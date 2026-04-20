@@ -219,7 +219,7 @@ export default function EmployerHeader() {
                               {formData.company_name || "User"}
                             </h2>
                             <Link
-                              href="/employer/account"
+                              href="/account"
                               className="text-blue-600 text-sm font-medium"
                             >
                               View & Update Account

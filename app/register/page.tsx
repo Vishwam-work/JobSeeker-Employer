@@ -532,7 +532,7 @@ const handleResendOTP = async () => {
       toast.success("Registration successful ");
 
         setTimeout(() => {
-          router.push("/employer/login");
+          router.push("/login");
         }, 1500);
 
     } catch (error) {
