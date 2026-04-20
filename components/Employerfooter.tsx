@@ -34,7 +34,7 @@ export default function EmployerFooter() {
           <ul className="space-y-2">
             <li>
               <Link
-                href="/employer/dashboard"
+                href="/dashboard"
                 className="hover:text-black transition"
               >
                 Dashboard
@@ -42,7 +42,7 @@ export default function EmployerFooter() {
             </li>
             <li>
               <Link
-                href="/employer/account"
+                href="/account"
                 className="hover:text-black transition"
               >
                 Account

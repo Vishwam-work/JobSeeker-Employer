@@ -56,7 +56,7 @@ export default function EmployerLogin() {
         setAlertMessage("Login Successful!");
         setAlertOpen(true);
         setTimeout(() => {
-          router.push("/employer/dashboard");
+          router.push("/dashboard");
         }, 2000);
       } else {
         setAlertType("error");
@@ -98,7 +98,7 @@ export default function EmployerLogin() {
   ];
   // GoogleLogin
   // const handleGoogleLogin = () => {
-  //   signIn("google", { callbackUrl: "/employer/dashboard" });
+  //   signIn("google", { callbackUrl: "/dashboard" });
   // };
 
   return (
@@ -121,7 +121,7 @@ export default function EmployerLogin() {
             <div className="text-sm text-gray-600 text-center sm:text-right">
               New to JobSeeker?{" "}
               <Link
-                href="/employer/register"
+                href="/register"
                 className="text-blue-600 hover:underline font-medium"
               >
                 Register here
@@ -311,7 +311,7 @@ export default function EmployerLogin() {
                     </div>
                   </div>
 
-                  <Link href="/employer/register">
+                  <Link href="/register">
                     <Button
                       variant="outline"
                       className="w-full h-12 border-blue-200 text-blue-600 hover:bg-blue-50"
