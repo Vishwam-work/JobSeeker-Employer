@@ -90,6 +90,7 @@ export default function Candidates() {
   const [jobTitles, setJobTitles] = useState<string[]>([]);
   const [totalCandidates, setTotalCandidates] = useState<number>(0);
   const [locations, setLocations] = useState<string[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   interface Candidate {
     id: number;
     name: string;
@@ -715,9 +716,10 @@ const formatDate = (date?: any) => {
                 </svg>
               </div>
             </div>
+            
 
             {/*  Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
+            <div className="hidden sm:grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
               {/*  Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full h-10">
@@ -813,6 +815,133 @@ const formatDate = (date?: any) => {
                 </SelectContent>
               </Select>
             </div>
+            <div
+              className={`fixed inset-0 z-50 transition ${
+                isOpen ? "visible" : "invisible"
+              }`}
+            >
+              {/* Overlay */}
+              <div
+                className={`absolute inset-0 bg-black/40 transition-opacity ${
+                  isOpen ? "opacity-100" : "opacity-0"
+                }`}
+                onClick={() => setIsOpen(false)}
+              />
+
+              {/* Drawer */}
+              <div
+                className={`absolute top-0 right-0 h-full w-[80%] max-w-sm bg-white shadow-lg transform transition-transform ${
+                  isOpen ? "translate-x-0" : "translate-x-full"
+                }`}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h2 className="font-semibold text-lg">Filters</h2>
+                  <button onClick={() => setIsOpen(false)}>✕</button>
+                </div>
+
+                {/* Filters Content */}
+                <div className="p-4 space-y-4 overflow-y-auto h-full pb-20">
+
+                  {/* Status */}
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Status</SelectItem>
+                      <SelectItem value="Under Review">Under Review</SelectItem>
+                      <SelectItem value="Shortlisted">Shortlisted</SelectItem>
+                      <SelectItem value="Rejected">Rejected</SelectItem>
+                      <SelectItem value="Interview Scheduled">Interview Scheduled</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Location */}
+                  <Select value={locationFilter} onValueChange={setLocationFilter}>
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder="Location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Locations</SelectItem>
+                      {locations.map((loc, i) => (
+                        <SelectItem key={i} value={loc}>{loc}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Experience */}
+                  <Select value={experienceFilter} onValueChange={setExperienceFilter}>
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder="Experience" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Experience</SelectItem>
+                      <SelectItem value="Fresher">Fresher</SelectItem>
+                      <SelectItem value="1 Years">1 Years</SelectItem>
+                      <SelectItem value="2 Years">2 Years</SelectItem>
+                      {/* continue... */}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Job Title */}
+                  <Select value={jobTitleFilter} onValueChange={setJobTitleFilter}>
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder="Job Title" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Job Titles</SelectItem>
+                      {jobTitles.map((title, i) => (
+                        <SelectItem key={i} value={title}>{title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Gender */}
+                  <Select value={genderFilter} onValueChange={setGenderFilter}>
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Genders</SelectItem>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="absolute bottom-0 w-full p-4 border-t bg-white flex gap-2">
+                  <button
+                    onClick={() => {
+                      setStatusFilter("All");
+                      setLocationFilter("All");
+                      setExperienceFilter("All");
+                      setJobTitleFilter("All");
+                      setGenderFilter("All");
+                    }}
+                    className="w-1/2 border rounded-lg py-2"
+                  >
+                    Reset
+                  </button>
+
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="w-1/2 bg-black text-white rounded-lg py-2"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsOpen(true)}
+              className="w-full mb-3 bg-black text-white py-2 rounded-lg sm:hidden"
+            >
+              Filters
+            </button>
       </div>
     <div className="h-[calc(100vh-100px)] overflow-y-hidden p-4">
 
@@ -837,7 +966,7 @@ const formatDate = (date?: any) => {
                   setJobTitleFilter("All");
                   setGenderFilter("All");
                 }}
-                className="text-sm px-3 py-1 border rounded-md hover:bg-gray-100"
+                className="hidden sm:grid text-sm px-3 py-1 border rounded-md hover:bg-gray-100"
               >
                 Clear Filters
               </button>
@@ -990,7 +1119,7 @@ const formatDate = (date?: any) => {
       </div>
 
       {/* Candidate Profile */}
-      <div className="lg:col-span-2 h-full overflow-auto">
+      <div className="hidden sm:grid lg:col-span-2 h-full overflow-auto">
         {selectedCandidate ? (
           <Card className="h-full flex flex-col overflow-auto">
             <CardHeader className=" sticky top-0 bg-white ">

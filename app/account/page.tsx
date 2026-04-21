@@ -525,12 +525,18 @@ export default function EmployerAccountEdit() {
                         />
                       )}
                       {/* File Input */}
-                      <div className="flex flex-col items-center gap-4">
+                      <div className="flex flex-col gap-4">
                         {/* File Upload Button */}
-                        <label className="w-full cursor-pointer">
-                          <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-purple-600 hover:bg-purple-50 transition duration-300">
+                       <label className="block w-full max-w-full cursor-pointer">
+                        <div className="flex flex-col items-center justify-center
+                          w-full max-w-full overflow-hidden
+                          border-2 border-dashed border-gray-300
+                          rounded-xl p-4 sm:p-6
+                          hover:border-purple-600 hover:bg-purple-50
+                          transition duration-300"
+                        >
                             <svg
-                              className="w-10 h-10 text-purple-600 mb-2"
+                              className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 mb-2"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="2"
@@ -542,7 +548,7 @@ export default function EmployerAccountEdit() {
                                 d="M4 16v4h16v-4M12 4v12m0 0l-4-4m4 4l4-4"
                               />
                             </svg>
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-medium text-gray-700 break-all text-center">
                               {selectedImage
                                 ? selectedImage.name
                                 : "Click to upload photo"}
