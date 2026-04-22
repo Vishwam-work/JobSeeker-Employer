@@ -70,7 +70,7 @@ export default function EmployerHeader() {
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
     setIsAuthenticated(false);
-    router.push("/");
+    router.push("/login");
   };
 
   useEffect(() => {
