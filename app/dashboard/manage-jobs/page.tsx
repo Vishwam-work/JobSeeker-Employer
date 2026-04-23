@@ -17,37 +17,21 @@ import {
 import {
   Building2,
   MapPin,
-  DollarSign,
   Clock,
   Users,
   Briefcase,
   Plus,
   Search,
   Calendar,
-  Target,
-  TrendingUp,
   Eye,
   Edit,
   Trash2,
-  Save,
-  X,
-  Filter,
   MoreVertical,
-  Download,
-  Mail,
-  Phone,
-  GraduationCap,
-  Award,
-  ExternalLink,
-  Star,
   CheckCircle,
   Share2,
   XCircle,
-  ChevronsUpDown,
-  ChevronDown,
-  Bell,
-  UserCircle,
-  BarChart3,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import {
@@ -2028,7 +2012,7 @@ const handleAddQuestion = () => {
           onClick={() => fetchPostedJobs(currentPage - 1, searchTerm, jobFilter, dateFilter)}
           className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
         >
-          Previous
+          <ChevronLeft className="h-4 w-4" />
         </button>
 
         <span>
@@ -2040,7 +2024,7 @@ const handleAddQuestion = () => {
           onClick={() => fetchPostedJobs(currentPage + 1, searchTerm, jobFilter, dateFilter)}
           className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
         >
-          Next
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
     </>

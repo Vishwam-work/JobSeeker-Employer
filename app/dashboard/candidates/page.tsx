@@ -4,7 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Calendar,User } from "lucide-react";
+import { 
+  Calendar,
+  User ,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
@@ -943,7 +948,7 @@ const formatDate = (date?: any) => {
               Filters
             </button>
       </div>
-    <div className="h-[calc(100vh-100px)] overflow-y-hidden p-4">
+    <div className="h-[calc(100vh-25px)] overflow-y-hidden p-4">
 
   <div className="grid lg:grid-cols-3 gap-6 h-full">
       {/* Candidates List */}
@@ -1060,7 +1065,7 @@ const formatDate = (date?: any) => {
                 </p>
               </div>
             )}
-            <div className="flex items-center justify-between mt-8 px-4 py-3 border rounded-xl bg-white shadow-sm">
+            <div className="flex items-center justify-between mt-8 px-4 py-3">
 
               {/* Left Info */}
               <p className="text-sm text-gray-500">
@@ -1086,7 +1091,7 @@ const formatDate = (date?: any) => {
                   }
                   className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  ← Previous
+                 <ChevronLeft className="h-4 w-4" />
                 </button>
 
                 <span className="px-3 py-1 text-sm font-medium bg-gray-100 rounded-lg">
@@ -1109,7 +1114,7 @@ const formatDate = (date?: any) => {
                   }
                   className="px-4 py-2 text-sm border rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next →
+                 <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
