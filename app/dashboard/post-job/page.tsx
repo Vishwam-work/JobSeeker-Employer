@@ -734,28 +734,12 @@ useEffect(() => {
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select experience level" />
                 </SelectTrigger>
-                <SelectContent>
+                 <SelectContent>
                   <SelectItem value="fresher">Fresher</SelectItem>
-                  <SelectItem value="1">1 years</SelectItem>
-                  <SelectItem value="2">2 years</SelectItem>
-                  <SelectItem value="3">3 years</SelectItem>
-                  <SelectItem value="4">4 years</SelectItem>
-                  <SelectItem value="5">5 years</SelectItem>
-                  <SelectItem value="6">6 years</SelectItem>
-                  <SelectItem value="7">7 years</SelectItem>
-                  <SelectItem value="8">8 years</SelectItem>
-                  <SelectItem value="9">9 years</SelectItem>
-                  <SelectItem value="10">10 years</SelectItem>
-                  <SelectItem value="11">11 years</SelectItem>
-                  <SelectItem value="12">12 years</SelectItem>
-                  <SelectItem value="13">13 years</SelectItem>
-                  <SelectItem value="14">14 years</SelectItem>
-                  <SelectItem value="15">15 years</SelectItem>
-                  <SelectItem value="16">16 years</SelectItem>
-                  <SelectItem value="17">17 years</SelectItem>
-                  <SelectItem value="18">18 years</SelectItem>
-                  <SelectItem value="19">19 years</SelectItem>
-                  <SelectItem value="20+">20+ years</SelectItem>
+                  <SelectItem value="1-2">1-2 years</SelectItem>
+                  <SelectItem value="3-5">3-5 years</SelectItem>
+                  <SelectItem value="6-10">6-10 years</SelectItem>
+                  <SelectItem value="10+">10+ years</SelectItem>
                 </SelectContent>
               </Select>
             </div>
