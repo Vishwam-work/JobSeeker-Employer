@@ -12,6 +12,10 @@ import {
   Activity,
   CreditCard,
   ChevronDown,
+  ChevronUp,
+  Users,
+  GaugeCircle,
+  BadgeCheck,
 } from "lucide-react";
 import Image from "next/image";
 import { jwtDecode } from "jwt-decode";
@@ -21,6 +25,7 @@ export default function EmployerHeader() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+    const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     company_name: "",
     company_type: "",
@@ -249,14 +254,45 @@ export default function EmployerHeader() {
                             </div>
                           </Link>
 
-                          <Link href="">
-                            <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                          <div
+                            onClick={() => setOpen(!open)}
+                            className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center justify-between gap-3"
+                          >
+                            <div className="flex items-center gap-3">
                               <Settings size={18} />
-                              Settings
+                              <span>Settings</span>
                             </div>
-                          </Link>
 
-                          <Link href="">
+                            {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </div>
+
+                          {/* Dropdown */}
+                          {open && (
+                            <div className="ml-8 mt-1 bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+                              <Link href="/manage-users">
+                                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                                  <Users size={18} className="text-gray-600" />
+                                  <span>Manage Users</span>
+                                </div>
+                              </Link>
+
+                              <Link href="/manage-quota">
+                                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                                  <GaugeCircle size={18} className="text-gray-600" />
+                                  <span>Manage Quota</span>
+                                </div>
+                              </Link>
+
+                              <Link href="/subscription-status">
+                                <div className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                                  <BadgeCheck size={18} className="text-gray-600" />
+                                  <span>Subscription Status</span>
+                                </div>
+                              </Link>
+                            </div>
+                          )}
+
+                          <Link href="/faq-support">
                             <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
                               <HelpCircle size={18} />
                               FAQs

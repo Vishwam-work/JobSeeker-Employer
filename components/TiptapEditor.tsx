@@ -4,6 +4,12 @@ import { useEffect } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Editor } from "@tiptap/react";
+import {
+  List,
+  ListOrdered,
+  Bold,
+  Italic, Heading1,
+} from "lucide-react";
 
 type Props = {
   value: string;
@@ -41,7 +47,7 @@ export default function TiptapEditor({ value, onChange }: Props) {
               : "bg-gray-100 hover:bg-gray-200"
           }`}
         >
-          B
+          <Bold className="w-4 h-4" />
         </button>
 
         {/* Italic */}
@@ -54,7 +60,7 @@ export default function TiptapEditor({ value, onChange }: Props) {
               : "bg-gray-100 hover:bg-gray-200"
           }`}
         >
-          I
+          <Italic className="w-4 h-4" />
         </button>
 
         {/* Bullet List */}
@@ -67,7 +73,7 @@ export default function TiptapEditor({ value, onChange }: Props) {
               : "bg-gray-100 hover:bg-gray-200"
           }`}
         >
-          • List
+          <List className="w-4 h-4" />
         </button>
 
         {/* Ordered List */}
@@ -80,7 +86,7 @@ export default function TiptapEditor({ value, onChange }: Props) {
               : "bg-gray-100 hover:bg-gray-200"
           }`}
         >
-          1. List
+          <ListOrdered className="w-4 h-4" />
         </button>
 
         {/* Heading */}
@@ -95,7 +101,7 @@ export default function TiptapEditor({ value, onChange }: Props) {
               : "bg-gray-100 hover:bg-gray-200"
           }`}
         >
-          H1
+          <Heading1 className="w-4 h-4" />
         </button>
 
       </div>
