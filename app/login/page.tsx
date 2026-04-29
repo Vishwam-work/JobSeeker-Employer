@@ -51,7 +51,8 @@ export default function EmployerLogin() {
 
       const data = await response.json();
       if (response.ok) {
-        localStorage.setItem("auth_token", data.access || data.token);
+        localStorage.setItem("employeer_token", data.access || data.token);
+        localStorage.setItem("admin_role", data.user_role || "employer");
         setAlertType("success");
         setAlertMessage("Login Successful!");
         setAlertOpen(true);

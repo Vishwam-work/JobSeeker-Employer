@@ -161,7 +161,7 @@ export default function Candidates() {
   const fetchApplications = async ( page=1,search = "", status = "All", gender = "All", title = "All", location = "All", exp = "All", salary = "All" ) => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("employeer_token");
         if (!token) return;
             const query = new URLSearchParams({
       page: page.toString(),
@@ -250,7 +250,7 @@ export default function Candidates() {
 ]);
 
  const fetchAllTitles = async () => {
-  const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("employeer_token");
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/?page=1`,
@@ -349,7 +349,7 @@ const formatDate = (date?: any) => {
   // SHORTLIST
   const handleShortlistCandidate = async (candidate: any) => {
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("employeer_token");
       if (!token) {
         toast.error("Token missing", {
           description: "Please log in again to continue.",
@@ -414,7 +414,7 @@ const formatDate = (date?: any) => {
         return;
       }
 
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("employeer_token");
       if (!token) {
         toast.error("Token missing", {
           description: "Please log in again to continue.",
@@ -496,7 +496,7 @@ const formatDate = (date?: any) => {
     }
 
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("employeer_token");
       if (!token)
         return toast.error("Token missing", {
           description: "Please log in again to continue.",
