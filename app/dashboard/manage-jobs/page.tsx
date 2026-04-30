@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter} from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -43,7 +43,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import * as XLSX from "xlsx";
+import AdminExcelUpload from "@/app/admin-excel-upload/page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +65,7 @@ dayjs.extend(customParseFormat);
 
 const ManageJobs = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const jobId = searchParams.get("id");
   const [activeTab, setActiveTab] = useState("post-job");
   const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
@@ -93,8 +94,6 @@ const ManageJobs = () => {
   const [newSkill, setNewSkill] = useState("");
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [jobForm, setJobForm] = useState<JobForm>({
     title: "",
     category: "",
@@ -327,113 +326,6 @@ useEffect(() => {
     setIsAdmin(true);
   }
 }, []);
-const handleExcelUpload = async (
-  e: React.ChangeEvent<HTMLInputElement>
-) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = async (event) => {
-    const data = event.target?.result;
-
-    const workbook = XLSX.read(data, { type: "binary" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-
-    const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
-
-    const token = localStorage.getItem("employeer_token");
-
-    if (!token) {
-      toast.error("Login required");
-      return;
-    }
-
-    try {
-      for (const row of jsonData) {
-      const payload = {
-        title: row.title || "",
-        job_title: row.job_title || "",
-        company: row.company || "",
-        category: row.category || "",
-        location: row.location || "",
-        currency_id: Number(row.currency_id) || 1,
-        experience: row.experience || "",
-        salary: String(row.salary || ""),
-        salary_max: String(row.salary_max || ""),
-        job_type: row.job_type
-          ? String(row.job_type)
-              .split(",")
-              .map((item) => item.trim().toLowerCase())
-          : [],
-        work_mode: row.work_mode || "",
-        vacancies: Number(row.vacancies) || 1,
-        application_deadline: row.application_deadline || "",
-        description: row.description || "",
-        requirements: row.requirements || "",
-        benefits: row.benefits || "",
-        skills: row.skills
-          ? String(row.skills)
-              .split(",")
-              .map((s) => s.trim())
-          : [],
-        is_urgent: String(row.is_urgent).toLowerCase() === "true",
-        is_remote: String(row.is_remote).toLowerCase() === "true",
-        status: "active",
-        questions: row.questions
-          ? String(row.questions)
-              .split("|")
-              .map((q) => q.trim())
-          : [],
-        website_apply: row.website_apply || "",
-      };
-      console.log("Payload for row:", payload);
-        const response = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-postings/`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  }
-);
-
-const responseText = await response.text();
-
-let result;
-
-try {
-  result = JSON.parse(responseText);
-} catch {
-  result = responseText;
-}
-
-if (!response.ok) {
-  console.error("Failed Row:", row);
-  console.error("Payload:", payload);
-  console.error("Server Error:", result);
-
-  toast.error("Upload failed for one row");
-  continue;
-}
-
-console.log("Success:", result);
-        }
-
-      toast.success("Excel jobs uploaded successfully");
-      fetchPostedJobs();
-    } catch (error) {
-      console.error(error);
-      toast.error("Upload failed");
-    }
-  };
-
-  reader.readAsBinaryString(file);
-};
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -1075,75 +967,18 @@ const handleAddQuestion = () => {
             <CardTitle>Manage Your Jobs</CardTitle>
 
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+
               {isAdmin && (
-                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      onClick={() => setDialogOpen(true)}
-                      className="bg-red-600 hover:bg-red-700 text-white"
-                    >
-                      Admin Button
-                    </Button>
-                  </DialogTrigger>
-
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Upload Excel File</DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-4">
-                      <Input
-                        type="file"
-                        accept=".xls,.xlsx"
-                        disabled={uploading}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-
-                          if (!file) return;
-
-                          const validTypes = [
-                            "application/vnd.ms-excel",
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                          ];
-
-                          if (!validTypes.includes(file.type)) {
-                            toast.error("Only Excel files (.xls, .xlsx) are allowed");
-                            e.target.value = "";
-                            return;
-                          }
-
-                          try {
-                            setUploading(true);
-
-                            toast.success(`Selected: ${file.name}`);
-
-                            await handleExcelUpload(e);
-
-                            toast.success("Upload Completed");
-
-                            setDialogOpen(false); // auto close dialog
-                          } catch (error) {
-                            console.error(error);
-                            toast.error("Upload failed");
-                          } finally {
-                            setUploading(false);
-                          }
-                        }}
-                      />
-
-                      {uploading && (
-                        <div className="flex items-center gap-2 text-sm text-blue-600">
-                          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                          Uploading Excel file...
-                        </div>
-                      )}
-
-                      <p className="text-sm text-gray-500">
-                        Only Excel files (.xls, .xlsx) are allowed
-                      </p>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <AdminExcelUpload
+                  onUploadSuccess={fetchPostedJobs}
+                  triggerButton={
+                  <Button
+                  className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-5 py-2 font-medium shadow"
+                   >
+                  Upload Excel
+                  </Button>
+                   }
+                />
               )}
               {/* Date Filter */}
               <Select value={dateFilter} onValueChange={setDateFilter}>
@@ -1618,7 +1453,6 @@ const handleAddQuestion = () => {
               <Input
                 name="company"
                 value={jobForm.company || ""}
-                readOnly
                 onChange={(e) =>
                   setJobForm({
                     ...jobForm,

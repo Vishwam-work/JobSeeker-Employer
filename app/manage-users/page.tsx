@@ -1,9 +1,10 @@
 "use client";
-
+import { useState } from "react";
 import { Search, MoreVertical, Check, X } from "lucide-react";
 import EmployerHeader from "@/components/Employerheader";
 import EmployerFooter from "@/components/Employerfooter";
 export default function ManageUsersPage() {
+  const [showModal, setShowModal] = useState(false);
   const users = [
     {
       name: "Atversion",
@@ -26,13 +27,101 @@ export default function ManageUsersPage() {
           </h1>
 
           <div className="flex items-center gap-4">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium">
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium"
+            >
               Add user
             </button>
             <MoreVertical className="text-gray-500 cursor-pointer" />
           </div>
         </div>
+{/* Modal for add users */}
+{showModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl relative">
 
+      {/* Header */}
+      <div className="flex justify-between items-center px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold">Add users</h2>
+        <button onClick={() => setShowModal(false)}>✕</button>
+      </div>
+
+      {/* Body */}
+      <div className="p-6 space-y-5">
+
+        {/* Name */}
+        <div>
+          <label className="text-sm font-medium">Name</label>
+          <input
+            className="w-full border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md px-3 py-2 mt-1 outline-none"
+            placeholder="Enter the name of the user"
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="text-sm font-medium">Work email ID</label>
+          <input
+            className="w-full border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md px-3 py-2 mt-1 outline-none"
+            placeholder="Enter work email"
+          />
+        </div>
+
+        {/* Mobile */}
+        <div>
+          <label className="text-sm font-medium">Mobile number</label>
+          <div className="flex mt-1">
+            <select className="border border-gray-300 rounded-l-md px-2">
+              <option>+91</option>
+            </select>
+            <input
+              className="flex-1 border border-gray-300 rounded-r-md px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              placeholder="Enter the mobile number of the user"
+            />
+          </div>
+        </div>
+
+        {/* Permissions */}
+        <div className="bg-gray-100 rounded-md p-4 space-y-3">
+         <p className="text-sm font-medium">Permissions</p>
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" defaultChecked />
+              Job Posting
+            </label>
+
+            <label className="flex items-center gap-2">
+              <input type="checkbox" defaultChecked />
+              <span>
+                Job Promotion{" "}
+                <span className="text-xs text-gray-500">
+                  (requires Job Posting permission)
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Response manager access is available to all recruiters who post a job,
+            send an Nvite, or are added as collaborators.
+          </p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-between items-center px-6 py-4 border-t">
+        <button className="text-blue-600 font-medium">
+          Save and add another user
+        </button>
+
+        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
         <div className="border-b border-gray-200 px-6 py-4 flex flex-wrap items-center gap-6 text-sm text-gray-600">
           <span className="font-semibold text-blue-600 border-b-2 border-blue-600 pb-2">
             Approved (1)
