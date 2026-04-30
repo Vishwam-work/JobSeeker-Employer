@@ -129,7 +129,7 @@ export default function CandidatesPage() {
   const cleanSearch = search.trim().replace(/\s+/g, " ");
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("employeer_token");
     if (!token) return;
 
     fetch(

@@ -120,7 +120,7 @@ export default function EmployerAccountEdit() {
   useEffect(() => {
     const fetchCompanyDetails = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("employeer_token");
         if (!token) return;
 
         const decoded: any = jwtDecode(token);
@@ -280,7 +280,7 @@ export default function EmployerAccountEdit() {
     }
 
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("employeer_token");
       const decoded: any = jwtDecode(token!);
       const userId = decoded?.user_id;
 
@@ -598,7 +598,7 @@ export default function EmployerAccountEdit() {
                                   {
                                     method: "PATCH",
                                     headers: {
-                                      Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+                                      Authorization: `Bearer ${localStorage.getItem("employeer_token")}`,
                                     },
                                     body: formData,
                                   },

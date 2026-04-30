@@ -68,12 +68,12 @@ export default function EmployerHeader() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("employeer_token");
     // console.log("LOG TOKEN:", token);
     setIsAuthenticated(!!token);
   }, []);
   const handleLogout = () => {
-    localStorage.removeItem("auth_token");
+    localStorage.removeItem("employeer_token");
     setIsAuthenticated(false);
     router.push("/login");
   };
@@ -81,7 +81,7 @@ export default function EmployerHeader() {
   useEffect(() => {
     const fetchCompanyDetails = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("employeer_token");
         if (!token) return;
 
         const decoded: any = jwtDecode(token);

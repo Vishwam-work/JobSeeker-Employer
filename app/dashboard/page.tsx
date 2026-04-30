@@ -86,7 +86,7 @@ interface CandidateQA {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("employeer_token");
         if (!token) return;
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/`,

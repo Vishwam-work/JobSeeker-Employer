@@ -63,6 +63,7 @@ export default function PostJobPage() {
   const [newSkill, setNewSkill] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
   const [open, setOpen] = useState(false);
+   const [isAdmin, setIsAdmin] = useState(false);
   //date validation
   const [deadlineInput, setDeadlineInput] = useState("");
   const [deadlineError, setDeadlineError] = useState("");
@@ -139,7 +140,7 @@ export default function PostJobPage() {
 
   const fetchPostedJobs = async () => {
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("employeer_token");
       if (!token) return;
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/job-list-view/`,
@@ -163,6 +164,14 @@ export default function PostJobPage() {
       console.error("Error fetching jobs:", error);
     }
   };
+
+useEffect(() => {
+  const role = localStorage.getItem("admin_role");
+
+  if (role === "admin") {
+    setIsAdmin(true);
+  }
+}, []);
   const handleSubmitJob = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const minSalary = Number(jobForm.salary);
@@ -185,7 +194,7 @@ export default function PostJobPage() {
         }
       }
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("employeer_token");
       if (!token) {
         toast.error("You must be logged in to post a job.", {
           description: "Please log in to continue.",
@@ -205,7 +214,7 @@ export default function PostJobPage() {
         salary_max: jobForm.salary_max,
         job_type: jobForm.job_type,
         work_mode: jobForm.workMode,
-        vacancies: parseInt(jobForm.vacancies) || 1, // Ensure integer
+        vacancies: parseInt(jobForm.vacancies) || "", // Ensure integer
         application_deadline: jobForm.application_deadline,
         description: jobForm.description,
         requirements: jobForm.requirements,
@@ -297,7 +306,7 @@ export default function PostJobPage() {
   useEffect(() => {
     const run = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("employeer_token");
         if (!token) return;
 
         const decoded = jwtDecode<DecodedToken>(token);
@@ -1159,30 +1168,35 @@ useEffect(() => {
                 }
               />
           </div>
-            <div className="flex items-center space-x-2">
-            <Checkbox
-              id="add-website"
-              checked={websiteEnabled}
-              onCheckedChange={(checked) => {
-                setWebsiteEnabled(!!checked);
+            {isAdmin && (
+              <>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="add-website"
+                    checked={websiteEnabled}
+                    onCheckedChange={(checked) => {
+                      setWebsiteEnabled(!!checked);
 
-                // Reset value when unchecked
-                if (!checked) setWebsiteUrl("");
-              }}
-            />
-            <Label htmlFor="add-website" className="text-sm">
-              Website URL
-            </Label>
-          </div>
-          {websiteEnabled && (
-            <div className="mt-4 w-full sm:w-3/5 lg:w-2/5">
-              <Input
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                placeholder="Enter website URL..."
-              />
-            </div>
-          )}
+                      // Reset value when unchecked
+                      if (!checked) setWebsiteUrl("");
+                    }}
+                  />
+                  <Label htmlFor="add-website" className="text-sm">
+                    Website URL
+                  </Label>
+                </div>
+
+                {websiteEnabled && (
+                  <div className="mt-4 w-full sm:w-3/5 lg:w-2/5">
+                    <Input
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      placeholder="Enter website URL..."
+                    />
+                  </div>
+                )}
+              </>
+            )}
 
           {/* Checkboxes */}
           <div className="flex flex-col sm:flex-row gap-4">
