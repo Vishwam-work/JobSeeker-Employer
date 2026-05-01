@@ -205,7 +205,7 @@ useEffect(() => {
 
         title: jobForm.title,
         job_title:(jobForm.jobTitle),
-        company: CompanyName,
+        company: jobForm.company,
         category: jobForm.category,
         location: (jobForm.location),
         currency_id: parseInt(jobForm.currency),
@@ -697,7 +697,7 @@ useEffect(() => {
               </Label>
               <Input
                 id="company"
-                value={CompanyName}
+                
                 onChange={(e) =>
                   setJobForm((prev) => ({
                     ...prev,
