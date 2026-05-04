@@ -93,6 +93,76 @@ const formatExcelDate = (excelDate: any) => {
 
       const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
+      const errors: string[] = [];
+      const seen = new Set();
+      jsonData.forEach((row, index) => {
+        const rowNumber = index + 1;
+
+        // Check for duplicates based on title, company and job_title
+        const key = `${row.title}-${row.company}-${row.job_title}`;
+
+        if (seen.has(key)) {
+            errors.push(`Row ${rowNumber}: Duplicate entry in file`);
+        } else {
+            seen.add(key);
+        }
+
+        // Required fields
+        if (!row.title) errors.push(`Row ${rowNumber}: Title is required`);
+        if (!row.job_title) errors.push(`Row ${rowNumber}: Job Title is required`);
+        if (!row.company) errors.push(`Row ${rowNumber}: Company is required`);
+        if (!row.category) errors.push(`Row ${rowNumber}: Category is required`);
+        if (!row.location) errors.push(`Row ${rowNumber}: Location is required`);
+        if (!row.salary) errors.push(`Row ${rowNumber}: Salary is required`);
+
+        // Salary number check
+        if (row.salary && isNaN(Number(row.salary))) {
+            errors.push(`Row ${rowNumber}: Salary must be a number`);
+        }
+
+        if (row.salary_max && isNaN(Number(row.salary_max))) {
+            errors.push(`Row ${rowNumber}: Salary Max must be a number`);
+        }
+
+        // Vacancies
+        if (row.vacancies && isNaN(Number(row.vacancies))) {
+            errors.push(`Row ${rowNumber}: Vacancies must be a number`);
+        }
+
+        // Boolean fields
+        if (row.is_urgent && !["true", "false"].includes(String(row.is_urgent).toLowerCase())) {
+            errors.push(`Row ${rowNumber}: is_urgent must be true/false`);
+        }
+
+        if (row.is_remote && !["true", "false"].includes(String(row.is_remote).toLowerCase())) {
+            errors.push(`Row ${rowNumber}: is_remote must be true/false`);
+        }
+
+
+        // Work mode validation
+        if (row.work_mode) {
+            const validModes = ["remote", "onsite", "hybrid"];
+            if (!validModes.includes(String(row.work_mode).toLowerCase())) {
+            errors.push(`Row ${rowNumber}: Invalid work_mode`);
+            }
+        }
+
+        // Website URL check
+        if (row.website_apply) {
+            try {
+            new URL(row.website_apply);
+            } catch {
+            errors.push(`Row ${rowNumber}: Invalid website URL`);
+            }
+        }
+        });
+
+        if (errors.length > 0) {
+        setUploadErrors(errors);
+        toast.error("Fix all errors before uploading");
+        return;
+        }
+
       const token = localStorage.getItem("employeer_token");
 
       if (!token) {
@@ -235,7 +305,7 @@ const formatExcelDate = (excelDate: any) => {
                 setUploadedRows([]);
                 setUploadError("");
                 setSelectedFile(file);
-
+                setUploadCompleted(false);
                 const validTypes = [
                     "application/vnd.ms-excel",
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -270,36 +340,28 @@ const formatExcelDate = (excelDate: any) => {
                     const errors: string[] = [];
 
                     jsonData.forEach((row, index) => {
-                const rowNumber = index + 1;
+                    const rowNumber = index + 1;
 
-                if (!row.title) {
-                    errors.push(`Row ${rowNumber}: Title is required`);
-                }
+                    if (!row.title) {
+                        errors.push(`Row ${rowNumber}: Title is required`);
+                    }
 
-                if (!row.job_title) {
-                    errors.push(`Row ${rowNumber}: Job Title is required`);
-                }
+                    if (!row.job_title) {
+                        errors.push(`Row ${rowNumber}: Job Title is required`);
+                    }
 
-                if (!row.company) {
-                    errors.push(`Row ${rowNumber}: Company is required`);
-                }
+                    if (!row.company) {
+                        errors.push(`Row ${rowNumber}: Company is required`);
+                    }
 
-                if (!row.category) {
-                    errors.push(`Row ${rowNumber}: Category is required`);
-                }
+                    if (!row.category) {
+                        errors.push(`Row ${rowNumber}: Category is required`);
+                    }
 
-                if (!row.salary) {
-                    errors.push(`Row ${rowNumber}: Salary is required`);
-                }
-
-                // const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-
-                // if (!row.application_deadline) {
-                //     errors.push(`Row ${rowNumber}: Deadline is required`);
-                // } else if (!dateRegex.test(String(row.application_deadline))) {
-                //     errors.push(`Row ${rowNumber}: Date format must be DD/MM/YYYY`);
-                // }
-                });
+                    if (!row.salary) {
+                        errors.push(`Row ${rowNumber}: Salary is required`);
+                    }
+                    });
                     setUploadErrors(errors);
                     } catch (error) {
                     console.error(error);

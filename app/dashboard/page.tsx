@@ -26,7 +26,7 @@ export default function EmployerDashboard() {
   const [experienceFilter, setExperienceFilter] = useState("All");
   const [jobTitleFilter, setJobTitleFilter] = useState("All");
   const [candidates, setCandidates] =useState<Candidate[]>([]);
-
+  const [isAdmin, setIsAdmin] = useState(false);
 interface Candidate {
   id: number;
   name: string;
@@ -225,11 +225,19 @@ interface CandidateQA {
       jobTitleMatch
     );
   });
+  useEffect(() => {
+  const role = localStorage.getItem("admin_role");
+  if (role === "admin") {
+    setIsAdmin(true);
+  }
+}, []);
 
 
   const tabs = [
     { id: "post-job", label: "Post a Job", icon: Plus ,component: <PostJobPage />},
     { id: "manage-jobs", label: "Manage Jobs", icon: Briefcase, component: <ManageJobs /> },
+     ...(!isAdmin
+    ? [
     { id: "candidates", label: "Candidates", icon: Users ,component: <Candidates />},
     {
     id: "profiles",
@@ -243,6 +251,8 @@ interface CandidateQA {
     icon: BarChart3,
     component: <QuotaUsagePage />,
   },
+   ]
+    : []),
   ];
 
   return (
@@ -301,15 +311,15 @@ interface CandidateQA {
         )}
 
         {/* Candidates Tab */}
-        {activeTab === "candidates" && (
+        {!isAdmin && activeTab === "candidates" && (
          <Candidates/>
         )}
 
-        {activeTab === "profiles" && (
+        {!isAdmin && activeTab === "profiles" && (
         <CandidatesPage/>
          )}
 
-         {activeTab === "quota" && (
+         {!isAdmin && activeTab === "quota" && (
         <QuotaUsagePage />
          )}
       </div>
