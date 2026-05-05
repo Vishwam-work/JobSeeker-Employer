@@ -9,6 +9,7 @@ import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
 import { Calendar } from "lucide-react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import AsyncCreatableSelect from 'react-select/async-creatable'
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import TiptapEditor from "@/components/TiptapEditor";
@@ -636,12 +637,13 @@ useEffect(() => {
 
             <div>
               <Label className="text-sm font-medium">Job Category *</Label>
-              <AsyncSelect
+              <AsyncCreatableSelect
                 required
                 cacheOptions
                 defaultOptions
                 placeholder="e.g., Accounting"
                 className="mt-1"
+                isClearable
                 loadOptions={getJobCategoryOptions}
                 value={getSelectedJobCategory()}
                 onChange={(selectedOption: any) => {
@@ -652,7 +654,6 @@ useEffect(() => {
                     jobTitle: "",
                   }));
                 }}
-                isClearable
                 menuPortalTarget={
                   typeof window !== "undefined" ? document.body : null
                 }
@@ -667,7 +668,7 @@ useEffect(() => {
                 Specific Job Title *
               </Label>
 
-              <AsyncSelect
+              <AsyncCreatableSelect
                 required
                 cacheOptions
                 defaultOptions
