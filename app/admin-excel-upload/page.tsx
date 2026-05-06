@@ -178,7 +178,7 @@ const formatExcelDate = (excelDate: any) => {
             company: row.company || "",
             category: row.category || "",
             location: row.location || "",
-            currency_id: Number(row.currency_id) || 1,
+            currency_id: Number(row.currency_id) || 293,
             experience: row.experience || "",
             salary: String(row.salary || ""),
             salary_max: String(row.salary_max || ""),

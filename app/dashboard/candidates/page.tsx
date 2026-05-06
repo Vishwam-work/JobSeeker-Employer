@@ -931,13 +931,6 @@ const formatDate = (date?: any) => {
                   >
                     Reset
                   </button>
-
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="w-1/2 bg-black text-white rounded-lg py-2"
-                  >
-                    Apply
-                  </button>
                 </div>
               </div>
             </div>

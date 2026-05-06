@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, FileText, Mail, CheckSquare, Briefcase, DollarSign, MapPin } from "lucide-react";
+import { Phone, FileText, Mail, CheckSquare, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -72,12 +73,15 @@ export default function CandidatesPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
   );
-
+  const [allCompanies, setAllCompanies] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchCompany, setSearchCompany] = useState("");
+  const experienceList = ["fresher","1-2", "3-5", "6-10", "10+"];
   const [filters, setFilters] = useState({
     hideProfiles: false,
     premiumOnly: false,
     keywords: "",
-    currentCompany: "",
+      currentCompany: [] as string[], 
     locationSearch: "",
     locations: [] as string[],
     minExperience: "",
@@ -94,6 +98,7 @@ export default function CandidatesPage() {
     maxAge: "",
     degree: [] as string[],
     college: [] as string[],
+    
   });
 
   const clearFilters = () => {
@@ -101,7 +106,7 @@ export default function CandidatesPage() {
       hideProfiles: false,
       premiumOnly: false,
       keywords: "",
-      currentCompany: "",
+      currentCompany: [] as string[],
       locationSearch: "",
       locations: [],
       minExperience: "",
@@ -183,7 +188,9 @@ const formatDate = (date?: any) => {
         matches(c.city?.name) ||
         matches(c.state?.name) ||
         matches(c.country?.name) ||
-        (c.skills?.some((s) => matches(s.name)) ?? false) ||
+        (c.skills?.some((s) =>
+          (s?.name || s)?.toString().toLowerCase().includes(q)
+        ) ?? false) ||
         (c.certifications?.some(
           (cert) =>
             matches(cert.name) || matches(cert.issuer) || matches(cert.year)
@@ -202,7 +209,6 @@ const formatDate = (date?: any) => {
           (ex) => matches(ex.designation) || matches(ex.company)
         ) ?? false);
     }
-
     // 2. Specific Filters
 
     // Hide Profiles
@@ -225,18 +231,33 @@ const formatDate = (date?: any) => {
       const hasKeyword =
         c.skills?.some((s) => s.name.toLowerCase().includes(k)) ||
         c.full_name.toLowerCase().includes(k) ||
-        c.current_role?.toLowerCase().includes(k);
+        c.city?.name.toLowerCase().includes(k) ||
+        c.state?.name.toLowerCase().includes(k) ||
+        c.country?.name.toLowerCase().includes(k);
       if (!hasKeyword) return false;
     }
 
     // Current Company
-    if (filters.currentCompany) {
-      const company = filters.currentCompany.toLowerCase();
-      const hasCompany =
-        c.current_company?.toLowerCase().includes(company) ||
-        c.experiences?.some(ex => ex.company?.toLowerCase().includes(company) && (!ex.end_date || String(ex.end_date).toLowerCase() === 'present'));
-      if (!hasCompany) return false;
-    }
+      if (filters.currentCompany.length > 0) {
+        const normalize = (val: any) =>
+          val ? String(val).toLowerCase() : "";
+
+        const matchesCompany = filters.currentCompany.some((company) => {
+          const q = company.toLowerCase();
+
+          if (normalize(c.current_company).includes(q)) return true;
+
+          const currentExp = c.experiences?.find(
+            (ex: any) =>
+              !ex.end_date ||
+              normalize(ex.end_date) === "present"
+          );
+
+          return normalize(currentExp?.company).includes(q);
+        });
+
+        if (!matchesCompany) return false;
+      }
 
     // Location
     if (filters.locations.length > 0) {
@@ -315,7 +336,67 @@ const formatDate = (date?: any) => {
 
     return matchesSearch;
   });
+  useEffect(() => {
+  if (!candidates.length) return;
 
+  const set = new Set<string>();
+
+  const normalize = (val: any) =>
+    val ? String(val).trim() : "";
+
+  candidates.forEach((c) => {
+    if (c.current_company) {
+      set.add(normalize(c.current_company));
+    } else {
+      const currentExp = c.experiences?.find(
+        (ex: any) =>
+          !ex.end_date ||
+          String(ex.end_date).toLowerCase() === "present"
+      );
+
+      if (currentExp?.company) {
+        set.add(normalize(currentExp.company));
+      }
+    }
+  });
+
+  setAllCompanies(Array.from(set));
+}, [candidates]);
+const filteredCompanies =
+  searchCompany.trim() === ""
+    ? allCompanies.slice(0, 10)
+    : allCompanies
+        .filter((company) =>
+          company
+            .toLowerCase()
+            .includes(searchCompany.toLowerCase())
+        )
+        .sort((a, b) => {
+          const q = searchCompany.toLowerCase();
+
+          const aStarts = a.toLowerCase().startsWith(q);
+          const bStarts = b.toLowerCase().startsWith(q);
+
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+
+          return a.localeCompare(b);
+        });
+const toggleCompany = (company: string) => {
+  const exists = filters.currentCompany.includes(company);
+
+  if (exists) {
+    setFilters({
+      ...filters,
+      currentCompany: filters.currentCompany.filter((c) => c !== company),
+    });
+  } else {
+    setFilters({
+      ...filters,
+      currentCompany: [...filters.currentCompany, company],
+    });
+  }
+};
   type HighlightProps = {
     text?: string;
   };
@@ -441,20 +522,6 @@ const formatDate = (date?: any) => {
 
   return (
     <div className="min-h-screen">
-      <div className="w-full mb-6">
-        <div className="relative">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by skill, keyword, company, designation..."
-            className="w-full rounded-lg border border-gray-300 px-5 py-4 pl-12 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
-            🔍
-          </span>
-        </div>
-      </div>
       <div className="p-4 md:hidden flex justify-between items-center">
         <button
           onClick={() => setShowFilters(true)}
@@ -462,7 +529,6 @@ const formatDate = (date?: any) => {
         >
           Filters
         </button>
-        
       </div>
       <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 p-4">
         {/* LEFT FILTERS */}
@@ -478,43 +544,47 @@ const formatDate = (date?: any) => {
           </div>
 
           <hr className="mb-4" />
-          {/* Hide Profiles */}
-          <label className="flex items-center gap-2 font-medium mb-4 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.hideProfiles}
-              onChange={(e) =>
-                setFilters({ ...filters, hideProfiles: e.target.checked })
-              }
-            />
-            Hide Viewed Profiles
-          </label>
 
-          <hr className="mb-4" />
+          {/* Gender*/}
+          <details open className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between mb-2">
+              Gender <span><ChevronDown className="w-4 h-4" /></span>
+            </summary>
 
-          {/* Premium */}
-          <label className="flex items-center gap-2 mb-4 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.premiumOnly}
-              onChange={(e) => setFilters({ ...filters, premiumOnly: e.target.checked })}
-            />
-            Premium Institute Candidates
-          </label>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setFilters({ ...filters, gender: filters.gender === 'Male' ? '' : 'Male' })}
+                className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Male' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
+                Male
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, gender: filters.gender === 'Female' ? '' : 'Female' })}
+                className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Female' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
+                Female
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, gender: filters.gender === 'Other' ? '' : 'Other' })}
+                className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Other' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
+                Other
+              </button>
+
+            </div>
+          </details>
 
           <hr className="mb-4" />
 
           {/* Keywords */}
           <details className="mb-4">
             <summary className="cursor-pointer font-medium flex justify-between">
-              Keywords <span>⌄</span>
+              Keywords <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
             <div className="mt-2">
               <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by skill, keyword, company, designation..."
                 className="w-full border rounded px-2 py-1 text-sm"
-                placeholder="e.g. React, Java"
-                value={filters.keywords}
-                onChange={(e) => setFilters({ ...filters, keywords: e.target.value })}
               />
             </div>
           </details>
@@ -522,19 +592,52 @@ const formatDate = (date?: any) => {
           <hr className="mb-4" />
 
           {/* Current Company */}
-          <details className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between">
-              Current company <span>⌄</span>
-            </summary>
-            <div className="mt-2">
-              <input
-                className="w-full border rounded px-2 py-1 text-sm"
-                placeholder="Search company"
-                value={filters.currentCompany}
-                onChange={(e) => setFilters({ ...filters, currentCompany: e.target.value })}
-              />
+          <div className="mb-4">
+            <Label className="text-sm font-medium text-gray-700 mb-2 block">
+              Current Company
+            </Label>
+
+            {/* Search */}
+            <input
+              type="text"
+              placeholder="Search company"
+              value={searchCompany}
+              onChange={(e) => setSearchCompany(e.target.value)}
+              className="w-full border rounded px-2 py-2 text-sm mb-2"
+            />
+
+            {/* List */}
+            <div className="max-h-48 overflow-y-auto">
+              {allCompanies
+                .filter((company) =>
+                  company.toLowerCase().includes(searchCompany.toLowerCase())
+                )
+                .map((company) => {
+                  const checked = filters.currentCompany.includes(company);
+
+                  return (
+                    <div
+                      key={company}
+                      className="flex items-center justify-between mb-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleCompany(company)}
+                        />
+                        <label className="text-sm text-gray-700">
+                          {company}
+                        </label>
+                      </div>
+
+                      {/* Optional count (agar data ho to) */}
+                      {/* <span className="text-xs text-gray-400">123</span> */}
+                    </div>
+                  );
+                })}
             </div>
-          </details>
+          </div>
 
           <hr className="mb-4" />
 
@@ -808,28 +911,6 @@ const formatDate = (date?: any) => {
 
           <hr className="mb-4" />
 
-          {/* Gender*/}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-3">
-              Gender <span>⌃</span>
-            </summary>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setFilters({ ...filters, gender: filters.gender === 'Male' ? '' : 'Male' })}
-                className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Male' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
-                Male
-              </button>
-              <button
-                onClick={() => setFilters({ ...filters, gender: filters.gender === 'Female' ? '' : 'Female' })}
-                className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Female' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
-                Female
-              </button>
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
           {/* Age  */}
           <details open className="mb-4">
             <summary className="cursor-pointer font-medium flex justify-between mb-3">
@@ -940,19 +1021,52 @@ const formatDate = (date?: any) => {
             <hr className="mb-4" />
 
             {/* Current Company */}
-            <details className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between">
-                Current company <span>⌄</span>
-              </summary>
-              <div className="mt-2">
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm"
-                  placeholder="Search company"
-                  value={filters.currentCompany}
-                  onChange={(e) => setFilters({ ...filters, currentCompany: e.target.value })}
-                />
-              </div>
-            </details>
+                     <div className="mb-4">
+            <Label className="text-sm font-medium text-gray-700 mb-2 block">
+              Current Company
+            </Label>
+
+            {/* Search */}
+            <input
+              type="text"
+              placeholder="Search company"
+              value={searchCompany}
+              onChange={(e) => setSearchCompany(e.target.value)}
+              className="w-full border rounded px-2 py-2 text-sm mb-2"
+            />
+
+            {/* List */}
+            <div className="max-h-48 overflow-y-auto">
+              {allCompanies
+                .filter((company) =>
+                  company.toLowerCase().includes(searchCompany.toLowerCase())
+                )
+                .map((company) => {
+                  const checked = filters.currentCompany.includes(company);
+
+                  return (
+                    <div
+                      key={company}
+                      className="flex items-center justify-between mb-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleCompany(company)}
+                        />
+                        <label className="text-sm text-gray-700">
+                          {company}
+                        </label>
+                      </div>
+
+                      {/* Optional count (agar data ho to) */}
+                      {/* <span className="text-xs text-gray-400">123</span> */}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
 
             <hr className="mb-4" />
 
@@ -1278,7 +1392,7 @@ const formatDate = (date?: any) => {
             {/* FIRST 1 CANDIDATE */}
                {filteredCandidates.length > 0 ? (
             <>
-              {filteredCandidates.slice(0, 1).map((c) => (
+              {filteredCandidates.slice(0, 10).map((c) => (
                 <div
                 key={c.id}
                 className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
@@ -1340,8 +1454,10 @@ const formatDate = (date?: any) => {
                   )}
 
                   <span>
+                    <Highlight text={c.country?.name || ""} />,{" "}
                     <Highlight text={c.city?.name || ""} />,{" "}
                     <Highlight text={c.state?.name || ""} />
+
                   </span>
                 </div>
 
@@ -1353,7 +1469,7 @@ const formatDate = (date?: any) => {
                         key={i}
                         className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-md"
                       >
-                        {skill.name}
+                        <Highlight text={skill.name} />
                       </span>
                     ))}
                   </div>
@@ -1431,7 +1547,7 @@ const formatDate = (date?: any) => {
           )}
           <div className="h-16" />
           {/* BLURRED REST */}
-          <div className="relative">
+          {/* <div className="relative">
 
             <div className="space-y-4 blur-sm opacity-40 select-none pointer-events-none grayscale">
               {filteredCandidates.slice(1, 3).map((c) => (
@@ -1439,10 +1555,10 @@ const formatDate = (date?: any) => {
                   key={c.id}
                   className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
                 >
-                  {/* Checkbox */}
+                 
                         <input type="checkbox" className="mt-2 md:mt-0" />
 
-                        {/* MAIN INFO */}
+                        
                         <div className="flex-1 flex flex-col gap-2">
                           <h3
                             onClick={() => {
@@ -1462,7 +1578,7 @@ const formatDate = (date?: any) => {
                             </h3>
                           </h3>
 
-                          {/* Experience, salary, location */}
+                          
                           <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
                             <span>
                               <Highlight text={c.experience} />
@@ -1484,7 +1600,7 @@ const formatDate = (date?: any) => {
                           </div>
                         </div>
 
-                        {/* RIGHT ACTION PANEL */}
+                        
                         <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
                           <img
                             src={
@@ -1517,7 +1633,7 @@ const formatDate = (date?: any) => {
               ))}
             </div>
 
-            {/* 🔐 UNLOCK OVERLAY */}
+           
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="bg-white rounded-xl shadow-xl p-6 text-center w-[350px]">
 
@@ -1538,7 +1654,7 @@ const formatDate = (date?: any) => {
               </div>
             </div>
 
-          </div>
+          </div> */}
 
         </main>
         ) : (
