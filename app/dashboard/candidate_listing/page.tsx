@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
@@ -65,6 +66,7 @@ interface Candidate {
 
 export default function CandidatesPage() {
   const isSubscribed = false;
+  const [savedProfiles, setSavedProfiles] = useState<number[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -152,6 +154,48 @@ export default function CandidatesPage() {
         setLoading(false);
       });
   }, []);
+  const saveProfile = async (profileId: number) => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) {
+    alert("Please login first");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profile/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          profile: profileId,
+        }),
+      }
+    );
+
+    if (res.status === 400) {
+      const data = await res.json();
+
+      console.log(data.detail || "Profile already saved");
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error("Failed to save profile");
+    }
+
+    // saved state update
+    setSavedProfiles((prev) => [...prev, profileId]);
+
+    console.log("Profile saved successfully");
+  } catch (err) {
+    console.error("Error saving profile:", err);
+  }
+};
 const formatDate = (date?: any) => {
   if (!date) return "";
 
@@ -362,26 +406,6 @@ const formatDate = (date?: any) => {
 
   setAllCompanies(Array.from(set));
 }, [candidates]);
-const filteredCompanies =
-  searchCompany.trim() === ""
-    ? allCompanies.slice(0, 10)
-    : allCompanies
-        .filter((company) =>
-          company
-            .toLowerCase()
-            .includes(searchCompany.toLowerCase())
-        )
-        .sort((a, b) => {
-          const q = searchCompany.toLowerCase();
-
-          const aStarts = a.toLowerCase().startsWith(q);
-          const bStarts = b.toLowerCase().startsWith(q);
-
-          if (aStarts && !bStarts) return -1;
-          if (!aStarts && bStarts) return 1;
-
-          return a.localeCompare(b);
-        });
 const toggleCompany = (company: string) => {
   const exists = filters.currentCompany.includes(company);
 
@@ -413,104 +437,6 @@ const toggleCompany = (company: string) => {
       />
     );
   };
-
-  const renderCandidateCard = (c: Candidate) => (
-    <div
-      key={c.id}
-      className={`bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4 transition-all duration-300 ${selectedCandidate?.id === c.id
-        ? "border-l-4 border-l-blue-500 bg-blue-50"
-        : "border-l-4 border-l-transparent"
-        }`}
-    >
-      <input type="checkbox" className="mt-2 md:mt-0" />
-
-      <div className="flex-1 flex flex-col gap-2">
-        <h3
-          onClick={() => {
-            setSelectedCandidate(c);
-            setViewedCandidateIds((prev) =>
-              prev.includes(c.id) ? prev : [...prev, c.id]
-            );
-          }}
-          className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
-        >
-          {viewedCandidateIds.includes(c.id) && (
-            <CheckSquare size={16} className="text-blue-600" />
-          )}
-          <span className="font-semibold text-gray-900">
-            <Highlight text={c.full_name} />
-          </span>
-        </h3>
-
-        <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
-          <span>
-            <Highlight text={c.experience} />
-          </span>
-          <span>
-            <Highlight text={c.current_salary} />
-          </span>
-          {c.expected_salary && (
-            <span>
-              Expected: <Highlight text={c.expected_salary} />
-            </span>
-          )}
-          <span>
-            <Highlight text={c.city?.name} />, <Highlight text={c.state?.name} />
-          </span>
-        </div>
-
-        {c.notice_period && (
-          <p className="text-xs text-gray-500">
-            Notice period: <Highlight text={c.notice_period} />
-          </p>
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          {c.skills?.slice(0, 6).map((s, i) => (
-            <span
-              key={i}
-              className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
-            >
-              <Highlight text={s.name} />
-            </span>
-          ))}
-        </div>
-
-        <p className="text-xs text-blue-600 mt-1 cursor-pointer">
-          View similar profiles
-        </p>
-      </div>
-
-      <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
-        <img
-          src={
-            c.profile_image
-              ? `${process.env.NEXT_PUBLIC_URL}${c.profile_image}`
-              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                c.full_name
-              )}`
-          }
-          alt={c.full_name}
-          className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
-        />
-
-        <p className="text-xs text-gray-500 flex items-center gap-1">
-          <Mail size={14} /> <Highlight text={c.email} />
-        </p>
-
-        {c.resume && (
-          <a
-            href={`${process.env.NEXT_PUBLIC_URL}${c.resume}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
-          >
-            <FileText size={14} /> View CV
-          </a>
-        )}
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
@@ -957,6 +883,7 @@ const toggleCompany = (company: string) => {
           </details>
         </aside>
 
+      {/* mobile filter */}
         <div
           className={`fixed inset-0 bg-black/40 z-50 md:hidden transition-transform ${showFilters ? "translate-x-0" : "translate-x-full"
             }`}
@@ -1392,13 +1319,17 @@ const toggleCompany = (company: string) => {
             {/* FIRST 1 CANDIDATE */}
                {filteredCandidates.length > 0 ? (
             <>
-              {filteredCandidates.slice(0, 10).map((c) => (
+              {filteredCandidates.slice(0, 10).map((c) => {
+
+                const isSaved = savedProfiles.includes(c.id);
+
+                return (
                 <div
                 key={c.id}
                 className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
                 >
                 {/* Checkbox */}
-                <input type="checkbox" className="mt-2 md:mt-0" />
+                {/* <input type="checkbox" className="mt-2 md:mt-0" /> */}
 
                 {/* MAIN INFO */}
                 <div className="flex-1 flex flex-col gap-2">
@@ -1406,7 +1337,10 @@ const toggleCompany = (company: string) => {
                 {/* NAME */}
                 <h3
                   onClick={() => {
-                    setSelectedCandidate(c);
+                    window.open(
+                      `/dashboard/candidate_listing/candidate_detail/${c.id}`,
+                      "_blank"
+                    );
 
                     setViewedCandidateIds((prev) =>
                       prev.includes(c.id) ? prev : [...prev, c.id]
@@ -1506,9 +1440,25 @@ const toggleCompany = (company: string) => {
                       <FileText size={14} /> View CV
                     </a>
                   )}
+                  <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
+
+                  <button
+                  disabled={isSaved}
+                  onClick={() => saveProfile(c.id)}
+                  className={`px-3 py-1 rounded text-sm ${
+                    isSaved
+                      ? "bg-green-100 text-green-700"
+                      : "bg-blue-600 text-white"
+                  }`}
+                >
+                  {isSaved ? "Saved" : "Save Profile"}
+                </button>
+
+                </div>
                 </div>
               </div>
-              ))}
+              );
+              })}
             </>
           ) : (
             <div className="flex items-center justify-center w-full py-12">
@@ -1555,10 +1505,10 @@ const toggleCompany = (company: string) => {
                   key={c.id}
                   className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
                 >
-                 
+
                         <input type="checkbox" className="mt-2 md:mt-0" />
 
-                        
+
                         <div className="flex-1 flex flex-col gap-2">
                           <h3
                             onClick={() => {
@@ -1660,312 +1610,9 @@ const toggleCompany = (company: string) => {
         ) : (
           /*DETAIL VIEW  */
           <main className="col-span-12 md:col-span-9">
-            <CandidateDetail
-              candidate={selectedCandidate!}
-              candidates={candidates}
-              search={search}
-              onBack={() => setSelectedCandidate(null)}
-              onSelect={setSelectedCandidate}
-            />
           </main>
         )}
       </div>
     </div>
-  );
-}
-
-// Candidate Detail page
-
-function CandidateDetail({
-  candidate,
-  candidates,
-  search,
-  onBack,
-  onSelect,
-}: {
-  candidate: Candidate;
-  candidates: Candidate[];
-  search: string;
-  onBack: () => void;
-  onSelect: (c: Candidate) => void;
-}) {
-  const cleanSearch = search.trim().replace(/\s+/g, " ");
-  const educations = candidate.educations ?? [];
-const experiences = candidate.experiences ?? [];
-const certifications = candidate.certifications ?? [];
-const skills = candidate.skills ?? [];
-  const formatSalary = (value?: string | number) => {
-    if (!value) return "-";
-    return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
-  };
-  const HighlightText = ({ text = "" }: { text?: string }) => {
-    if (!cleanSearch) return <>{text}</>;
-
-    return (
-      <Highlighter
-        searchWords={cleanSearch.split(" ")}
-        autoEscape={true}
-        textToHighlight={String(text)}
-        highlightClassName="bg-yellow-200 px-1 rounded font-semibold"
-      />
-    );
-  };
-
-  return (
-    <div className="grid grid-cols-12 gap-6 px-4 lg:px-8 py-6 bg-gray-50 min-h-screen">
-  {/* LEFT PROFILE */}
-  <div className="col-span-12 lg:col-span-8 bg-white rounded-2xl p-6 shadow-md">
-    
-    <button
-      onClick={onBack}
-      className="text-blue-600 text-sm mb-6 hover:underline"
-    >
-      ← Back to profiles
-    </button>
-
-    {/* Header */}
-    <div className="flex flex-col sm:flex-row gap-5 items-start">
-      <img
-        src={
-          candidate.profile_image
-            ? `${process.env.NEXT_PUBLIC_URL}${candidate.profile_image}`
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                candidate.full_name
-              )}`
-        }
-        alt={candidate.full_name}
-        className="w-20 h-20 rounded-full object-cover border shadow-sm"
-      />
-
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">
-          <HighlightText text={candidate.full_name} />
-        </h2>
-
-        <p className="text-sm text-gray-600 mt-1">
-          <HighlightText text={candidate.experience} /> •{" "}
-          <span className="font-medium text-gray-800">
-            <HighlightText text={formatSalary(candidate.current_salary)} />
-          </span>
-        </p>
-
-        <p className="text-sm text-gray-500 mt-1">
-          <HighlightText text={candidate.city?.name} />,{" "}
-          <HighlightText text={candidate.state?.name} />
-        </p>
-        <p className="text-sm text-gray-500 mt-1">
-         Gender : <HighlightText
-                    text={
-                      candidate.gender
-                        ? candidate.gender.charAt(0).toUpperCase() + candidate.gender.slice(1)
-                        : ""
-                    }
-                  />
-        </p>
-      </div>
-    </div>
-
-    {/* Divider */}
-    <div className="border-t my-6" />
-
-    <div>
-       <h3 className="font-semibold text-gray-900 mb-3">
-        Professional Summary
-      </h3>
-      <div
-         className="text-gray-700 leading-relaxed prose max-w-none
-          [&_ul]:list-disc [&_ul]:pl-6
-           [&_ol]:list-decimal [&_ol]:pl-6
-          [&_li]:mb-1"
-        dangerouslySetInnerHTML={{ __html: candidate.professional_summary
-        || "" }}
-      />
-     </div>
-     {/* Divider */}
-    <div className="border-t my-6" />
-
-    {/* Compensation */}
-    <h3 className="text-lg font-semibold text-gray-800 mb-3">
-      Compensation
-    </h3>
-
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-      <div className="bg-gray-50 p-3 rounded-lg">
-        <p className="text-gray-500">Current</p>
-        <p className="font-medium text-gray-800">
-          <HighlightText text={formatSalary(candidate.current_salary)} />
-        </p>
-      </div>
-
-      <div className="bg-gray-50 p-3 rounded-lg">
-        <p className="text-gray-500">Expected</p>
-        <p className="font-medium text-gray-800">
-          <HighlightText text={formatSalary(candidate.expected_salary)} />
-        </p>
-      </div>
-
-      <div className="bg-gray-50 p-3 rounded-lg">
-        <p className="text-gray-500">Notice Period</p>
-        <p className="font-medium text-gray-800">
-          <HighlightText text={candidate.notice_period} />
-        </p>
-      </div>
-    </div>
-     {/* Skills */}
-    <div className="border-t my-6" />
-    <h3 className="text-lg font-semibold mb-3">Skills</h3>
-
-    <div className="flex flex-wrap gap-2">
-      {candidate.skills?.map((s, i) => (
-        <span
-          key={i}
-          className="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-medium"
-        >
-          <HighlightText text={s.name} />
-        </span>
-      ))}
-    </div>
- {/* Experience */}
-    {experiences?.length > 0 && (
-      <>
-        <div className="border-t my-6" />
-        <h3 className="text-lg font-semibold mb-3">Experience</h3>
-
-        <div className="space-y-4">
-          {experiences.map((ex, i) => (
-            <div key={i} className="p-4 border rounded-lg">
-              <h4 className="font-medium text-gray-900">{ex.job_title}</h4>
-              <p className="text-purple-600 font-medium"> {ex.category}</p>
-              <p className="text-purple-600 font-medium">{ex.company}</p>
-
-              <p className="text-sm text-gray-500">
-                {ex.start_date} - {ex.end_date || "Present"}
-              </p>
-
-              <p className="text-sm text-gray-700 mt-2">
-                {ex.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </>
-    )}
-    {/* Education */}
-    {educations?.length > 0 && (
-      <>
-        <div className="border-t my-6" />
-        <h3 className="text-lg font-semibold mb-3">Education</h3>
-
-        <div className="space-y-4">
-          {educations.map((e, i) => (
-            <div key={i} className="p-4 border rounded-lg">
-              <h4 className="font-medium text-gray-900">
-                {e.education_detail?.name}
-              </h4>
-              <p className="text-green-600 font-medium">
-                {e.course_detail?.name}
-              </p>
-              <p className="text-gray-600">{e.institution}</p>
-
-              <div className="text-sm text-gray-500 mt-1">
-                {e.start_year} - {e.end_year} • {e.percentage} ({e.score_type})
-              </div>
-            </div>
-          ))}
-        </div>
-      </>
-    )}
-
-{/* Certifications */}
-{certifications.length > 0 && (
-  <>
-    <div className="border-t my-6" />
-    <h3 className="text-lg font-semibold mb-3">Certifications</h3>
-
-    <div className="space-y-4">
-      {certifications.map((c, i) => (
-        <div
-          key={i}
-          className="p-4 border rounded-lg flex justify-between items-center"
-        >
-          <div>
-            <h4 className="font-medium text-gray-900">
-              <HighlightText text={c.name} />
-            </h4>
-
-            {c.issuer && (
-              <p className="text-sm text-gray-600">
-                <HighlightText text={c.issuer} />
-              </p>
-            )}
-          </div>
-
-          {c.year && (
-            <span className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600">
-              {c.year}
-            </span>
-          )}
-        </div>
-      ))}
-    </div>
-  </>
-)}
-    {/* Contact */}
-    <div className="border-t my-6" />
-    <h3 className="text-lg font-semibold mb-3">Contact</h3>
-
-    <div className="space-y-2 text-sm">
-      <p className="flex items-center gap-2">
-        <Mail size={14} />
-        <span className="text-gray-700 break-all">
-          <HighlightText text={candidate.email} />
-        </span>
-      </p>
-
-      <p className="flex items-center gap-2">
-        <Phone size={14} />
-        <span className="text-gray-700">
-          +<HighlightText text={candidate.phone_code} />{" "}
-          <HighlightText text={candidate.phone} />
-        </span>
-      </p>
-    </div>
-
-    {/* Resume Button */}
-    {candidate.resume && (
-      <button
-        onClick={() =>
-          window.open(
-            `${process.env.NEXT_PUBLIC_URL}${candidate.resume}`,
-            "_blank"
-          )
-        }
-        className="mt-5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
-      >
-        View CV
-      </button>
-    )}
-  </div>
-
-  {/* RIGHT PANEL */}
-  <div className="col-span-12 lg:col-span-4 bg-white rounded-2xl p-5 shadow-md">
-    <h3 className="text-lg font-semibold mb-4">Similar Profiles</h3>
-
-    <div className="space-y-3">
-      {candidates
-        .filter((c) => c.id !== candidate.id)
-        .slice(0, 10)
-        .map((c) => (
-          <div
-            key={c.id}
-            onClick={() => onSelect(c)}
-            className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition border"
-          >
-            <HighlightText text={c.full_name} />
-          </div>
-        ))}
-    </div>
-  </div>
-</div>
   );
 }
