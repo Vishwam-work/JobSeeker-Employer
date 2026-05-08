@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, FileText, Mail, CheckSquare, ChevronDown } from "lucide-react";
+import { Phone, FileText, Mail, CheckSquare, ChevronDown, Bookmark,Check  } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
 import { Label } from "@/components/ui/label";
@@ -77,6 +77,8 @@ export default function CandidatesPage() {
   );
   const [allCompanies, setAllCompanies] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalProfiles, setTotalProfiles] = useState(0);
   const [searchCompany, setSearchCompany] = useState("");
   const experienceList = ["fresher","1-2", "3-5", "6-10", "10+"];
   const [filters, setFilters] = useState({
@@ -128,33 +130,116 @@ export default function CandidatesPage() {
     });
     setSearch("");
   };
-
+const limit = 2;
+const totalPages = Math.ceil(totalProfiles / limit);
   const formatSalary = (value: string | number) => {
   if (!value) return "-";
   return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
 };
   const cleanSearch = search.trim().replace(/\s+/g, " ");
 
-  useEffect(() => {
-    const token = localStorage.getItem("employeer_token");
-    if (!token) return;
+// fetch with pagination
+useEffect(() => {
+  const token = localStorage.getItem("employeer_token");
+  if (!token) return;
 
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`,
+  setLoading(true);
+
+  fetch(
+    `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/?page=${page}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("API DATA:", data);
+
+      // ✅ FIX HERE
+      if (Array.isArray(data)) {
+        setCandidates(data);
+        setTotalProfiles(data.length);
+      } else {
+        setCandidates([]);
+        setTotalProfiles(0);
+      }
+
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.error(err);
+      setLoading(false);
+    });
+}, [page]);
+
+  // Save profile function
+
+
+useEffect(() => {
+  fetchSavedProfiles();
+}, []);
+
+const fetchSavedProfiles = async () => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles-all/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Candidate data:", data);
-        setCandidates(Array.isArray(data) ? data : []);
-        setLoading(false);
-      });
-  }, []);
-  const saveProfile = async (profileId: number) => {
+    );
+
+    const data = await res.json();
+
+    // only profile ids store karo
+    const ids = data.map((item: any) => item.profile.id);
+
+    setSavedProfiles(ids);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+useEffect(() => {
+  fetchViewedProfiles();
+}, []);
+
+const fetchViewedProfiles = async () => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/view-profile/`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch viewed profiles");
+    }
+
+    const data = await res.json();
+
+    setViewedCandidateIds(data.profile_ids || []);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const saveProfile = async (profileId: number) => {
   const token = localStorage.getItem("employeer_token");
 
   if (!token) {
@@ -179,8 +264,7 @@ export default function CandidatesPage() {
 
     if (res.status === 400) {
       const data = await res.json();
-
-      console.log(data.detail || "Profile already saved");
+      console.log(data.detail || "Already saved");
       return;
     }
 
@@ -188,7 +272,7 @@ export default function CandidatesPage() {
       throw new Error("Failed to save profile");
     }
 
-    // saved state update
+    // direct id add
     setSavedProfiles((prev) => [...prev, profileId]);
 
     console.log("Profile saved successfully");
@@ -196,6 +280,94 @@ export default function CandidatesPage() {
     console.error("Error saving profile:", err);
   }
 };
+
+const removeSavedProfile = async (profileId: number) => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    // pehle saved record find karo
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles-all/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const savedData = await res.json();
+
+    const record = savedData.find(
+      (item: any) => item.profile.id === profileId
+    );
+
+    if (!record) return;
+
+    // delete api
+    const delRes = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles/${record.id}/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!delRes.ok && delRes.status !== 204) {
+      throw new Error("Failed to remove profile");
+    }
+
+    // state update
+    setSavedProfiles((prev) =>
+      prev.filter((id) => id !== profileId)
+    );
+
+    console.log("Profile removed");
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
+const viewProfile = async (profileId: number) => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/view-profile/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          profile: profileId,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to store viewed profile");
+    }
+
+    const data = await res.json();
+
+    // backend se latest ids
+    setViewedCandidateIds(data.profile_ids || []);
+
+    console.log("Viewed profile stored");
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// Date formatting with future date check
 const formatDate = (date?: any) => {
   if (!date) return "";
 
@@ -208,6 +380,8 @@ const formatDate = (date?: any) => {
 
   return parsed.format("DD/MM/YYYY");
 };
+
+// Filter candidates based on search and filters
   const filteredCandidates = candidates.filter((c) => {
     // 1. Global Search (Search Bar)
     const q = search.trim().toLowerCase();
@@ -406,6 +580,8 @@ const formatDate = (date?: any) => {
 
   setAllCompanies(Array.from(set));
 }, [candidates]);
+
+// Toggle company filter
 const toggleCompany = (company: string) => {
   const exists = filters.currentCompany.includes(company);
 
@@ -421,6 +597,8 @@ const toggleCompany = (company: string) => {
     });
   }
 };
+
+// Highlight component for search terms
   type HighlightProps = {
     text?: string;
   };
@@ -1318,16 +1496,37 @@ const toggleCompany = (company: string) => {
 
             {/* FIRST 1 CANDIDATE */}
                {filteredCandidates.length > 0 ? (
-            <>
-              {filteredCandidates.slice(0, 10).map((c) => {
+               <>
+              {filteredCandidates.map((c) => {
 
-                const isSaved = savedProfiles.includes(c.id);
+               const isSaved = savedProfiles.includes(c.id);
 
                 return (
                 <div
-                key={c.id}
-                className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
-                >
+                    key={c.id}
+                    className="relative bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
+                  >
+                    {viewedCandidateIds.includes(c.id) && (
+                    <div className="absolute top-0 left-0 z-20 group">
+
+                      {/* Blue corner triangle */}
+                      <div className="w-0 h-0 border-t-[35px] border-t-blue-700 border-r-[35px] border-r-transparent" />
+
+                      {/* White Tick */}
+                      <Check
+                        size={14}
+                        className="absolute top-1 left-1 text-white font-bold stroke-[3]"
+                      />
+
+                      {/* Hover Tooltip */}
+                      <div className="absolute left-2 top-8 hidden group-hover:block">
+                        <div className="bg-white border border-gray-300 shadow-lg px-3 py-2 text-xs rounded whitespace-nowrap text-gray-700">
+                          Profile viewed by you
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
                 {/* Checkbox */}
                 {/* <input type="checkbox" className="mt-2 md:mt-0" /> */}
 
@@ -1336,21 +1535,16 @@ const toggleCompany = (company: string) => {
 
                 {/* NAME */}
                 <h3
-                  onClick={() => {
-                    window.open(
-                      `/dashboard/candidate_listing/candidate_detail/${c.id}`,
-                      "_blank"
-                    );
+                onClick={() => {
+                  window.open(
+                    `/dashboard/candidate_listing/candidate_detail/${c.id}`,
+                    "_blank"
+                  );
 
-                    setViewedCandidateIds((prev) =>
-                      prev.includes(c.id) ? prev : [...prev, c.id]
-                    );
-                  }}
+                  viewProfile(c.id);
+                }}
                   className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
                 >
-                  {viewedCandidateIds.includes(c.id) && (
-                    <CheckSquare size={16} className="text-blue-600" />
-                  )}
 
                   <span className="font-semibold">
                     <Highlight text={c.full_name} />
@@ -1408,7 +1602,32 @@ const toggleCompany = (company: string) => {
                     ))}
                   </div>
                 )}
+                <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  isSaved
+                    ? removeSavedProfile(c.id)
+                    : saveProfile(c.id)
+                }
+                className={`flex items-center gap-2 self-end ${
+                  isSaved
+                    ? "text-green-600"
+                    : "text-gray-400 hover:text-green-500"
+                }`}
+              >
+                <Bookmark
+                  className={`w-4 h-4 transition-all duration-300 ${
+                    isSaved
+                      ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                      : ""
+                  }`}
+                />
 
+                <span className="text-sm font-medium">
+                  {isSaved ? "Saved" : "Save"}
+                </span> 
+                </Button>
               </div>
 
 
@@ -1440,30 +1659,65 @@ const toggleCompany = (company: string) => {
                       <FileText size={14} /> View CV
                     </a>
                   )}
-                  <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
-
-                  <button
-                  disabled={isSaved}
-                  onClick={() => saveProfile(c.id)}
-                  className={`px-3 py-1 rounded text-sm ${
-                    isSaved
-                      ? "bg-green-100 text-green-700"
-                      : "bg-blue-600 text-white"
-                  }`}
-                >
-                  {isSaved ? "Saved" : "Save Profile"}
-                </button>
-
-                </div>
                 </div>
               </div>
               );
               })}
+              {/* Pagination */}
+          <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
+            {/* Previous */}
+            <button
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
+              className={`px-4 py-2 rounded-lg border text-sm font-medium transition ${
+                page === 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+            >
+              Previous
+            </button>
+
+            {/* Page Numbers */}
+            {[...Array(totalPages)].map((_, index) => {
+              const pageNumber = index + 1;
+
+              return (
+                <button
+                  key={pageNumber}
+                  onClick={() => setPage(pageNumber)}
+                  className={`w-10 h-10 rounded-lg border text-sm font-medium transition ${
+                    page === pageNumber
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+
+            {/* Next */}
+            <button
+              onClick={() =>
+                setPage((prev) =>
+                  prev < totalPages ? prev + 1 : prev
+                )
+              }
+              disabled={page === totalPages}
+              className={`px-4 py-2 rounded-lg border text-sm font-medium transition ${
+                page === totalPages
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+            >
+              Next
+            </button>
+          </div>
             </>
           ) : (
             <div className="flex items-center justify-center w-full py-12">
               <div className="bg-white border rounded-2xl shadow-sm p-10 text-center max-w-sm w-full">
-                
                 {/* Icon */}
                 <div className="w-14 h-14 mx-auto flex items-center justify-center rounded-full bg-gray-100 mb-4">
                   <svg
