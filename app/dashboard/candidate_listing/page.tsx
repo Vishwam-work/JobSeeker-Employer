@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, FileText, Mail, CheckSquare, Briefcase, DollarSign, MapPin } from "lucide-react";
+import { Phone, FileText, Mail, CheckSquare, ChevronDown, Bookmark,Check ,ChevronLeft,ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
@@ -64,6 +66,7 @@ interface Candidate {
 
 export default function CandidatesPage() {
   const isSubscribed = false;
+  const [savedProfiles, setSavedProfiles] = useState<number[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -72,55 +75,183 @@ export default function CandidatesPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
   );
+  const [allCompanies, setAllCompanies] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalProfiles, setTotalProfiles] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchCompany, setSearchCompany] = useState("");
+  const experienceList = [
+  "fresher",
+  "1-2",
+  "3-5",
+  "6-10",
+  "10-15",
+  "15-20",
+  "20+",
+];
 
+const salaryRanges = [
+  "0-3 LPA",
+  "3-6 LPA",
+  "6-10 LPA",
+  "10-15 LPA",
+  "15-20 LPA",
+  "20+ LPA",
+];
+  const [states, setStates] = useState<
+  { id: number; name: string }[]
+  >([]);
+  const [stateSearch, setStateSearch] = useState("");
+const [degreeOptions, setDegreeOptions] = useState<
+  { label: string; value: string }[]
+>([]);
+const [degreeSearch, setDegreeSearch] = useState("");
+const [jobCategoryOptions, setJobCategoryOptions] = useState<
+  { label: string; value: string }[]
+>([]);
+const [jobCategorySearch, setJobCategorySearch] = useState("");
   const [filters, setFilters] = useState({
-    hideProfiles: false,
-    premiumOnly: false,
     keywords: "",
-    currentCompany: "",
+    currentCompany: [] as string[], 
     locationSearch: "",
     locations: [] as string[],
     minExperience: "",
     maxExperience: "",
     minSalary: "",
     maxSalary: "",
-    designation: "",
     department: [] as string[],
-    industry: [] as string[],
     noticePeriod: [] as string[],
     gender: "",
-    professional_summary: "",
-    minAge: "",
-    maxAge: "",
     degree: [] as string[],
-    college: [] as string[],
+    degreeSearch: "",
+    experience: [] as string[],
+    salary: [] as string[],
   });
-
-  const clearFilters = () => {
-    setFilters({
-      hideProfiles: false,
-      premiumOnly: false,
-      keywords: "",
-      currentCompany: "",
-      locationSearch: "",
-      locations: [],
-      minExperience: "",
-      maxExperience: "",
-      minSalary: "",
-      maxSalary: "",
-      designation: "",
-      department: [],
-      industry: [],
-      noticePeriod: [],
-      gender: "",
-      professional_summary: "",
-      minAge: "",
-      maxAge: "",
-      degree: [],
-      college: [],
-    });
-    setSearch("");
+const [appliedFilters, setAppliedFilters] = useState(filters);
+  //  Clear Filters function
+const clearFilters = () => {
+  const emptyFilters = {
+    keywords: "",
+    currentCompany: [],
+    locationSearch: "",
+    locations: [],
+    minExperience: "",
+    maxExperience: "",
+    minSalary: "",
+    maxSalary: "",
+    department: [],
+    noticePeriod: [],
+    gender: "",
+    degree: [],
+    degreeSearch: "",
+    experience: [],
+    salary: [],
   };
+
+  setFilters(emptyFilters);
+  setAppliedFilters(emptyFilters);
+  setSearch("");
+  setPage(1);
+};
+
+  // Add this function above your component or inside the component
+
+const getJobCategoryOptions = async (inputValue: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category?q=${inputValue || ""}`
+    );
+
+    const data = await res.json();
+
+    return data.map((category: any) => ({
+      label: category.name,
+      value: category.name,
+    }));
+  } catch (error) {
+    console.error("Error fetching job categories:", error);
+    return [];
+  }
+};
+// Load categories when component mounts
+useEffect(() => {
+  const loadJobCategories = async () => {
+    const options = await getJobCategoryOptions("");
+    setJobCategoryOptions(options);
+  };
+
+  loadJobCategories();
+}, []);
+useEffect(() => {
+  const fetchStates = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/states`
+      );
+      const data = await res.json();
+      setStates(data);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+  };
+
+  fetchStates();
+}, []);
+// Use this exact function instead of your current loadCategories
+
+const loadCategories = async (inputValue: string) => {
+  const token =
+    localStorage.getItem("user_token") ||
+    localStorage.getItem("employeer_token");
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/categories/?q=${inputValue}`,
+      {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    console.log("Categories API Response:", data);
+
+    // Handle paginated response
+    const results = Array.isArray(data)
+      ? data
+      : Array.isArray(data.results)
+      ? data.results
+      : [];
+
+    return results.map((item: any) => ({
+      label: item.name,
+      value: item.name,
+    }));
+  } catch (error) {
+    console.error("Error loading categories:", error);
+    return [];
+  }
+};
+
+// Load categories on mount
+useEffect(() => {
+  const fetchDegrees = async () => {
+    const options = await loadCategories("");
+    setDegreeOptions(options);
+    console.log("Degree Options:", options);
+  };
+
+  fetchDegrees();
+}, []);
 
   const formatSalary = (value: string | number) => {
   if (!value) return "-";
@@ -128,37 +259,284 @@ export default function CandidatesPage() {
 };
   const cleanSearch = search.trim().replace(/\s+/g, " ");
 
-  useEffect(() => {
-    const token = localStorage.getItem("employeer_token");
-    if (!token) return;
+// fetch with pagination
+useEffect(() => {
+  const token = localStorage.getItem("employeer_token");
+  if (!token) return;
 
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`,
+  setLoading(true);
+
+  const params = new URLSearchParams();
+  params.append("page", page.toString());
+
+  // keywords
+  if (appliedFilters.keywords) {
+    params.append("keywords", appliedFilters.keywords);
+  }
+
+  // location
+  if (appliedFilters.locationSearch) {
+    params.append("location", appliedFilters.locationSearch);
+  }
+
+  // current company
+  appliedFilters.currentCompany.forEach((company) => {
+    params.append("current_company", company);
+  });
+
+  // experience
+ appliedFilters.experience.forEach((exp) => {
+  params.append("experience", exp);
+});
+
+// Salary filter
+appliedFilters.salary.forEach((sal) => {
+  params.append("salary_range", sal);
+});
+
+  // department
+  appliedFilters.department.forEach((dept) => {
+    params.append("category", dept);
+  });
+
+  // gender
+  if (appliedFilters.gender) {
+    params.append("gender", appliedFilters.gender);
+  }
+
+  // degree
+  appliedFilters.degree.forEach((degree) => {
+    params.append("degree", degree);
+  });
+
+  const url = `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/?${params.toString()}`;
+
+  fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+  if (Array.isArray(data.results)) {
+    setCandidates(data.results);
+    setTotalProfiles(data.count || 0);
+
+    const pageSize = data.results.length;
+
+    setTotalPages(Math.ceil((data.count || 0) / pageSize));
+  } else {
+    setCandidates([]);
+    setTotalProfiles(0);
+    setTotalPages(1);
+  }
+
+  setLoading(false);
+})
+    .catch((err) => {
+      console.error(err);
+      setLoading(false);
+    });
+}, [page, appliedFilters]);
+
+// Apply Filters function
+const applyFilters = () => {
+  setPage(1); // first page pe jao
+  setAppliedFilters({ ...filters });
+};
+
+  // Save profile function
+useEffect(() => {
+  fetchSavedProfiles();
+}, []);
+
+const fetchSavedProfiles = async () => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles-all/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Candidate data:", data);
-        setCandidates(Array.isArray(data) ? data : []);
-        setLoading(false);
-      });
-  }, []);
-const formatDate = (date?: any) => {
-  if (!date) return "";
+    );
 
-  const parsed = dayjs(date);
+    const data = await res.json();
 
-  // ❗ future date check
-  if (!parsed.isValid() || parsed.year() > dayjs().year()) {
-    return "Invalid Date";
+    // only profile ids store karo
+    const ids = data.map((item: any) => item.profile.id);
+
+    setSavedProfiles(ids);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+useEffect(() => {
+  fetchViewedProfiles();
+}, []);
+
+const fetchViewedProfiles = async () => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/view-profile/`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch viewed profiles");
+    }
+
+    const data = await res.json();
+
+    setViewedCandidateIds(data.profile_ids || []);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const saveProfile = async (profileId: number) => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) {
+    alert("Please login first");
+    return;
   }
 
-  return parsed.format("DD/MM/YYYY");
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profile/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          profile: profileId,
+        }),
+      }
+    );
+
+    if (res.status === 400) {
+      const data = await res.json();
+      console.log(data.detail || "Already saved");
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error("Failed to save profile");
+    }
+
+    // direct id add
+    setSavedProfiles((prev) => [...prev, profileId]);
+
+    console.log("Profile saved successfully");
+  } catch (err) {
+    console.error("Error saving profile:", err);
+  }
 };
+
+const removeSavedProfile = async (profileId: number) => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    // pehle saved record find karo
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles-all/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const savedData = await res.json();
+
+    const record = savedData.find(
+      (item: any) => item.profile.id === profileId
+    );
+
+    if (!record) return;
+
+    // delete api
+    const delRes = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles/${record.id}/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!delRes.ok && delRes.status !== 204) {
+      throw new Error("Failed to remove profile");
+    }
+
+    // state update
+    setSavedProfiles((prev) =>
+      prev.filter((id) => id !== profileId)
+    );
+
+    console.log("Profile removed");
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
+const viewProfile = async (profileId: number) => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/view-profile/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          profile: profileId,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to store viewed profile");
+    }
+
+    const data = await res.json();
+
+    // backend se latest ids
+    setViewedCandidateIds(data.profile_ids || []);
+
+    console.log("Viewed profile stored");
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// Filter candidates based on search and filters
   const filteredCandidates = candidates.filter((c) => {
     // 1. Global Search (Search Bar)
     const q = search.trim().toLowerCase();
@@ -183,7 +561,9 @@ const formatDate = (date?: any) => {
         matches(c.city?.name) ||
         matches(c.state?.name) ||
         matches(c.country?.name) ||
-        (c.skills?.some((s) => matches(s.name)) ?? false) ||
+        (c.skills?.some((s) =>
+          (s?.name || s)?.toString().toLowerCase().includes(q)
+        ) ?? false) ||
         (c.certifications?.some(
           (cert) =>
             matches(cert.name) || matches(cert.issuer) || matches(cert.year)
@@ -202,120 +582,173 @@ const formatDate = (date?: any) => {
           (ex) => matches(ex.designation) || matches(ex.company)
         ) ?? false);
     }
-
     // 2. Specific Filters
 
-    // Hide Profiles
-    if (filters.hideProfiles && viewedCandidateIds.includes(c.id)) return false;
-
-    // Premium Institute
-    if (filters.premiumOnly) {
-      const premiumKeywords = ["iit", "iim", "nit", "bits", "xlri", "isb", "iiit"];
-      const isPremium = c.educations?.some((e) => // Use c.educations if available from API (check interface, used in detail view, so assumed exists in list OR detail)
-        premiumKeywords.some((pk) => e.institution?.toLowerCase().includes(pk))
-      );
-      // If educations is not in list view item, this might fail or be false. 
-      // Assuming 'profile-all' returns full nested objects as seen in CandidatesPage detail view logic.
-      if (!isPremium) return false;
-    }
-
     // Keywords
-    if (filters.keywords) {
-      const k = filters.keywords.toLowerCase();
+    if (appliedFilters.keywords) {
+      const k = appliedFilters.keywords.toLowerCase();
       const hasKeyword =
         c.skills?.some((s) => s.name.toLowerCase().includes(k)) ||
         c.full_name.toLowerCase().includes(k) ||
-        c.current_role?.toLowerCase().includes(k);
+        c.city?.name.toLowerCase().includes(k) ||
+        c.state?.name.toLowerCase().includes(k) ||
+        c.country?.name.toLowerCase().includes(k);
       if (!hasKeyword) return false;
     }
 
     // Current Company
-    if (filters.currentCompany) {
-      const company = filters.currentCompany.toLowerCase();
-      const hasCompany =
-        c.current_company?.toLowerCase().includes(company) ||
-        c.experiences?.some(ex => ex.company?.toLowerCase().includes(company) && (!ex.end_date || String(ex.end_date).toLowerCase() === 'present'));
-      if (!hasCompany) return false;
-    }
+      if (appliedFilters.currentCompany.length > 0) {
+        const normalize = (val: any) =>
+          val ? String(val).toLowerCase() : "";
+
+        const matchesCompany = appliedFilters.currentCompany.some((company) => {
+          const q = company.toLowerCase();
+
+          if (normalize(c.current_company).includes(q)) return true;
+
+          const currentExp = c.experiences?.find(
+            (ex: any) =>
+              !ex.end_date ||
+              normalize(ex.end_date) === "present"
+          );
+
+          return normalize(currentExp?.company).includes(q);
+        });
+
+        if (!matchesCompany) return false;
+      }
 
     // Location
-    if (filters.locations.length > 0) {
-      const locMatch = filters.locations.some(loc =>
-        c.city?.name.toLowerCase().includes(loc.toLowerCase()) ||
-        c.state?.name.toLowerCase().includes(loc.toLowerCase())
-      );
-      if (!locMatch) return false;
-    }
-    if (filters.locationSearch) {
-      const locS = filters.locationSearch.toLowerCase();
-      const locSearchMatch =
-        c.city?.name.toLowerCase().includes(locS) ||
-        c.state?.name.toLowerCase().includes(locS);
-      if (!locSearchMatch) return false;
-    }
+   if (appliedFilters.locations.length > 0) {
+  const stateMatch = appliedFilters.locations.some(
+    (stateName) =>
+      c.state?.name?.toLowerCase() ===
+      stateName.toLowerCase()
+  );
 
-    // Experience
-    const expVal = parseFloat(c.experience) || 0;
-    if (filters.minExperience && expVal < parseFloat(filters.minExperience)) return false;
-    if (filters.maxExperience && expVal > parseFloat(filters.maxExperience)) return false;
+  if (!stateMatch) return false;
+}
 
-    // Salary
-    const salVal = parseFloat(c.current_salary) || 0;
-    if (filters.minSalary && salVal < parseFloat(filters.minSalary)) return false;
-    if (filters.maxSalary && salVal > parseFloat(filters.maxSalary)) return false;
+  // filteredCandidates ke andar Experience Filter
+if (appliedFilters.experience.length > 0) {
+  const expVal = parseFloat(c.experience) || 0;
 
-    // Designation
-    if (filters.designation) {
-      const des = filters.designation.toLowerCase();
-      const matchesDes = c.current_role?.toLowerCase().includes(des) ||
-        c.experiences?.some(ex => ex.designation?.toLowerCase().includes(des));
-      if (!matchesDes) return false;
+  const matchesExperience = appliedFilters.experience.some((range) => {
+    if (range === "fresher") {
+      return expVal === 0;
     }
 
-    // Department (Search in rule)
-    if (filters.department.length > 0) {
-      const matchesDept = filters.department.some(dept =>
-        c.current_role?.toLowerCase().includes(dept.toLowerCase())
-      );
-      if (!matchesDept) return false;
+    if (range === "20+") {
+      return expVal >= 20;
     }
 
-    // Industry - Placeholder logic
-    if (filters.industry.length > 0) {
-      // checks against current company or role for now
-      const matchesInd = filters.industry.some(ind =>
-        c.current_role?.toLowerCase().includes(ind.toLowerCase()) ||
-        c.current_company?.toLowerCase().includes(ind.toLowerCase())
-      );
-      if (!matchesInd) return false;
+    const [min, max] = range.split("-").map(Number);
+    return expVal >= min && expVal <= max;
+  });
+
+  if (!matchesExperience) return false;
+}
+
+// Salary Filter
+if (appliedFilters.salary.length > 0) {
+  // Backend expected_salary ko rupees me store karta hai
+  // Example: 12 LPA = 1200000
+  const salVal = Number(c.expected_salary || 0);
+
+  const matchesSalary = appliedFilters.salary.some((range) => {
+    // "20+ LPA"
+    if (range === "20+ LPA") {
+      return salVal >= 20 * 100000;
     }
 
-    // Notice Period
-    if (filters.noticePeriod.length > 0) {
-      const matchesNP = filters.noticePeriod.some(np =>
-        c.notice_period?.toLowerCase() === np.toLowerCase() ||
-        c.notice_period?.toLowerCase().includes(np.toLowerCase())
-      );
-      if (!matchesNP) return false;
-    }
+    // "10-15 LPA" -> ["10", "15"]
+    const cleanedRange = range.replace(" LPA", "");
+    const [min, max] = cleanedRange.split("-").map(Number);
+
+    // Convert LPA to rupees
+    const minSalary = min * 100000;
+    const maxSalary = max * 100000;
+
+    return salVal >= minSalary && salVal <= maxSalary;
+  });
+
+  if (!matchesSalary) return false;
+}
+    // Department
+    if (appliedFilters.department.length > 0) {
+  const matchesDept = appliedFilters.department.some((dept) => {
+    const selectedCategory = dept.toLowerCase();
+
+    // Check all experiences.category
+    const categoryMatch =
+      c.experiences?.some(
+        (exp) =>
+          exp.category &&
+          exp.category.toLowerCase() === selectedCategory
+      ) ?? false;
+
+    // Optional fallback: current role contains selected category
+    const roleMatch =
+      c.current_role?.toLowerCase().includes(selectedCategory) ?? false;
+
+    return categoryMatch || roleMatch;
+  });
+
+  if (!matchesDept) return false;
+}
 
     // Gender
-    if (filters.gender) {
-      if ((c as any).gender?.toLowerCase() !== filters.gender.toLowerCase()) return false;
-    }
-
-    // Age
-    if (filters.minAge || filters.maxAge) {
-      const age = (c as any).age ? parseInt((c as any).age) : 0;
-      if (age > 0) {
-        if (filters.minAge && age < parseInt(filters.minAge)) return false;
-        if (filters.maxAge && age > parseInt(filters.maxAge)) return false;
-      }
+    if (appliedFilters.gender) {
+      if ((c as any).gender?.toLowerCase() !== appliedFilters.gender.toLowerCase()) return false;
     }
 
     return matchesSearch;
   });
+  useEffect(() => {
+  if (!candidates.length) return;
 
+  const set = new Set<string>();
+
+  const normalize = (val: any) =>
+    val ? String(val).trim() : "";
+
+  candidates.forEach((c) => {
+    if (c.current_company) {
+      set.add(normalize(c.current_company));
+    } else {
+      const currentExp = c.experiences?.find(
+        (ex: any) =>
+          !ex.end_date ||
+          String(ex.end_date).toLowerCase() === "present"
+      );
+
+      if (currentExp?.company) {
+        set.add(normalize(currentExp.company));
+      }
+    }
+  });
+
+  setAllCompanies(Array.from(set));
+}, [candidates]);
+
+// Toggle company filter
+const toggleCompany = (company: string) => {
+  const exists = filters.currentCompany.includes(company);
+
+  if (exists) {
+    setFilters({
+      ...filters,
+      currentCompany: filters.currentCompany.filter((c) => c !== company),
+    });
+  } else {
+    setFilters({
+      ...filters,
+      currentCompany: [...filters.currentCompany, company],
+    });
+  }
+};
+
+// Highlight component for search terms
   type HighlightProps = {
     text?: string;
   };
@@ -333,104 +766,6 @@ const formatDate = (date?: any) => {
     );
   };
 
-  const renderCandidateCard = (c: Candidate) => (
-    <div
-      key={c.id}
-      className={`bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4 transition-all duration-300 ${selectedCandidate?.id === c.id
-        ? "border-l-4 border-l-blue-500 bg-blue-50"
-        : "border-l-4 border-l-transparent"
-        }`}
-    >
-      <input type="checkbox" className="mt-2 md:mt-0" />
-
-      <div className="flex-1 flex flex-col gap-2">
-        <h3
-          onClick={() => {
-            setSelectedCandidate(c);
-            setViewedCandidateIds((prev) =>
-              prev.includes(c.id) ? prev : [...prev, c.id]
-            );
-          }}
-          className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
-        >
-          {viewedCandidateIds.includes(c.id) && (
-            <CheckSquare size={16} className="text-blue-600" />
-          )}
-          <span className="font-semibold text-gray-900">
-            <Highlight text={c.full_name} />
-          </span>
-        </h3>
-
-        <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
-          <span>
-            <Highlight text={c.experience} />
-          </span>
-          <span>
-            <Highlight text={c.current_salary} />
-          </span>
-          {c.expected_salary && (
-            <span>
-              Expected: <Highlight text={c.expected_salary} />
-            </span>
-          )}
-          <span>
-            <Highlight text={c.city?.name} />, <Highlight text={c.state?.name} />
-          </span>
-        </div>
-
-        {c.notice_period && (
-          <p className="text-xs text-gray-500">
-            Notice period: <Highlight text={c.notice_period} />
-          </p>
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          {c.skills?.slice(0, 6).map((s, i) => (
-            <span
-              key={i}
-              className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
-            >
-              <Highlight text={s.name} />
-            </span>
-          ))}
-        </div>
-
-        <p className="text-xs text-blue-600 mt-1 cursor-pointer">
-          View similar profiles
-        </p>
-      </div>
-
-      <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
-        <img
-          src={
-            c.profile_image
-              ? `${process.env.NEXT_PUBLIC_URL}${c.profile_image}`
-              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                c.full_name
-              )}`
-          }
-          alt={c.full_name}
-          className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
-        />
-
-        <p className="text-xs text-gray-500 flex items-center gap-1">
-          <Mail size={14} /> <Highlight text={c.email} />
-        </p>
-
-        {c.resume && (
-          <a
-            href={`${process.env.NEXT_PUBLIC_URL}${c.resume}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
-          >
-            <FileText size={14} /> View CV
-          </a>
-        )}
-      </div>
-    </div>
-  );
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
@@ -441,20 +776,6 @@ const formatDate = (date?: any) => {
 
   return (
     <div className="min-h-screen">
-      <div className="w-full mb-6">
-        <div className="relative">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by skill, keyword, company, designation..."
-            className="w-full rounded-lg border border-gray-300 px-5 py-4 pl-12 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
-            🔍
-          </span>
-        </div>
-      </div>
       <div className="p-4 md:hidden flex justify-between items-center">
         <button
           onClick={() => setShowFilters(true)}
@@ -462,356 +783,38 @@ const formatDate = (date?: any) => {
         >
           Filters
         </button>
-        
       </div>
       <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 p-4">
         {/* LEFT FILTERS */}
         <aside className="hidden md:block col-span-3 bg-white rounded-xl p-4 shadow-sm h-fit max-h-screen overflow-y-auto sticky top-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-sm">Filters</h3>
+          <div className="mb-4">
+            {/* Top Row */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="font-semibold text-sm text-gray-900">Filters</h3>
+
+              <button
+                onClick={clearFilters}
+                className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+              >
+                Clear all
+              </button>
+            </div>
+
+            {/* Apply Button */}
             <button
-              onClick={clearFilters}
-              className="text-xs text-blue-600 hover:underline"
+              onClick={applyFilters}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium text-sm transition"
             >
-              Clear all
+              Apply Filters
             </button>
           </div>
 
           <hr className="mb-4" />
-          {/* Hide Profiles */}
-          <label className="flex items-center gap-2 font-medium mb-4 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.hideProfiles}
-              onChange={(e) =>
-                setFilters({ ...filters, hideProfiles: e.target.checked })
-              }
-            />
-            Hide Viewed Profiles
-          </label>
-
-          <hr className="mb-4" />
-
-          {/* Premium */}
-          <label className="flex items-center gap-2 mb-4 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.premiumOnly}
-              onChange={(e) => setFilters({ ...filters, premiumOnly: e.target.checked })}
-            />
-            Premium Institute Candidates
-          </label>
-
-          <hr className="mb-4" />
-
-          {/* Keywords */}
-          <details className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between">
-              Keywords <span>⌄</span>
-            </summary>
-            <div className="mt-2">
-              <input
-                className="w-full border rounded px-2 py-1 text-sm"
-                placeholder="e.g. React, Java"
-                value={filters.keywords}
-                onChange={(e) => setFilters({ ...filters, keywords: e.target.value })}
-              />
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Current Company */}
-          <details className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between">
-              Current company <span>⌄</span>
-            </summary>
-            <div className="mt-2">
-              <input
-                className="w-full border rounded px-2 py-1 text-sm"
-                placeholder="Search company"
-                value={filters.currentCompany}
-                onChange={(e) => setFilters({ ...filters, currentCompany: e.target.value })}
-              />
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Location */}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Location <span>⌃</span>
-            </summary>
-
-            <input
-              placeholder="Search location"
-              value={filters.locationSearch}
-              onChange={(e) => {
-                setFilters({
-                  ...filters,
-                  locationSearch: e.target.value,
-                });
-              }}
-              className="w-full border rounded px-2 py-1 mb-3 text-sm"
-            />
-
-            {[
-              ["Hyderabad", "1,153"],
-              ["Bengaluru", "1,111"],
-              ["Pune", "516"],
-              ["Chennai", "234"],
-              ["Delhi", "500"],
-              ["Mumbai", "600"],
-            ].map(([city, count]) => (
-              <label
-                key={city}
-                className="flex justify-between items-center mb-2 cursor-pointer"
-              >
-                <span className="flex gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={filters.locations.includes(city)}
-                    onChange={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        locations: prev.locations.includes(city)
-                          ? prev.locations.filter((c) => c !== city)
-                          : [...prev.locations, city],
-                      }))
-                    }
-                  />
-                  {city}
-                </span>
-                <span className="text-gray-400 text-xs">{count}</span>
-              </label>
-            ))}
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Experience */}
-          <details open>
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Experience (Years) <span>⌃</span>
-            </summary>
-
-            <div className="flex items-center gap-2">
-              <select
-                value={filters.minExperience}
-                onChange={(e) =>
-                  setFilters({ ...filters, minExperience: e.target.value })
-                }
-                className="w-full border rounded px-2 py-1 text-sm"
-              >
-                <option value="">Min</option>
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="3">3</option>
-                <option value="5">5</option>
-                <option value="8">8</option>
-                <option value="10">10</option>
-              </select>
-
-              <span>to</span>
-
-              <select
-                value={filters.maxExperience}
-                onChange={(e) =>
-                  setFilters({ ...filters, maxExperience: e.target.value })
-                }
-                className="w-full border rounded px-2 py-1 text-sm"
-              >
-                <option value="">Max</option>
-                <option value="2">2</option>
-                <option value="5">5</option>
-                <option value="8">8</option>
-                <option value="12">12</option>
-                <option value="15">15+</option>
-              </select>
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Salary  */}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Salary (INR-Lacs) <span>⌃</span>
-            </summary>
-
-            <div className="flex items-center gap-2">
-              <select
-                className="w-full border rounded px-2 py-2 text-sm"
-                value={filters.minSalary}
-                onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
-              >
-                <option value="">Min</option>
-                <option value="0">0</option>
-                <option value="3">3</option>
-                <option value="6">6</option>
-                <option value="10">10</option>
-                <option value="15">15</option>
-                <option value="20">20</option>
-              </select>
-
-              <span>to</span>
-
-              <select
-                className="w-full border rounded px-2 py-2 text-sm"
-                value={filters.maxSalary}
-                onChange={(e) => setFilters({ ...filters, maxSalary: e.target.value })}
-              >
-                <option value="">Max</option>
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="15">15</option>
-                <option value="25">25</option>
-                <option value="50">50+</option>
-              </select>
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Current Designation*/}
-          <details className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Current designation <span>⌄</span>
-            </summary>
-
-            <div className="relative">
-              <input
-                placeholder="Add designation"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.designation}
-                onChange={(e) => setFilters({ ...filters, designation: e.target.value })}
-              />
-              <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Department & Role */}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Department and Role <span>⌃</span>
-            </summary>
-
-            <div className="max-h-40 overflow-y-auto">
-              {[
-                "Engineering - Software & QA",
-                "Consulting",
-                "IT & Information Security",
-                "Project & Program Management",
-                "Sales",
-                "Marketing",
-                "HR"
-              ].map((name) => (
-                <label
-                  key={name}
-                  className="flex justify-between items-center mb-2 cursor-pointer"
-                >
-                  <span className="flex gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={filters.department.includes(name)}
-                      onChange={() => setFilters(prev => ({
-                        ...prev,
-                        department: prev.department.includes(name)
-                          ? prev.department.filter(d => d !== name)
-                          : [...prev.department, name]
-                      }))}
-                    />
-                    {name}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/*  Industry  */}
-          <details open>
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Industry <span>⌃</span>
-            </summary>
-
-            <div className="max-h-40 overflow-y-auto">
-              {[
-                "IT Services & Consulting",
-                "Software Product",
-                "Management Consulting",
-                "Emerging Technologies",
-                "Banking",
-                "Healthcare"
-              ].map((name) => (
-                <label
-                  key={name}
-                  className="flex justify-between items-center mb-2 cursor-pointer"
-                >
-                  <span className="flex gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={filters.industry.includes(name)}
-                      onChange={() => setFilters(prev => ({
-                        ...prev,
-                        industry: prev.industry.includes(name)
-                          ? prev.industry.filter(i => i !== name)
-                          : [...prev.industry, name]
-                      }))}
-                    />
-                    {name}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </details>
-          <hr className="my-4" />
-
-          {/* Notice Period*/}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Notice period <span>⌃</span>
-            </summary>
-
-            {[
-              "0 - 15 days",
-              "1 month",
-              "2 months",
-              "3 months",
-              "More than 3 months",
-              "Serving Notice Period",
-            ].map((label) => (
-              <label
-                key={label}
-                className="flex justify-between items-center mb-2 cursor-pointer"
-              >
-                <span className="flex gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={filters.noticePeriod.includes(label)}
-                    onChange={() => setFilters(prev => ({
-                      ...prev,
-                      noticePeriod: prev.noticePeriod.includes(label)
-                        ? prev.noticePeriod.filter(n => n !== label)
-                        : [...prev.noticePeriod, label]
-                    }))}
-                  />
-                  {label}
-                </span>
-              </label>
-            ))}
-          </details>
-
-          <hr className="mb-4" />
 
           {/* Gender*/}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-3">
-              Gender <span>⌃</span>
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between">
+              Gender <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
 
             <div className="flex gap-3">
@@ -825,31 +828,248 @@ const formatDate = (date?: any) => {
                 className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Female' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
                 Female
               </button>
+              <button
+                onClick={() => setFilters({ ...filters, gender: filters.gender === 'Other' ? '' : 'Other' })}
+                className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Other' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
+                Other
+              </button>
+
             </div>
           </details>
 
           <hr className="mb-4" />
 
-          {/* Age  */}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-3">
-              Age <span>⌃</span>
+          {/* Keywords */}
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between">
+              Keywords <span><ChevronDown className="w-4 h-4" /></span>
+            </summary>
+            <div className="mt-2">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by skill, keyword, company, designation..."
+                className="w-full border rounded px-2 py-1 text-sm"
+              />
+            </div>
+          </details>
+
+          <hr className="mb-4" />
+
+          {/* Current Company */}
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between">
+              Current Company <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
 
-            <div className="flex items-center gap-2">
-              <input
-                placeholder="Min"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.minAge}
-                onChange={(e) => setFilters({ ...filters, minAge: e.target.value })}
-              />
-              <span>to</span>
-              <input
-                placeholder="Max"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.maxAge}
-                onChange={(e) => setFilters({ ...filters, maxAge: e.target.value })}
-              />
+            {/* Search */}
+            <input
+              type="text"
+              placeholder="Search company"
+              value={searchCompany}
+              onChange={(e) => setSearchCompany(e.target.value)}
+              className="w-full border rounded px-2 py-2 text-sm mb-2"
+            />
+
+            {/* List */}
+            <div className="max-h-48 overflow-y-auto">
+              {allCompanies
+                .filter((company) =>
+                  company.toLowerCase().includes(searchCompany.toLowerCase())
+                )
+                .map((company) => {
+                  const checked = filters.currentCompany.includes(company);
+
+                  return (
+                    <div
+                      key={company}
+                      className="flex items-center justify-between mb-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleCompany(company)}
+                        />
+                        <label className="text-sm text-gray-700">
+                          {company}
+                        </label>
+                      </div>
+
+                      {/* Optional count (agar data ho to) */}
+                      {/* <span className="text-xs text-gray-400">123</span> */}
+                    </div>
+                  );
+                })}
+            </div>
+          </details>
+
+          <hr className="mb-4" />
+
+          {/* Location */}
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between">
+              Location <span><ChevronDown className="w-4 h-4" /></span>
+            </summary>
+
+            {/* Search State */}
+            <input
+              type="text"
+              placeholder="Search state"
+              value={stateSearch}
+              onChange={(e) => setStateSearch(e.target.value)}
+              className="w-full border rounded px-2 py-2 mb-3 text-sm"
+            />
+
+            {/* State List */}
+            <div className="max-h-48 overflow-y-auto">
+              {states
+                .filter((state) =>
+                  state.name
+                    .toLowerCase()
+                    .includes(stateSearch.toLowerCase())
+                )
+                .map((state) => (
+                  <label
+                    key={state.id}
+                    className="flex items-center gap-2 mb-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.locations.includes(state.name)}
+                      onChange={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          locations: prev.locations.includes(state.name)
+                            ? prev.locations.filter(
+                                (item) => item !== state.name
+                              )
+                            : [...prev.locations, state.name],
+                        }))
+                      }
+                    />
+                    <span className="text-sm text-gray-700">
+                      {state.name}
+                    </span>
+                  </label>
+                ))}
+            </div>
+          </details>
+
+          <hr className="mb-4" />
+
+          {/* Experience */}
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between mb-2">
+              Experience (Years) <span><ChevronDown className="w-4 h-4" /></span>
+            </summary>
+
+            <div className="space-y-2">
+              {experienceList.map((range) => (
+                <label
+                  key={range}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.experience.includes(range)}
+                    onChange={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        experience: prev.experience.includes(range)
+                          ? prev.experience.filter((item) => item !== range)
+                          : [...prev.experience, range],
+                      }))
+                    }
+                  />
+                  <span className="text-sm text-gray-700">{range}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+
+          <hr className="mb-4" />
+
+          {/* Salary */}
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between mb-2">
+              Salary (INR-Lacs) <span><ChevronDown className="w-4 h-4" /></span>
+            </summary>
+
+            <div className="space-y-2">
+              {salaryRanges.map((range) => (
+                <label
+                  key={range}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.salary.includes(range)}
+                    onChange={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        salary: prev.salary.includes(range)
+                          ? prev.salary.filter((item) => item !== range)
+                          : [...prev.salary, range],
+                      }))
+                    }
+                  />
+                  <span className="text-sm text-gray-700">{range}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+
+          <hr className="mb-4" />
+
+          {/* Department & Role */}
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between mb-2">
+              Department & Role <span><ChevronDown className="w-4 h-4" /></span>
+            </summary>
+
+            {/* Search Box */}
+            <input
+              type="text"
+              placeholder="Search category"
+              value={jobCategorySearch}
+              onChange={(e) => setJobCategorySearch(e.target.value)}
+              className="w-full border rounded px-2 py-2 text-sm mb-3"
+            />
+
+            {/* Category List */}
+            <div className="max-h-48 overflow-y-auto">
+              {jobCategoryOptions
+                .filter((option) =>
+                  option.label
+                    .toLowerCase()
+                    .includes(jobCategorySearch.toLowerCase())
+                )
+                .map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex items-center gap-2 mb-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.department.includes(option.value)}
+                      onChange={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          department: prev.department.includes(option.value)
+                            ? prev.department.filter(
+                                (item) => item !== option.value
+                              )
+                            : [...prev.department, option.value],
+                        }))
+                      }
+                    />
+                    <span className="text-sm text-gray-700">
+                      {option.label}
+                    </span>
+                  </label>
+                ))}
             </div>
           </details>
 
@@ -858,451 +1078,112 @@ const formatDate = (date?: any) => {
           {/*  Degree / Course */}
           <details className="mb-4">
             <summary className="cursor-pointer font-medium flex justify-between mb-3">
-              Degree/Course <span>⌄</span>
+              Degree <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
-            {/* Expanded details could go here, for now keeping simple UI */}
-            <div className="text-sm text-gray-500 italic">Select degrees (Coming soon)</div>
-          </details>
 
-          <hr className="mb-4" />
+            {/* Search Box */}
+            <input
+              type="text"
+              placeholder="Search degree"
+              value={degreeSearch}
+              onChange={(e) => setDegreeSearch(e.target.value)}
+              className="w-full border rounded px-2 py-2 text-sm mb-3"
+            />
 
-          {/* College Name  */}
-          <details className="mb-2">
-            <summary className="cursor-pointer font-medium flex justify-between mb-3">
-              College name <span>⌄</span>
-            </summary>
-            {/* Expanded details for colleges */}
-            <div className="text-sm text-gray-500 italic">Select colleges (Coming soon)</div>
-          </details>
-        </aside>
-
-        <div
-          className={`fixed inset-0 bg-black/40 z-50 md:hidden transition-transform ${showFilters ? "translate-x-0" : "translate-x-full"
-            }`}
-        >
-          <div className="absolute right-0 w-3/4 max-w-xs h-full bg-white p-4 overflow-y-auto">
-            <button
-              onClick={() => setShowFilters(false)}
-              className="mb-4 text-gray-500"
-            >
-              Close ✕
-            </button>
-
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm">Filters</h3>
-              <button
-                onClick={clearFilters}
-                className="text-xs text-blue-600 hover:underline"
-              >
-                Clear all
-              </button>
-            </div>
-
-            {/* Hide Profiles */}
-            <label className="flex items-center gap-2 font-medium mb-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.hideProfiles}
-                onChange={(e) => setFilters({ ...filters, hideProfiles: e.target.checked })}
-              />
-              Hide Viewed Profiles
-            </label>
-
-            <hr className="mb-4" />
-
-            {/* Premium */}
-            <label className="flex items-center gap-2 mb-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.premiumOnly}
-                onChange={(e) => setFilters({ ...filters, premiumOnly: e.target.checked })}
-              />
-              Premium Institute Candidates
-            </label>
-
-            <hr className="mb-4" />
-
-            {/* Keywords */}
-            <details className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between">
-                Keywords <span>⌄</span>
-              </summary>
-              <div className="mt-2">
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm"
-                  placeholder="e.g. React, Java"
-                  value={filters.keywords}
-                  onChange={(e) => setFilters({ ...filters, keywords: e.target.value })}
-                />
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Current Company */}
-            <details className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between">
-                Current company <span>⌄</span>
-              </summary>
-              <div className="mt-2">
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm"
-                  placeholder="Search company"
-                  value={filters.currentCompany}
-                  onChange={(e) => setFilters({ ...filters, currentCompany: e.target.value })}
-                />
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Location */}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Location <span>⌃</span>
-              </summary>
-
-              <input
-                placeholder="Search location"
-                className="w-full border rounded px-2 py-1 mb-3 text-sm"
-                value={filters.locationSearch}
-                onChange={(e) => setFilters({ ...filters, locationSearch: e.target.value })}
-              />
-
-              {[
-                ["Hyderabad", "1,153"],
-                ["Bengaluru", "1,111"],
-                ["Pune", "516"],
-                ["Chennai", "234"],
-              ].map(([city, count]) => (
-                <label
-                  key={city}
-                  className="flex justify-between items-center mb-2 cursor-pointer"
-                >
-                  <span className="flex gap-2">
+            {/* Degree List */}
+            <div className="max-h-48 overflow-y-auto">
+              {degreeOptions
+                .filter((option) =>
+                  option.label
+                    .toLowerCase()
+                    .includes(degreeSearch.toLowerCase())
+                )
+                .map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex items-center gap-2 mb-2 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
-                      checked={filters.locations.includes(city)}
+                      checked={filters.degree.includes(option.value)}
                       onChange={() =>
                         setFilters((prev) => ({
                           ...prev,
-                          locations: prev.locations.includes(city)
-                            ? prev.locations.filter((c) => c !== city)
-                            : [...prev.locations, city],
+                          degree: prev.degree.includes(option.value)
+                            ? prev.degree.filter(
+                                (item) => item !== option.value
+                              )
+                            : [...prev.degree, option.value],
                         }))
                       }
                     />
-                    {city}
-                  </span>
-                  <span className="text-gray-400">{count}</span>
-                </label>
-              ))}
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Experience */}
-            <details open>
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Experience (Years) <span>⌃</span>
-              </summary>
-
-              <div className="flex items-center gap-2">
-                <select
-                  value={filters.minExperience}
-                  onChange={(e) =>
-                    setFilters({ ...filters, minExperience: e.target.value })
-                  }
-                  className="w-full border rounded px-2 py-1 text-sm"
-                >
-                  <option value="">Min</option>
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="3">3</option>
-                  <option value="5">5</option>
-                  <option value="8">8</option>
-                  <option value="10">10</option>
-                </select>
-
-                <span>to</span>
-
-                <select
-                  value={filters.maxExperience}
-                  onChange={(e) =>
-                    setFilters({ ...filters, maxExperience: e.target.value })
-                  }
-                  className="w-full border rounded px-2 py-1 text-sm"
-                >
-                  <option value="">Max</option>
-                  <option value="2">2</option>
-                  <option value="5">5</option>
-                  <option value="8">8</option>
-                  <option value="12">12</option>
-                  <option value="15">15+</option>
-                </select>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Salary  */}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Salary (INR-Lacs) <span>⌃</span>
-              </summary>
-
-              <div className="flex items-center gap-2">
-                <select
-                  className="w-full border rounded px-2 py-2 text-sm"
-                  value={filters.minSalary}
-                  onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
-                >
-                  <option value="">Min</option>
-                  <option value="0">0</option>
-                  <option value="3">3</option>
-                  <option value="6">6</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="20">20</option>
-                </select>
-
-                <span>to</span>
-
-                <select
-                  className="w-full border rounded px-2 py-2 text-sm"
-                  value={filters.maxSalary}
-                  onChange={(e) => setFilters({ ...filters, maxSalary: e.target.value })}
-                >
-                  <option value="">Max</option>
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="25">25</option>
-                  <option value="50">50+</option>
-                </select>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Current Designation*/}
-            <details className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Current designation <span>⌄</span>
-              </summary>
-
-              <div className="relative">
-                <input
-                  placeholder="Add designation"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                  value={filters.designation}
-                  onChange={(e) => setFilters({ ...filters, designation: e.target.value })}
-                />
-                <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Department & Role */}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Department and Role <span>⌃</span>
-              </summary>
-
-              <div className="relative mb-3">
-                <input
-                  placeholder="Search department/role"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-                <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
-              </div>
-              <div className="max-h-40 overflow-y-auto">
-                {[
-                  "Engineering - Software & QA",
-                  "Consulting",
-                  "IT & Information Security",
-                  "Project & Program Management",
-                  "Sales",
-                  "Marketing",
-                  "HR"
-                ].map((name) => (
-                  <label
-                    key={name}
-                    className="flex justify-between items-center mb-2 cursor-pointer"
-                  >
-                    <span className="flex gap-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.department.includes(name)}
-                        onChange={() => setFilters(prev => ({
-                          ...prev,
-                          department: prev.department.includes(name)
-                            ? prev.department.filter(d => d !== name)
-                            : [...prev.department, name]
-                        }))}
-                      />
-                      {name}
+                    <span className="text-sm text-gray-700">
+                      {option.label}
                     </span>
                   </label>
                 ))}
-              </div>
-            </details>
-            <hr className="mb-4" />
-
-            {/*  Industry  */}
-            <details open>
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Industry <span>⌃</span>
-              </summary>
-
-              <div className="max-h-40 overflow-y-auto">
-                {[
-                  "IT Services & Consulting",
-                  "Software Product",
-                  "Management Consulting",
-                  "Emerging Technologies",
-                  "Banking",
-                  "Healthcare"
-                ].map((name) => (
-                  <label
-                    key={name}
-                    className="flex justify-between items-center mb-2 cursor-pointer"
-                  >
-                    <span className="flex gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.industry.includes(name)}
-                        onChange={() => setFilters(prev => ({
-                          ...prev,
-                          industry: prev.industry.includes(name)
-                            ? prev.industry.filter(i => i !== name)
-                            : [...prev.industry, name]
-                        }))}
-                      />
-                      {name}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </details>
-            <hr className="my-4" />
-
-            {/* Notice Period*/}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Notice period <span>⌃</span>
-              </summary>
-
-              {[
-                "0 - 15 days",
-                "1 month",
-                "2 months",
-                "3 months",
-                "More than 3 months",
-                "Serving Notice Period",
-              ].map((label) => (
-                <label
-                  key={label}
-                  className="flex justify-between items-center mb-2 cursor-pointer"
-                >
-                  <span className="flex gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={filters.noticePeriod.includes(label)}
-                      onChange={() => setFilters(prev => ({
-                        ...prev,
-                        noticePeriod: prev.noticePeriod.includes(label)
-                          ? prev.noticePeriod.filter(n => n !== label)
-                          : [...prev.noticePeriod, label]
-                      }))}
-                    />
-                    {label}
-                  </span>
-                </label>
-              ))}
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Gender*/}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-3">
-                Gender <span>⌃</span>
-              </summary>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setFilters({ ...filters, gender: filters.gender === 'Male' ? '' : 'Male' })}
-                  className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Male' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
-                  Male
-                </button>
-                <button
-                  onClick={() => setFilters({ ...filters, gender: filters.gender === 'Female' ? '' : 'Female' })}
-                  className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Female' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
-                  Female
-                </button>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Age  */}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-3">
-                Age <span>⌃</span>
-              </summary>
-
-            <div className="flex items-center gap-2">
-              <input
-                placeholder="Min"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.minAge}
-                onChange={(e) => setFilters({...filters, minAge: e.target.value})}
-              />
-              <span>to</span>
-              <input
-                placeholder="Max"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.maxAge}
-                onChange={(e) => setFilters({...filters, maxAge: e.target.value})}
-              />
             </div>
           </details>
-          </div>
-        </div>
+        </aside>
+
+      {/* mobile filter */}
+
+
 
         {!selectedCandidate ? (
           <main className="col-span-12 md:col-span-9 space-y-4">
 
             {/* FIRST 1 CANDIDATE */}
                {filteredCandidates.length > 0 ? (
-            <>
-              {filteredCandidates.slice(0, 1).map((c) => (
+               <>
+              {filteredCandidates.map((c) => {
+
+               const isSaved = savedProfiles.includes(c.id);
+
+                return (
                 <div
-                key={c.id}
-                className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
-                >
+                    key={c.id}
+                    className="relative bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
+                  >
+                    {viewedCandidateIds.includes(c.id) && (
+                    <div className="absolute top-0 left-0 z-20 group">
+
+                      {/* Blue corner triangle */}
+                      <div className="w-0 h-0 border-t-[35px] border-t-blue-700 border-r-[35px] border-r-transparent" />
+
+                      {/* White Tick */}
+                      <Check
+                        size={14}
+                        className="absolute top-1 left-1 text-white font-bold stroke-[3]"
+                      />
+
+                      {/* Hover Tooltip */}
+                      <div className="absolute left-2 top-8 hidden group-hover:block">
+                        <div className="bg-white border border-gray-300 shadow-lg px-3 py-2 text-xs rounded whitespace-nowrap text-gray-700">
+                          Profile viewed by you
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
                 {/* Checkbox */}
-                <input type="checkbox" className="mt-2 md:mt-0" />
+                {/* <input type="checkbox" className="mt-2 md:mt-0" /> */}
 
                 {/* MAIN INFO */}
                 <div className="flex-1 flex flex-col gap-2">
 
                 {/* NAME */}
                 <h3
-                  onClick={() => {
-                    setSelectedCandidate(c);
+                onClick={() => {
+                  window.open(
+                    `/dashboard/candidate_listing/candidate_detail/${c.id}`,
+                    "_blank"
+                  );
 
-                    setViewedCandidateIds((prev) =>
-                      prev.includes(c.id) ? prev : [...prev, c.id]
-                    );
-                  }}
+                  viewProfile(c.id);
+                }}
                   className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
                 >
-                  {viewedCandidateIds.includes(c.id) && (
-                    <CheckSquare size={16} className="text-blue-600" />
-                  )}
 
                   <span className="font-semibold">
                     <Highlight text={c.full_name} />
@@ -1340,8 +1221,10 @@ const formatDate = (date?: any) => {
                   )}
 
                   <span>
+                    <Highlight text={c.country?.name || ""} />,{" "}
                     <Highlight text={c.city?.name || ""} />,{" "}
                     <Highlight text={c.state?.name || ""} />
+
                   </span>
                 </div>
 
@@ -1353,12 +1236,37 @@ const formatDate = (date?: any) => {
                         key={i}
                         className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-md"
                       >
-                        {skill.name}
+                        <Highlight text={skill.name} />
                       </span>
                     ))}
                   </div>
                 )}
+                <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  isSaved
+                    ? removeSavedProfile(c.id)
+                    : saveProfile(c.id)
+                }
+                className={`flex items-center gap-2 self-end ${
+                  isSaved
+                    ? "text-green-600"
+                    : "text-gray-400 hover:text-green-500"
+                }`}
+              >
+                <Bookmark
+                  className={`w-4 h-4 transition-all duration-300 ${
+                    isSaved
+                      ? "fill-green-500 drop-shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+                      : ""
+                  }`}
+                />
 
+                <span className="text-sm font-medium">
+                  {isSaved ? "Saved" : "Save"}
+                </span> 
+                </Button>
               </div>
 
 
@@ -1392,12 +1300,49 @@ const formatDate = (date?: any) => {
                   )}
                 </div>
               </div>
-              ))}
+              );
+              })}
+             {/* Pagination */}
+          <div className="flex items-center justify-center mt-8 px-4 py-3">
+
+            <div className="flex items-center gap-2">
+              {/* Previous */}
+              <button
+                disabled={page === 1}
+                onClick={() => {
+                  const newPage = Math.max(page - 1, 1);
+                  console.log("Previous Page:", newPage);
+                  setPage(newPage);
+                }}
+                className="px-4 py-2 border rounded-lg disabled:opacity-50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {/* Current Page */}
+              <p className="text-sm text-gray-500">
+              Page <span className="font-medium text-gray-900">{page}</span> of{" "}
+              <span className="font-medium text-gray-900">{totalPages}</span>
+            </p>
+
+              {/* Next */}
+              <button
+                disabled={page >= totalPages}
+                onClick={() => {
+                  const newPage = page + 1;
+                  console.log("Next Page:", newPage);
+                  setPage(newPage);
+                }}
+                className="px-4 py-2 border rounded-lg disabled:opacity-50"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
             </>
           ) : (
             <div className="flex items-center justify-center w-full py-12">
               <div className="bg-white border rounded-2xl shadow-sm p-10 text-center max-w-sm w-full">
-                
                 {/* Icon */}
                 <div className="w-14 h-14 mx-auto flex items-center justify-center rounded-full bg-gray-100 mb-4">
                   <svg
@@ -1430,426 +1375,14 @@ const formatDate = (date?: any) => {
             </div>
           )}
           <div className="h-16" />
-          {/* BLURRED REST */}
-          <div className="relative">
-
-            <div className="space-y-4 blur-sm opacity-40 select-none pointer-events-none grayscale">
-              {filteredCandidates.slice(1, 3).map((c) => (
-                <div
-                  key={c.id}
-                  className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
-                >
-                  {/* Checkbox */}
-                        <input type="checkbox" className="mt-2 md:mt-0" />
-
-                        {/* MAIN INFO */}
-                        <div className="flex-1 flex flex-col gap-2">
-                          <h3
-                            onClick={() => {
-                              setSelectedCandidate(c);
-
-                              setViewedCandidateIds((prev) =>
-                                prev.includes(c.id) ? prev : [...prev, c.id]
-                              );
-                            }}
-                            className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
-                          >
-                            {viewedCandidateIds.includes(c.id) && (
-                              <CheckSquare size={16} className="text-blue-600" />
-                            )}
-                            <h3 className="font-semibold text-gray-900">
-                              <Highlight text={c.full_name} />
-                            </h3>
-                          </h3>
-
-                          {/* Experience, salary, location */}
-                          <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
-                            <span>
-                              <Highlight text={c.experience} />
-                            </span>
-                            <span>
-                              <Highlight text={formatSalary(c.current_salary)} />
-                            </span>
-
-                            {c.expected_salary && (
-                              <span>
-                                Expected:
-                                <Highlight text={formatSalary(c.expected_salary)} />
-                              </span>
-                            )}
-                            <span>
-                              <Highlight text={c.city?.name} />,{" "}
-                              <Highlight text={c.state?.name} />
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* RIGHT ACTION PANEL */}
-                        <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
-                          <img
-                            src={
-                              c.profile_image
-                                ? `${process.env.NEXT_PUBLIC_URL}${c.profile_image}`
-                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                  c.full_name
-                                )}`
-                            }
-                            alt={c.full_name}
-                            className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
-                          />
-
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <Mail size={14} /> <Highlight text={c.email} />
-                          </p>
-
-                          {c.resume && (
-                            <a
-                              href={`${process.env.NEXT_PUBLIC_URL}${c.resume}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
-                            >
-                              <FileText size={14} />  View CV
-                            </a>
-                          )}
-                        </div>
-                </div>
-              ))}
-            </div>
-
-            {/* 🔐 UNLOCK OVERLAY */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-white rounded-xl shadow-xl p-6 text-center w-[350px]">
-
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Unlock Full Access
-                </h3>
-
-                <p className="text-gray-500 mb-4">
-                  Subscribe to our premium plan to view unlimited candidate profiles
-                  and access contact details.
-                </p>
-                <Link href="/pricing">
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2 rounded-full">
-                    View Subscription Plans
-                  </Button>
-                </Link>
-
-              </div>
-            </div>
-
-          </div>
 
         </main>
         ) : (
           /*DETAIL VIEW  */
           <main className="col-span-12 md:col-span-9">
-            <CandidateDetail
-              candidate={selectedCandidate!}
-              candidates={candidates}
-              search={search}
-              onBack={() => setSelectedCandidate(null)}
-              onSelect={setSelectedCandidate}
-            />
           </main>
         )}
       </div>
     </div>
-  );
-}
-
-// Candidate Detail page
-
-function CandidateDetail({
-  candidate,
-  candidates,
-  search,
-  onBack,
-  onSelect,
-}: {
-  candidate: Candidate;
-  candidates: Candidate[];
-  search: string;
-  onBack: () => void;
-  onSelect: (c: Candidate) => void;
-}) {
-  const cleanSearch = search.trim().replace(/\s+/g, " ");
-  const educations = candidate.educations ?? [];
-const experiences = candidate.experiences ?? [];
-const certifications = candidate.certifications ?? [];
-const skills = candidate.skills ?? [];
-  const formatSalary = (value?: string | number) => {
-    if (!value) return "-";
-    return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
-  };
-  const HighlightText = ({ text = "" }: { text?: string }) => {
-    if (!cleanSearch) return <>{text}</>;
-
-    return (
-      <Highlighter
-        searchWords={cleanSearch.split(" ")}
-        autoEscape={true}
-        textToHighlight={String(text)}
-        highlightClassName="bg-yellow-200 px-1 rounded font-semibold"
-      />
-    );
-  };
-
-  return (
-    <div className="grid grid-cols-12 gap-6 px-4 lg:px-8 py-6 bg-gray-50 min-h-screen">
-  {/* LEFT PROFILE */}
-  <div className="col-span-12 lg:col-span-8 bg-white rounded-2xl p-6 shadow-md">
-    
-    <button
-      onClick={onBack}
-      className="text-blue-600 text-sm mb-6 hover:underline"
-    >
-      ← Back to profiles
-    </button>
-
-    {/* Header */}
-    <div className="flex flex-col sm:flex-row gap-5 items-start">
-      <img
-        src={
-          candidate.profile_image
-            ? `${process.env.NEXT_PUBLIC_URL}${candidate.profile_image}`
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                candidate.full_name
-              )}`
-        }
-        alt={candidate.full_name}
-        className="w-20 h-20 rounded-full object-cover border shadow-sm"
-      />
-
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">
-          <HighlightText text={candidate.full_name} />
-        </h2>
-
-        <p className="text-sm text-gray-600 mt-1">
-          <HighlightText text={candidate.experience} /> •{" "}
-          <span className="font-medium text-gray-800">
-            <HighlightText text={formatSalary(candidate.current_salary)} />
-          </span>
-        </p>
-
-        <p className="text-sm text-gray-500 mt-1">
-          <HighlightText text={candidate.city?.name} />,{" "}
-          <HighlightText text={candidate.state?.name} />
-        </p>
-        <p className="text-sm text-gray-500 mt-1">
-         Gender : <HighlightText
-                    text={
-                      candidate.gender
-                        ? candidate.gender.charAt(0).toUpperCase() + candidate.gender.slice(1)
-                        : ""
-                    }
-                  />
-        </p>
-      </div>
-    </div>
-
-    {/* Divider */}
-    <div className="border-t my-6" />
-
-    <div>
-       <h3 className="font-semibold text-gray-900 mb-3">
-        Professional Summary
-      </h3>
-      <div
-         className="text-gray-700 leading-relaxed prose max-w-none
-          [&_ul]:list-disc [&_ul]:pl-6
-           [&_ol]:list-decimal [&_ol]:pl-6
-          [&_li]:mb-1"
-        dangerouslySetInnerHTML={{ __html: candidate.professional_summary
-        || "" }}
-      />
-     </div>
-     {/* Divider */}
-    <div className="border-t my-6" />
-
-    {/* Compensation */}
-    <h3 className="text-lg font-semibold text-gray-800 mb-3">
-      Compensation
-    </h3>
-
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-      <div className="bg-gray-50 p-3 rounded-lg">
-        <p className="text-gray-500">Current</p>
-        <p className="font-medium text-gray-800">
-          <HighlightText text={formatSalary(candidate.current_salary)} />
-        </p>
-      </div>
-
-      <div className="bg-gray-50 p-3 rounded-lg">
-        <p className="text-gray-500">Expected</p>
-        <p className="font-medium text-gray-800">
-          <HighlightText text={formatSalary(candidate.expected_salary)} />
-        </p>
-      </div>
-
-      <div className="bg-gray-50 p-3 rounded-lg">
-        <p className="text-gray-500">Notice Period</p>
-        <p className="font-medium text-gray-800">
-          <HighlightText text={candidate.notice_period} />
-        </p>
-      </div>
-    </div>
-     {/* Skills */}
-    <div className="border-t my-6" />
-    <h3 className="text-lg font-semibold mb-3">Skills</h3>
-
-    <div className="flex flex-wrap gap-2">
-      {candidate.skills?.map((s, i) => (
-        <span
-          key={i}
-          className="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-medium"
-        >
-          <HighlightText text={s.name} />
-        </span>
-      ))}
-    </div>
- {/* Experience */}
-    {experiences?.length > 0 && (
-      <>
-        <div className="border-t my-6" />
-        <h3 className="text-lg font-semibold mb-3">Experience</h3>
-
-        <div className="space-y-4">
-          {experiences.map((ex, i) => (
-            <div key={i} className="p-4 border rounded-lg">
-              <h4 className="font-medium text-gray-900">{ex.job_title}</h4>
-              <p className="text-purple-600 font-medium"> {ex.category}</p>
-              <p className="text-purple-600 font-medium">{ex.company}</p>
-
-              <p className="text-sm text-gray-500">
-                {ex.start_date} - {ex.end_date || "Present"}
-              </p>
-
-              <p className="text-sm text-gray-700 mt-2">
-                {ex.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </>
-    )}
-    {/* Education */}
-    {educations?.length > 0 && (
-      <>
-        <div className="border-t my-6" />
-        <h3 className="text-lg font-semibold mb-3">Education</h3>
-
-        <div className="space-y-4">
-          {educations.map((e, i) => (
-            <div key={i} className="p-4 border rounded-lg">
-              <h4 className="font-medium text-gray-900">
-                {e.education_detail?.name}
-              </h4>
-              <p className="text-green-600 font-medium">
-                {e.course_detail?.name}
-              </p>
-              <p className="text-gray-600">{e.institution}</p>
-
-              <div className="text-sm text-gray-500 mt-1">
-                {e.start_year} - {e.end_year} • {e.percentage} ({e.score_type})
-              </div>
-            </div>
-          ))}
-        </div>
-      </>
-    )}
-
-{/* Certifications */}
-{certifications.length > 0 && (
-  <>
-    <div className="border-t my-6" />
-    <h3 className="text-lg font-semibold mb-3">Certifications</h3>
-
-    <div className="space-y-4">
-      {certifications.map((c, i) => (
-        <div
-          key={i}
-          className="p-4 border rounded-lg flex justify-between items-center"
-        >
-          <div>
-            <h4 className="font-medium text-gray-900">
-              <HighlightText text={c.name} />
-            </h4>
-
-            {c.issuer && (
-              <p className="text-sm text-gray-600">
-                <HighlightText text={c.issuer} />
-              </p>
-            )}
-          </div>
-
-          {c.year && (
-            <span className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600">
-              {c.year}
-            </span>
-          )}
-        </div>
-      ))}
-    </div>
-  </>
-)}
-    {/* Contact */}
-    <div className="border-t my-6" />
-    <h3 className="text-lg font-semibold mb-3">Contact</h3>
-
-    <div className="space-y-2 text-sm">
-      <p className="flex items-center gap-2">
-        <Mail size={14} />
-        <span className="text-gray-700 break-all">
-          <HighlightText text={candidate.email} />
-        </span>
-      </p>
-
-      <p className="flex items-center gap-2">
-        <Phone size={14} />
-        <span className="text-gray-700">
-          +<HighlightText text={candidate.phone_code} />{" "}
-          <HighlightText text={candidate.phone} />
-        </span>
-      </p>
-    </div>
-
-    {/* Resume Button */}
-    {candidate.resume && (
-      <button
-        onClick={() =>
-          window.open(
-            `${process.env.NEXT_PUBLIC_URL}${candidate.resume}`,
-            "_blank"
-          )
-        }
-        className="mt-5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
-      >
-        View CV
-      </button>
-    )}
-  </div>
-
-  {/* RIGHT PANEL */}
-  <div className="col-span-12 lg:col-span-4 bg-white rounded-2xl p-5 shadow-md">
-    <h3 className="text-lg font-semibold mb-4">Similar Profiles</h3>
-
-    <div className="space-y-3">
-      {candidates
-        .filter((c) => c.id !== candidate.id)
-        .slice(0, 10)
-        .map((c) => (
-          <div
-            key={c.id}
-            onClick={() => onSelect(c)}
-            className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition border"
-          >
-            <HighlightText text={c.full_name} />
-          </div>
-        ))}
-    </div>
-  </div>
-</div>
   );
 }

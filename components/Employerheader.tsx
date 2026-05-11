@@ -254,6 +254,13 @@ export default function EmployerHeader() {
                             </div>
                           </Link>
 
+                          <Link href="/saved_profiles">
+                            <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
+                              <CreditCard size={18} />
+                              Saved Profiles
+                            </div>
+                          </Link>
+
                           <div
                             onClick={() => setOpen(!open)}
                             className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center justify-between gap-3"
