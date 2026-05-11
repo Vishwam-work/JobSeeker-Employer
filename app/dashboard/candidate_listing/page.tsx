@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, FileText, Mail, CheckSquare, ChevronDown, Bookmark,Check  } from "lucide-react";
+import { Phone, FileText, Mail, CheckSquare, ChevronDown, Bookmark,Check ,ChevronLeft,ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
 import { Label } from "@/components/ui/label";
@@ -79,59 +79,180 @@ export default function CandidatesPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [page, setPage] = useState(1);
   const [totalProfiles, setTotalProfiles] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [searchCompany, setSearchCompany] = useState("");
-  const experienceList = ["fresher","1-2", "3-5", "6-10", "10+"];
+  const experienceList = [
+  "fresher",
+  "1-2",
+  "3-5",
+  "6-10",
+  "10-15",
+  "15-20",
+  "20+",
+];
+
+const salaryRanges = [
+  "0-3 LPA",
+  "3-6 LPA",
+  "6-10 LPA",
+  "10-15 LPA",
+  "15-20 LPA",
+  "20+ LPA",
+];
+  const [states, setStates] = useState<
+  { id: number; name: string }[]
+  >([]);
+  const [stateSearch, setStateSearch] = useState("");
+const [degreeOptions, setDegreeOptions] = useState<
+  { label: string; value: string }[]
+>([]);
+const [degreeSearch, setDegreeSearch] = useState("");
+const [jobCategoryOptions, setJobCategoryOptions] = useState<
+  { label: string; value: string }[]
+>([]);
+const [jobCategorySearch, setJobCategorySearch] = useState("");
   const [filters, setFilters] = useState({
-    hideProfiles: false,
-    premiumOnly: false,
     keywords: "",
-      currentCompany: [] as string[], 
+    currentCompany: [] as string[], 
     locationSearch: "",
     locations: [] as string[],
     minExperience: "",
     maxExperience: "",
     minSalary: "",
     maxSalary: "",
-    designation: "",
     department: [] as string[],
-    industry: [] as string[],
     noticePeriod: [] as string[],
     gender: "",
-    professional_summary: "",
-    minAge: "",
-    maxAge: "",
     degree: [] as string[],
-    college: [] as string[],
-    
+    degreeSearch: "",
+    experience: [] as string[],
+    salary: [] as string[],
   });
-
-  const clearFilters = () => {
-    setFilters({
-      hideProfiles: false,
-      premiumOnly: false,
-      keywords: "",
-      currentCompany: [] as string[],
-      locationSearch: "",
-      locations: [],
-      minExperience: "",
-      maxExperience: "",
-      minSalary: "",
-      maxSalary: "",
-      designation: "",
-      department: [],
-      industry: [],
-      noticePeriod: [],
-      gender: "",
-      professional_summary: "",
-      minAge: "",
-      maxAge: "",
-      degree: [],
-      college: [],
-    });
-    setSearch("");
+const [appliedFilters, setAppliedFilters] = useState(filters);
+  //  Clear Filters function
+const clearFilters = () => {
+  const emptyFilters = {
+    keywords: "",
+    currentCompany: [],
+    locationSearch: "",
+    locations: [],
+    minExperience: "",
+    maxExperience: "",
+    minSalary: "",
+    maxSalary: "",
+    department: [],
+    noticePeriod: [],
+    gender: "",
+    degree: [],
+    degreeSearch: "",
+    experience: [],
+    salary: [],
   };
-const limit = 2;
-const totalPages = Math.ceil(totalProfiles / limit);
+
+  setFilters(emptyFilters);
+  setAppliedFilters(emptyFilters);
+  setSearch("");
+  setPage(1);
+};
+
+  // Add this function above your component or inside the component
+
+const getJobCategoryOptions = async (inputValue: string) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category?q=${inputValue || ""}`
+    );
+
+    const data = await res.json();
+
+    return data.map((category: any) => ({
+      label: category.name,
+      value: category.name,
+    }));
+  } catch (error) {
+    console.error("Error fetching job categories:", error);
+    return [];
+  }
+};
+// Load categories when component mounts
+useEffect(() => {
+  const loadJobCategories = async () => {
+    const options = await getJobCategoryOptions("");
+    setJobCategoryOptions(options);
+  };
+
+  loadJobCategories();
+}, []);
+useEffect(() => {
+  const fetchStates = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/states`
+      );
+      const data = await res.json();
+      setStates(data);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+  };
+
+  fetchStates();
+}, []);
+// Use this exact function instead of your current loadCategories
+
+const loadCategories = async (inputValue: string) => {
+  const token =
+    localStorage.getItem("user_token") ||
+    localStorage.getItem("employeer_token");
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_MASTER}/categories/?q=${inputValue}`,
+      {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    console.log("Categories API Response:", data);
+
+    // Handle paginated response
+    const results = Array.isArray(data)
+      ? data
+      : Array.isArray(data.results)
+      ? data.results
+      : [];
+
+    return results.map((item: any) => ({
+      label: item.name,
+      value: item.name,
+    }));
+  } catch (error) {
+    console.error("Error loading categories:", error);
+    return [];
+  }
+};
+
+// Load categories on mount
+useEffect(() => {
+  const fetchDegrees = async () => {
+    const options = await loadCategories("");
+    setDegreeOptions(options);
+    console.log("Degree Options:", options);
+  };
+
+  fetchDegrees();
+}, []);
+
   const formatSalary = (value: string | number) => {
   if (!value) return "-";
   return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
@@ -145,38 +266,86 @@ useEffect(() => {
 
   setLoading(true);
 
-  fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/?page=${page}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  )
+  const params = new URLSearchParams();
+  params.append("page", page.toString());
+
+  // keywords
+  if (appliedFilters.keywords) {
+    params.append("keywords", appliedFilters.keywords);
+  }
+
+  // location
+  if (appliedFilters.locationSearch) {
+    params.append("location", appliedFilters.locationSearch);
+  }
+
+  // current company
+  appliedFilters.currentCompany.forEach((company) => {
+    params.append("current_company", company);
+  });
+
+  // experience
+ appliedFilters.experience.forEach((exp) => {
+  params.append("experience", exp);
+});
+
+// Salary filter
+appliedFilters.salary.forEach((sal) => {
+  params.append("salary_range", sal);
+});
+
+  // department
+  appliedFilters.department.forEach((dept) => {
+    params.append("category", dept);
+  });
+
+  // gender
+  if (appliedFilters.gender) {
+    params.append("gender", appliedFilters.gender);
+  }
+
+  // degree
+  appliedFilters.degree.forEach((degree) => {
+    params.append("degree", degree);
+  });
+
+  const url = `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/?${params.toString()}`;
+
+  fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
     .then((res) => res.json())
     .then((data) => {
-      console.log("API DATA:", data);
+  if (Array.isArray(data.results)) {
+    setCandidates(data.results);
+    setTotalProfiles(data.count || 0);
 
-      // ✅ FIX HERE
-      if (Array.isArray(data)) {
-        setCandidates(data);
-        setTotalProfiles(data.length);
-      } else {
-        setCandidates([]);
-        setTotalProfiles(0);
-      }
+    const pageSize = data.results.length;
 
-      setLoading(false);
-    })
+    setTotalPages(Math.ceil((data.count || 0) / pageSize));
+  } else {
+    setCandidates([]);
+    setTotalProfiles(0);
+    setTotalPages(1);
+  }
+
+  setLoading(false);
+})
     .catch((err) => {
       console.error(err);
       setLoading(false);
     });
-}, [page]);
+}, [page, appliedFilters]);
+
+// Apply Filters function
+const applyFilters = () => {
+  setPage(1); // first page pe jao
+  setAppliedFilters({ ...filters });
+};
 
   // Save profile function
-
-
 useEffect(() => {
   fetchSavedProfiles();
 }, []);
@@ -367,20 +536,6 @@ const viewProfile = async (profileId: number) => {
   }
 };
 
-// Date formatting with future date check
-const formatDate = (date?: any) => {
-  if (!date) return "";
-
-  const parsed = dayjs(date);
-
-  // ❗ future date check
-  if (!parsed.isValid() || parsed.year() > dayjs().year()) {
-    return "Invalid Date";
-  }
-
-  return parsed.format("DD/MM/YYYY");
-};
-
 // Filter candidates based on search and filters
   const filteredCandidates = candidates.filter((c) => {
     // 1. Global Search (Search Bar)
@@ -429,23 +584,9 @@ const formatDate = (date?: any) => {
     }
     // 2. Specific Filters
 
-    // Hide Profiles
-    if (filters.hideProfiles && viewedCandidateIds.includes(c.id)) return false;
-
-    // Premium Institute
-    if (filters.premiumOnly) {
-      const premiumKeywords = ["iit", "iim", "nit", "bits", "xlri", "isb", "iiit"];
-      const isPremium = c.educations?.some((e) => // Use c.educations if available from API (check interface, used in detail view, so assumed exists in list OR detail)
-        premiumKeywords.some((pk) => e.institution?.toLowerCase().includes(pk))
-      );
-      // If educations is not in list view item, this might fail or be false. 
-      // Assuming 'profile-all' returns full nested objects as seen in CandidatesPage detail view logic.
-      if (!isPremium) return false;
-    }
-
     // Keywords
-    if (filters.keywords) {
-      const k = filters.keywords.toLowerCase();
+    if (appliedFilters.keywords) {
+      const k = appliedFilters.keywords.toLowerCase();
       const hasKeyword =
         c.skills?.some((s) => s.name.toLowerCase().includes(k)) ||
         c.full_name.toLowerCase().includes(k) ||
@@ -456,11 +597,11 @@ const formatDate = (date?: any) => {
     }
 
     // Current Company
-      if (filters.currentCompany.length > 0) {
+      if (appliedFilters.currentCompany.length > 0) {
         const normalize = (val: any) =>
           val ? String(val).toLowerCase() : "";
 
-        const matchesCompany = filters.currentCompany.some((company) => {
+        const matchesCompany = appliedFilters.currentCompany.some((company) => {
           const q = company.toLowerCase();
 
           if (normalize(c.current_company).includes(q)) return true;
@@ -478,78 +619,87 @@ const formatDate = (date?: any) => {
       }
 
     // Location
-    if (filters.locations.length > 0) {
-      const locMatch = filters.locations.some(loc =>
-        c.city?.name.toLowerCase().includes(loc.toLowerCase()) ||
-        c.state?.name.toLowerCase().includes(loc.toLowerCase())
-      );
-      if (!locMatch) return false;
-    }
-    if (filters.locationSearch) {
-      const locS = filters.locationSearch.toLowerCase();
-      const locSearchMatch =
-        c.city?.name.toLowerCase().includes(locS) ||
-        c.state?.name.toLowerCase().includes(locS);
-      if (!locSearchMatch) return false;
-    }
+   if (appliedFilters.locations.length > 0) {
+  const stateMatch = appliedFilters.locations.some(
+    (stateName) =>
+      c.state?.name?.toLowerCase() ===
+      stateName.toLowerCase()
+  );
 
-    // Experience
-    const expVal = parseFloat(c.experience) || 0;
-    if (filters.minExperience && expVal < parseFloat(filters.minExperience)) return false;
-    if (filters.maxExperience && expVal > parseFloat(filters.maxExperience)) return false;
+  if (!stateMatch) return false;
+}
 
-    // Salary
-    const salVal = parseFloat(c.current_salary) || 0;
-    if (filters.minSalary && salVal < parseFloat(filters.minSalary)) return false;
-    if (filters.maxSalary && salVal > parseFloat(filters.maxSalary)) return false;
+  // filteredCandidates ke andar Experience Filter
+if (appliedFilters.experience.length > 0) {
+  const expVal = parseFloat(c.experience) || 0;
 
-    // Designation
-    if (filters.designation) {
-      const des = filters.designation.toLowerCase();
-      const matchesDes = c.current_role?.toLowerCase().includes(des) ||
-        c.experiences?.some(ex => ex.designation?.toLowerCase().includes(des));
-      if (!matchesDes) return false;
+  const matchesExperience = appliedFilters.experience.some((range) => {
+    if (range === "fresher") {
+      return expVal === 0;
     }
 
-    // Department (Search in rule)
-    if (filters.department.length > 0) {
-      const matchesDept = filters.department.some(dept =>
-        c.current_role?.toLowerCase().includes(dept.toLowerCase())
-      );
-      if (!matchesDept) return false;
+    if (range === "20+") {
+      return expVal >= 20;
     }
 
-    // Industry - Placeholder logic
-    if (filters.industry.length > 0) {
-      // checks against current company or role for now
-      const matchesInd = filters.industry.some(ind =>
-        c.current_role?.toLowerCase().includes(ind.toLowerCase()) ||
-        c.current_company?.toLowerCase().includes(ind.toLowerCase())
-      );
-      if (!matchesInd) return false;
+    const [min, max] = range.split("-").map(Number);
+    return expVal >= min && expVal <= max;
+  });
+
+  if (!matchesExperience) return false;
+}
+
+// Salary Filter
+if (appliedFilters.salary.length > 0) {
+  // Backend expected_salary ko rupees me store karta hai
+  // Example: 12 LPA = 1200000
+  const salVal = Number(c.expected_salary || 0);
+
+  const matchesSalary = appliedFilters.salary.some((range) => {
+    // "20+ LPA"
+    if (range === "20+ LPA") {
+      return salVal >= 20 * 100000;
     }
 
-    // Notice Period
-    if (filters.noticePeriod.length > 0) {
-      const matchesNP = filters.noticePeriod.some(np =>
-        c.notice_period?.toLowerCase() === np.toLowerCase() ||
-        c.notice_period?.toLowerCase().includes(np.toLowerCase())
-      );
-      if (!matchesNP) return false;
-    }
+    // "10-15 LPA" -> ["10", "15"]
+    const cleanedRange = range.replace(" LPA", "");
+    const [min, max] = cleanedRange.split("-").map(Number);
+
+    // Convert LPA to rupees
+    const minSalary = min * 100000;
+    const maxSalary = max * 100000;
+
+    return salVal >= minSalary && salVal <= maxSalary;
+  });
+
+  if (!matchesSalary) return false;
+}
+    // Department
+    if (appliedFilters.department.length > 0) {
+  const matchesDept = appliedFilters.department.some((dept) => {
+    const selectedCategory = dept.toLowerCase();
+
+    // Check all experiences.category
+    const categoryMatch =
+      c.experiences?.some(
+        (exp) =>
+          exp.category &&
+          exp.category.toLowerCase() === selectedCategory
+      ) ?? false;
+
+    // Optional fallback: current role contains selected category
+    const roleMatch =
+      c.current_role?.toLowerCase().includes(selectedCategory) ?? false;
+
+    return categoryMatch || roleMatch;
+  });
+
+  if (!matchesDept) return false;
+}
 
     // Gender
-    if (filters.gender) {
-      if ((c as any).gender?.toLowerCase() !== filters.gender.toLowerCase()) return false;
-    }
-
-    // Age
-    if (filters.minAge || filters.maxAge) {
-      const age = (c as any).age ? parseInt((c as any).age) : 0;
-      if (age > 0) {
-        if (filters.minAge && age < parseInt(filters.minAge)) return false;
-        if (filters.maxAge && age > parseInt(filters.maxAge)) return false;
-      }
+    if (appliedFilters.gender) {
+      if ((c as any).gender?.toLowerCase() !== appliedFilters.gender.toLowerCase()) return false;
     }
 
     return matchesSearch;
@@ -637,21 +787,33 @@ const toggleCompany = (company: string) => {
       <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 p-4">
         {/* LEFT FILTERS */}
         <aside className="hidden md:block col-span-3 bg-white rounded-xl p-4 shadow-sm h-fit max-h-screen overflow-y-auto sticky top-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-sm">Filters</h3>
+          <div className="mb-4">
+            {/* Top Row */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="font-semibold text-sm text-gray-900">Filters</h3>
+
+              <button
+                onClick={clearFilters}
+                className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+              >
+                Clear all
+              </button>
+            </div>
+
+            {/* Apply Button */}
             <button
-              onClick={clearFilters}
-              className="text-xs text-blue-600 hover:underline"
+              onClick={applyFilters}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium text-sm transition"
             >
-              Clear all
+              Apply Filters
             </button>
           </div>
 
           <hr className="mb-4" />
 
           {/* Gender*/}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between">
               Gender <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
 
@@ -696,10 +858,10 @@ const toggleCompany = (company: string) => {
           <hr className="mb-4" />
 
           {/* Current Company */}
-          <div className="mb-4">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">
-              Current Company
-            </Label>
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between">
+              Current Company <span><ChevronDown className="w-4 h-4" /></span>
+            </summary>
 
             {/* Search */}
             <input
@@ -741,300 +903,173 @@ const toggleCompany = (company: string) => {
                   );
                 })}
             </div>
-          </div>
+          </details>
 
           <hr className="mb-4" />
 
           {/* Location */}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Location <span>⌃</span>
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between">
+              Location <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
 
+            {/* Search State */}
             <input
-              placeholder="Search location"
-              value={filters.locationSearch}
-              onChange={(e) => {
-                setFilters({
-                  ...filters,
-                  locationSearch: e.target.value,
-                });
-              }}
-              className="w-full border rounded px-2 py-1 mb-3 text-sm"
+              type="text"
+              placeholder="Search state"
+              value={stateSearch}
+              onChange={(e) => setStateSearch(e.target.value)}
+              className="w-full border rounded px-2 py-2 mb-3 text-sm"
             />
 
-            {[
-              ["Hyderabad", "1,153"],
-              ["Bengaluru", "1,111"],
-              ["Pune", "516"],
-              ["Chennai", "234"],
-              ["Delhi", "500"],
-              ["Mumbai", "600"],
-            ].map(([city, count]) => (
-              <label
-                key={city}
-                className="flex justify-between items-center mb-2 cursor-pointer"
-              >
-                <span className="flex gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={filters.locations.includes(city)}
-                    onChange={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        locations: prev.locations.includes(city)
-                          ? prev.locations.filter((c) => c !== city)
-                          : [...prev.locations, city],
-                      }))
-                    }
-                  />
-                  {city}
-                </span>
-                <span className="text-gray-400 text-xs">{count}</span>
-              </label>
-            ))}
+            {/* State List */}
+            <div className="max-h-48 overflow-y-auto">
+              {states
+                .filter((state) =>
+                  state.name
+                    .toLowerCase()
+                    .includes(stateSearch.toLowerCase())
+                )
+                .map((state) => (
+                  <label
+                    key={state.id}
+                    className="flex items-center gap-2 mb-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.locations.includes(state.name)}
+                      onChange={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          locations: prev.locations.includes(state.name)
+                            ? prev.locations.filter(
+                                (item) => item !== state.name
+                              )
+                            : [...prev.locations, state.name],
+                        }))
+                      }
+                    />
+                    <span className="text-sm text-gray-700">
+                      {state.name}
+                    </span>
+                  </label>
+                ))}
+            </div>
           </details>
 
           <hr className="mb-4" />
 
           {/* Experience */}
-          <details open>
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Experience (Years) <span>⌃</span>
-            </summary>
-
-            <div className="flex items-center gap-2">
-              <select
-                value={filters.minExperience}
-                onChange={(e) =>
-                  setFilters({ ...filters, minExperience: e.target.value })
-                }
-                className="w-full border rounded px-2 py-1 text-sm"
-              >
-                <option value="">Min</option>
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="3">3</option>
-                <option value="5">5</option>
-                <option value="8">8</option>
-                <option value="10">10</option>
-              </select>
-
-              <span>to</span>
-
-              <select
-                value={filters.maxExperience}
-                onChange={(e) =>
-                  setFilters({ ...filters, maxExperience: e.target.value })
-                }
-                className="w-full border rounded px-2 py-1 text-sm"
-              >
-                <option value="">Max</option>
-                <option value="2">2</option>
-                <option value="5">5</option>
-                <option value="8">8</option>
-                <option value="12">12</option>
-                <option value="15">15+</option>
-              </select>
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Salary  */}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Salary (INR-Lacs) <span>⌃</span>
-            </summary>
-
-            <div className="flex items-center gap-2">
-              <select
-                className="w-full border rounded px-2 py-2 text-sm"
-                value={filters.minSalary}
-                onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
-              >
-                <option value="">Min</option>
-                <option value="0">0</option>
-                <option value="3">3</option>
-                <option value="6">6</option>
-                <option value="10">10</option>
-                <option value="15">15</option>
-                <option value="20">20</option>
-              </select>
-
-              <span>to</span>
-
-              <select
-                className="w-full border rounded px-2 py-2 text-sm"
-                value={filters.maxSalary}
-                onChange={(e) => setFilters({ ...filters, maxSalary: e.target.value })}
-              >
-                <option value="">Max</option>
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="15">15</option>
-                <option value="25">25</option>
-                <option value="50">50+</option>
-              </select>
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Current Designation*/}
           <details className="mb-4">
             <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Current designation <span>⌄</span>
+              Experience (Years) <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
 
-            <div className="relative">
-              <input
-                placeholder="Add designation"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.designation}
-                onChange={(e) => setFilters({ ...filters, designation: e.target.value })}
-              />
-              <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
+            <div className="space-y-2">
+              {experienceList.map((range) => (
+                <label
+                  key={range}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.experience.includes(range)}
+                    onChange={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        experience: prev.experience.includes(range)
+                          ? prev.experience.filter((item) => item !== range)
+                          : [...prev.experience, range],
+                      }))
+                    }
+                  />
+                  <span className="text-sm text-gray-700">{range}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+
+          <hr className="mb-4" />
+
+          {/* Salary */}
+          <details className="mb-4">
+            <summary className="cursor-pointer font-medium flex justify-between mb-2">
+              Salary (INR-Lacs) <span><ChevronDown className="w-4 h-4" /></span>
+            </summary>
+
+            <div className="space-y-2">
+              {salaryRanges.map((range) => (
+                <label
+                  key={range}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.salary.includes(range)}
+                    onChange={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        salary: prev.salary.includes(range)
+                          ? prev.salary.filter((item) => item !== range)
+                          : [...prev.salary, range],
+                      }))
+                    }
+                  />
+                  <span className="text-sm text-gray-700">{range}</span>
+                </label>
+              ))}
             </div>
           </details>
 
           <hr className="mb-4" />
 
           {/* Department & Role */}
-          <details open className="mb-4">
+          <details className="mb-4">
             <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Department and Role <span>⌃</span>
+              Department & Role <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
 
-            <div className="max-h-40 overflow-y-auto">
-              {[
-                "Engineering - Software & QA",
-                "Consulting",
-                "IT & Information Security",
-                "Project & Program Management",
-                "Sales",
-                "Marketing",
-                "HR"
-              ].map((name) => (
-                <label
-                  key={name}
-                  className="flex justify-between items-center mb-2 cursor-pointer"
-                >
-                  <span className="flex gap-2 text-sm">
+            {/* Search Box */}
+            <input
+              type="text"
+              placeholder="Search category"
+              value={jobCategorySearch}
+              onChange={(e) => setJobCategorySearch(e.target.value)}
+              className="w-full border rounded px-2 py-2 text-sm mb-3"
+            />
+
+            {/* Category List */}
+            <div className="max-h-48 overflow-y-auto">
+              {jobCategoryOptions
+                .filter((option) =>
+                  option.label
+                    .toLowerCase()
+                    .includes(jobCategorySearch.toLowerCase())
+                )
+                .map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex items-center gap-2 mb-2 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
-                      checked={filters.department.includes(name)}
-                      onChange={() => setFilters(prev => ({
-                        ...prev,
-                        department: prev.department.includes(name)
-                          ? prev.department.filter(d => d !== name)
-                          : [...prev.department, name]
-                      }))}
+                      checked={filters.department.includes(option.value)}
+                      onChange={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          department: prev.department.includes(option.value)
+                            ? prev.department.filter(
+                                (item) => item !== option.value
+                              )
+                            : [...prev.department, option.value],
+                        }))
+                      }
                     />
-                    {name}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </details>
-
-          <hr className="mb-4" />
-
-          {/*  Industry  */}
-          <details open>
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Industry <span>⌃</span>
-            </summary>
-
-            <div className="max-h-40 overflow-y-auto">
-              {[
-                "IT Services & Consulting",
-                "Software Product",
-                "Management Consulting",
-                "Emerging Technologies",
-                "Banking",
-                "Healthcare"
-              ].map((name) => (
-                <label
-                  key={name}
-                  className="flex justify-between items-center mb-2 cursor-pointer"
-                >
-                  <span className="flex gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={filters.industry.includes(name)}
-                      onChange={() => setFilters(prev => ({
-                        ...prev,
-                        industry: prev.industry.includes(name)
-                          ? prev.industry.filter(i => i !== name)
-                          : [...prev.industry, name]
-                      }))}
-                    />
-                    {name}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </details>
-          <hr className="my-4" />
-
-          {/* Notice Period*/}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-2">
-              Notice period <span>⌃</span>
-            </summary>
-
-            {[
-              "0 - 15 days",
-              "1 month",
-              "2 months",
-              "3 months",
-              "More than 3 months",
-              "Serving Notice Period",
-            ].map((label) => (
-              <label
-                key={label}
-                className="flex justify-between items-center mb-2 cursor-pointer"
-              >
-                <span className="flex gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={filters.noticePeriod.includes(label)}
-                    onChange={() => setFilters(prev => ({
-                      ...prev,
-                      noticePeriod: prev.noticePeriod.includes(label)
-                        ? prev.noticePeriod.filter(n => n !== label)
-                        : [...prev.noticePeriod, label]
-                    }))}
-                  />
-                  {label}
-                </span>
-              </label>
-            ))}
-          </details>
-
-          <hr className="mb-4" />
-
-          {/* Age  */}
-          <details open className="mb-4">
-            <summary className="cursor-pointer font-medium flex justify-between mb-3">
-              Age <span>⌃</span>
-            </summary>
-
-            <div className="flex items-center gap-2">
-              <input
-                placeholder="Min"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.minAge}
-                onChange={(e) => setFilters({ ...filters, minAge: e.target.value })}
-              />
-              <span>to</span>
-              <input
-                placeholder="Max"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.maxAge}
-                onChange={(e) => setFilters({ ...filters, maxAge: e.target.value })}
-              />
+                    <span className="text-sm text-gray-700">
+                      {option.label}
+                    </span>
+                  </label>
+                ))}
             </div>
           </details>
 
@@ -1043,453 +1078,57 @@ const toggleCompany = (company: string) => {
           {/*  Degree / Course */}
           <details className="mb-4">
             <summary className="cursor-pointer font-medium flex justify-between mb-3">
-              Degree/Course <span>⌄</span>
+              Degree <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
-            {/* Expanded details could go here, for now keeping simple UI */}
-            <div className="text-sm text-gray-500 italic">Select degrees (Coming soon)</div>
-          </details>
 
-          <hr className="mb-4" />
+            {/* Search Box */}
+            <input
+              type="text"
+              placeholder="Search degree"
+              value={degreeSearch}
+              onChange={(e) => setDegreeSearch(e.target.value)}
+              className="w-full border rounded px-2 py-2 text-sm mb-3"
+            />
 
-          {/* College Name  */}
-          <details className="mb-2">
-            <summary className="cursor-pointer font-medium flex justify-between mb-3">
-              College name <span>⌄</span>
-            </summary>
-            {/* Expanded details for colleges */}
-            <div className="text-sm text-gray-500 italic">Select colleges (Coming soon)</div>
+            {/* Degree List */}
+            <div className="max-h-48 overflow-y-auto">
+              {degreeOptions
+                .filter((option) =>
+                  option.label
+                    .toLowerCase()
+                    .includes(degreeSearch.toLowerCase())
+                )
+                .map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex items-center gap-2 mb-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.degree.includes(option.value)}
+                      onChange={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          degree: prev.degree.includes(option.value)
+                            ? prev.degree.filter(
+                                (item) => item !== option.value
+                              )
+                            : [...prev.degree, option.value],
+                        }))
+                      }
+                    />
+                    <span className="text-sm text-gray-700">
+                      {option.label}
+                    </span>
+                  </label>
+                ))}
+            </div>
           </details>
         </aside>
 
       {/* mobile filter */}
-        <div
-          className={`fixed inset-0 bg-black/40 z-50 md:hidden transition-transform ${showFilters ? "translate-x-0" : "translate-x-full"
-            }`}
-        >
-          <div className="absolute right-0 w-3/4 max-w-xs h-full bg-white p-4 overflow-y-auto">
-            <button
-              onClick={() => setShowFilters(false)}
-              className="mb-4 text-gray-500"
-            >
-              Close ✕
-            </button>
 
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm">Filters</h3>
-              <button
-                onClick={clearFilters}
-                className="text-xs text-blue-600 hover:underline"
-              >
-                Clear all
-              </button>
-            </div>
 
-            {/* Hide Profiles */}
-            <label className="flex items-center gap-2 font-medium mb-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.hideProfiles}
-                onChange={(e) => setFilters({ ...filters, hideProfiles: e.target.checked })}
-              />
-              Hide Viewed Profiles
-            </label>
-
-            <hr className="mb-4" />
-
-            {/* Premium */}
-            <label className="flex items-center gap-2 mb-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.premiumOnly}
-                onChange={(e) => setFilters({ ...filters, premiumOnly: e.target.checked })}
-              />
-              Premium Institute Candidates
-            </label>
-
-            <hr className="mb-4" />
-
-            {/* Keywords */}
-            <details className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between">
-                Keywords <span>⌄</span>
-              </summary>
-              <div className="mt-2">
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm"
-                  placeholder="e.g. React, Java"
-                  value={filters.keywords}
-                  onChange={(e) => setFilters({ ...filters, keywords: e.target.value })}
-                />
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Current Company */}
-                     <div className="mb-4">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">
-              Current Company
-            </Label>
-
-            {/* Search */}
-            <input
-              type="text"
-              placeholder="Search company"
-              value={searchCompany}
-              onChange={(e) => setSearchCompany(e.target.value)}
-              className="w-full border rounded px-2 py-2 text-sm mb-2"
-            />
-
-            {/* List */}
-            <div className="max-h-48 overflow-y-auto">
-              {allCompanies
-                .filter((company) =>
-                  company.toLowerCase().includes(searchCompany.toLowerCase())
-                )
-                .map((company) => {
-                  const checked = filters.currentCompany.includes(company);
-
-                  return (
-                    <div
-                      key={company}
-                      className="flex items-center justify-between mb-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleCompany(company)}
-                        />
-                        <label className="text-sm text-gray-700">
-                          {company}
-                        </label>
-                      </div>
-
-                      {/* Optional count (agar data ho to) */}
-                      {/* <span className="text-xs text-gray-400">123</span> */}
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-
-            <hr className="mb-4" />
-
-            {/* Location */}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Location <span>⌃</span>
-              </summary>
-
-              <input
-                placeholder="Search location"
-                className="w-full border rounded px-2 py-1 mb-3 text-sm"
-                value={filters.locationSearch}
-                onChange={(e) => setFilters({ ...filters, locationSearch: e.target.value })}
-              />
-
-              {[
-                ["Hyderabad", "1,153"],
-                ["Bengaluru", "1,111"],
-                ["Pune", "516"],
-                ["Chennai", "234"],
-              ].map(([city, count]) => (
-                <label
-                  key={city}
-                  className="flex justify-between items-center mb-2 cursor-pointer"
-                >
-                  <span className="flex gap-2">
-                    <input
-                      type="checkbox"
-                      checked={filters.locations.includes(city)}
-                      onChange={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          locations: prev.locations.includes(city)
-                            ? prev.locations.filter((c) => c !== city)
-                            : [...prev.locations, city],
-                        }))
-                      }
-                    />
-                    {city}
-                  </span>
-                  <span className="text-gray-400">{count}</span>
-                </label>
-              ))}
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Experience */}
-            <details open>
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Experience (Years) <span>⌃</span>
-              </summary>
-
-              <div className="flex items-center gap-2">
-                <select
-                  value={filters.minExperience}
-                  onChange={(e) =>
-                    setFilters({ ...filters, minExperience: e.target.value })
-                  }
-                  className="w-full border rounded px-2 py-1 text-sm"
-                >
-                  <option value="">Min</option>
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="3">3</option>
-                  <option value="5">5</option>
-                  <option value="8">8</option>
-                  <option value="10">10</option>
-                </select>
-
-                <span>to</span>
-
-                <select
-                  value={filters.maxExperience}
-                  onChange={(e) =>
-                    setFilters({ ...filters, maxExperience: e.target.value })
-                  }
-                  className="w-full border rounded px-2 py-1 text-sm"
-                >
-                  <option value="">Max</option>
-                  <option value="2">2</option>
-                  <option value="5">5</option>
-                  <option value="8">8</option>
-                  <option value="12">12</option>
-                  <option value="15">15+</option>
-                </select>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Salary  */}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Salary (INR-Lacs) <span>⌃</span>
-              </summary>
-
-              <div className="flex items-center gap-2">
-                <select
-                  className="w-full border rounded px-2 py-2 text-sm"
-                  value={filters.minSalary}
-                  onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
-                >
-                  <option value="">Min</option>
-                  <option value="0">0</option>
-                  <option value="3">3</option>
-                  <option value="6">6</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="20">20</option>
-                </select>
-
-                <span>to</span>
-
-                <select
-                  className="w-full border rounded px-2 py-2 text-sm"
-                  value={filters.maxSalary}
-                  onChange={(e) => setFilters({ ...filters, maxSalary: e.target.value })}
-                >
-                  <option value="">Max</option>
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="25">25</option>
-                  <option value="50">50+</option>
-                </select>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Current Designation*/}
-            <details className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Current designation <span>⌄</span>
-              </summary>
-
-              <div className="relative">
-                <input
-                  placeholder="Add designation"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                  value={filters.designation}
-                  onChange={(e) => setFilters({ ...filters, designation: e.target.value })}
-                />
-                <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Department & Role */}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Department and Role <span>⌃</span>
-              </summary>
-
-              <div className="relative mb-3">
-                <input
-                  placeholder="Search department/role"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-                <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
-              </div>
-              <div className="max-h-40 overflow-y-auto">
-                {[
-                  "Engineering - Software & QA",
-                  "Consulting",
-                  "IT & Information Security",
-                  "Project & Program Management",
-                  "Sales",
-                  "Marketing",
-                  "HR"
-                ].map((name) => (
-                  <label
-                    key={name}
-                    className="flex justify-between items-center mb-2 cursor-pointer"
-                  >
-                    <span className="flex gap-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.department.includes(name)}
-                        onChange={() => setFilters(prev => ({
-                          ...prev,
-                          department: prev.department.includes(name)
-                            ? prev.department.filter(d => d !== name)
-                            : [...prev.department, name]
-                        }))}
-                      />
-                      {name}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </details>
-            <hr className="mb-4" />
-
-            {/*  Industry  */}
-            <details open>
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Industry <span>⌃</span>
-              </summary>
-
-              <div className="max-h-40 overflow-y-auto">
-                {[
-                  "IT Services & Consulting",
-                  "Software Product",
-                  "Management Consulting",
-                  "Emerging Technologies",
-                  "Banking",
-                  "Healthcare"
-                ].map((name) => (
-                  <label
-                    key={name}
-                    className="flex justify-between items-center mb-2 cursor-pointer"
-                  >
-                    <span className="flex gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={filters.industry.includes(name)}
-                        onChange={() => setFilters(prev => ({
-                          ...prev,
-                          industry: prev.industry.includes(name)
-                            ? prev.industry.filter(i => i !== name)
-                            : [...prev.industry, name]
-                        }))}
-                      />
-                      {name}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </details>
-            <hr className="my-4" />
-
-            {/* Notice Period*/}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-2">
-                Notice period <span>⌃</span>
-              </summary>
-
-              {[
-                "0 - 15 days",
-                "1 month",
-                "2 months",
-                "3 months",
-                "More than 3 months",
-                "Serving Notice Period",
-              ].map((label) => (
-                <label
-                  key={label}
-                  className="flex justify-between items-center mb-2 cursor-pointer"
-                >
-                  <span className="flex gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={filters.noticePeriod.includes(label)}
-                      onChange={() => setFilters(prev => ({
-                        ...prev,
-                        noticePeriod: prev.noticePeriod.includes(label)
-                          ? prev.noticePeriod.filter(n => n !== label)
-                          : [...prev.noticePeriod, label]
-                      }))}
-                    />
-                    {label}
-                  </span>
-                </label>
-              ))}
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Gender*/}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-3">
-                Gender <span>⌃</span>
-              </summary>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setFilters({ ...filters, gender: filters.gender === 'Male' ? '' : 'Male' })}
-                  className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Male' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
-                  Male
-                </button>
-                <button
-                  onClick={() => setFilters({ ...filters, gender: filters.gender === 'Female' ? '' : 'Female' })}
-                  className={`border rounded-full px-4 py-1 text-sm ${filters.gender === 'Female' ? 'bg-blue-100 border-blue-200' : 'hover:bg-gray-50'}`}>
-                  Female
-                </button>
-              </div>
-            </details>
-
-            <hr className="mb-4" />
-
-            {/* Age  */}
-            <details open className="mb-4">
-              <summary className="cursor-pointer font-medium flex justify-between mb-3">
-                Age <span>⌃</span>
-              </summary>
-
-            <div className="flex items-center gap-2">
-              <input
-                placeholder="Min"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.minAge}
-                onChange={(e) => setFilters({...filters, minAge: e.target.value})}
-              />
-              <span>to</span>
-              <input
-                placeholder="Max"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={filters.maxAge}
-                onChange={(e) => setFilters({...filters, maxAge: e.target.value})}
-              />
-            </div>
-          </details>
-          </div>
-        </div>
 
         {!selectedCandidate ? (
           <main className="col-span-12 md:col-span-9 space-y-4">
@@ -1663,56 +1302,42 @@ const toggleCompany = (company: string) => {
               </div>
               );
               })}
-              {/* Pagination */}
-          <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
-            {/* Previous */}
-            <button
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              disabled={page === 1}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium transition ${
-                page === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white hover:bg-gray-50"
-              }`}
-            >
-              Previous
-            </button>
+             {/* Pagination */}
+          <div className="flex items-center justify-center mt-8 px-4 py-3">
 
-            {/* Page Numbers */}
-            {[...Array(totalPages)].map((_, index) => {
-              const pageNumber = index + 1;
+            <div className="flex items-center gap-2">
+              {/* Previous */}
+              <button
+                disabled={page === 1}
+                onClick={() => {
+                  const newPage = Math.max(page - 1, 1);
+                  console.log("Previous Page:", newPage);
+                  setPage(newPage);
+                }}
+                className="px-4 py-2 border rounded-lg disabled:opacity-50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
 
-              return (
-                <button
-                  key={pageNumber}
-                  onClick={() => setPage(pageNumber)}
-                  className={`w-10 h-10 rounded-lg border text-sm font-medium transition ${
-                    page === pageNumber
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  {pageNumber}
-                </button>
-              );
-            })}
+              {/* Current Page */}
+              <p className="text-sm text-gray-500">
+              Page <span className="font-medium text-gray-900">{page}</span> of{" "}
+              <span className="font-medium text-gray-900">{totalPages}</span>
+            </p>
 
-            {/* Next */}
-            <button
-              onClick={() =>
-                setPage((prev) =>
-                  prev < totalPages ? prev + 1 : prev
-                )
-              }
-              disabled={page === totalPages}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium transition ${
-                page === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white hover:bg-gray-50"
-              }`}
-            >
-              Next
-            </button>
+              {/* Next */}
+              <button
+                disabled={page >= totalPages}
+                onClick={() => {
+                  const newPage = page + 1;
+                  console.log("Next Page:", newPage);
+                  setPage(newPage);
+                }}
+                className="px-4 py-2 border rounded-lg disabled:opacity-50"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
             </>
           ) : (
@@ -1750,115 +1375,6 @@ const toggleCompany = (company: string) => {
             </div>
           )}
           <div className="h-16" />
-          {/* BLURRED REST */}
-          {/* <div className="relative">
-
-            <div className="space-y-4 blur-sm opacity-40 select-none pointer-events-none grayscale">
-              {filteredCandidates.slice(1, 3).map((c) => (
-                <div
-                  key={c.id}
-                  className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row gap-4"
-                >
-
-                        <input type="checkbox" className="mt-2 md:mt-0" />
-
-
-                        <div className="flex-1 flex flex-col gap-2">
-                          <h3
-                            onClick={() => {
-                              setSelectedCandidate(c);
-
-                              setViewedCandidateIds((prev) =>
-                                prev.includes(c.id) ? prev : [...prev, c.id]
-                              );
-                            }}
-                            className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
-                          >
-                            {viewedCandidateIds.includes(c.id) && (
-                              <CheckSquare size={16} className="text-blue-600" />
-                            )}
-                            <h3 className="font-semibold text-gray-900">
-                              <Highlight text={c.full_name} />
-                            </h3>
-                          </h3>
-
-                          
-                          <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
-                            <span>
-                              <Highlight text={c.experience} />
-                            </span>
-                            <span>
-                              <Highlight text={formatSalary(c.current_salary)} />
-                            </span>
-
-                            {c.expected_salary && (
-                              <span>
-                                Expected:
-                                <Highlight text={formatSalary(c.expected_salary)} />
-                              </span>
-                            )}
-                            <span>
-                              <Highlight text={c.city?.name} />,{" "}
-                              <Highlight text={c.state?.name} />
-                            </span>
-                          </div>
-                        </div>
-
-                        
-                        <div className="flex md:flex-col items-center md:items-center justify-between md:justify-center gap-2 md:gap-3 md:w-52 w-full border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-4">
-                          <img
-                            src={
-                              c.profile_image
-                                ? `${process.env.NEXT_PUBLIC_URL}${c.profile_image}`
-                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                  c.full_name
-                                )}`
-                            }
-                            alt={c.full_name}
-                            className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border"
-                          />
-
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <Mail size={14} /> <Highlight text={c.email} />
-                          </p>
-
-                          {c.resume && (
-                            <a
-                              href={`${process.env.NEXT_PUBLIC_URL}${c.resume}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
-                            >
-                              <FileText size={14} />  View CV
-                            </a>
-                          )}
-                        </div>
-                </div>
-              ))}
-            </div>
-
-           
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-white rounded-xl shadow-xl p-6 text-center w-[350px]">
-
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Unlock Full Access
-                </h3>
-
-                <p className="text-gray-500 mb-4">
-                  Subscribe to our premium plan to view unlimited candidate profiles
-                  and access contact details.
-                </p>
-                <Link href="/pricing">
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2 rounded-full">
-                    View Subscription Plans
-                  </Button>
-                </Link>
-
-              </div>
-            </div>
-
-          </div> */}
 
         </main>
         ) : (
