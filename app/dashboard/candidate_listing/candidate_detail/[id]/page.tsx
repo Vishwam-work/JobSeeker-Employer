@@ -60,32 +60,43 @@ export default function CandidateDetailPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem("employeer_token");
+ useEffect(() => {
+  const token = localStorage.getItem("employeer_token");
 
-    if (!token) return;
+  if (!token) {
+    setLoading(false);
+    return;
+  }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  fetch(`${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("API Response:", data);
+
+      const profiles = Array.isArray(data)
+        ? data
+        : Array.isArray(data.results)
+        ? data.results
+        : [];
+
+      setCandidates(profiles);
+
+      const found = profiles.find(
+        (item: Candidate) => item.id === Number(params.id)
+      );
+
+      setCandidate(found || null);
+      setLoading(false);
     })
-      .then((res) => res.json())
-      .then((data) => {
-        setCandidates(data || []);
-
-        const found = data.find(
-          (item: Candidate) => item.id === Number(params.id),
-        );
-
-        setCandidate(found || null);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, [params.id]);
+    .catch((err) => {
+      console.error("Fetch error:", err);
+      setLoading(false);
+    });
+}, [params.id]);
 
   const formatSalary = (value?: string | number) => {
     if (!value) return "-";

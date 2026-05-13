@@ -39,41 +39,41 @@ export default function AdminExcelUpload({
     }
   }, []);
 
- const resetDialog = () => {
-  setDialogOpen(false);
-  setSelectedFile(null);
-  setUploadErrors([]);
-  setUploadedRows([]);
-  setUploadError("");
-  setUploadMessage("");
-  setUploadStatus("");
-  setUploading(false);
-  setUploadCompleted(false);
-};
+  const resetDialog = () => {
+    setDialogOpen(false);
+    setSelectedFile(null);
+    setUploadErrors([]);
+    setUploadedRows([]);
+    setUploadError("");
+    setUploadMessage("");
+    setUploadStatus("");
+    setUploading(false);
+    setUploadCompleted(false);
+  };
 
-const formatExcelDate = (excelDate: any) => {
-  if (!excelDate) return "";
+  const formatExcelDate = (excelDate: any) => {
+    if (!excelDate) return "";
 
-  // Excel serial number
-  if (typeof excelDate === "number") {
-    const date = XLSX.SSF.parse_date_code(excelDate);
+    // Excel serial number
+    if (typeof excelDate === "number") {
+      const date = XLSX.SSF.parse_date_code(excelDate);
 
-    return `${String(date.d).padStart(2, "0")}/${String(date.m).padStart(2, "0")}/${date.y}`;
-  }
+      return `${String(date.d).padStart(2, "0")}/${String(date.m).padStart(2, "0")}/${date.y}`;
+    }
 
-  // Already string date
-  const parsedDate = new Date(excelDate);
+    // Already string date
+    const parsedDate = new Date(excelDate);
 
-  if (!isNaN(parsedDate.getTime())) {
-    const day = String(parsedDate.getDate()).padStart(2, "0");
-    const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
-    const year = parsedDate.getFullYear();
+    if (!isNaN(parsedDate.getTime())) {
+      const day = String(parsedDate.getDate()).padStart(2, "0");
+      const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+      const year = parsedDate.getFullYear();
 
-    return `${day}/${month}/${year}`;
-  }
+      return `${day}/${month}/${year}`;
+    }
 
-  return String(excelDate);
-};
+    return String(excelDate);
+  };
 
   const handleExcelUpload = async () => {
     if (!selectedFile) {
@@ -102,66 +102,74 @@ const formatExcelDate = (excelDate: any) => {
         const key = `${row.title}-${row.company}-${row.job_title}`;
 
         if (seen.has(key)) {
-            errors.push(`Row ${rowNumber}: Duplicate entry in file`);
+          errors.push(`Row ${rowNumber}: Duplicate entry in file`);
         } else {
-            seen.add(key);
+          seen.add(key);
         }
 
         // Required fields
         if (!row.title) errors.push(`Row ${rowNumber}: Title is required`);
-        if (!row.job_title) errors.push(`Row ${rowNumber}: Job Title is required`);
+        if (!row.job_title)
+          errors.push(`Row ${rowNumber}: Job Title is required`);
         if (!row.company) errors.push(`Row ${rowNumber}: Company is required`);
-        if (!row.category) errors.push(`Row ${rowNumber}: Category is required`);
-        if (!row.location) errors.push(`Row ${rowNumber}: Location is required`);
+        if (!row.category)
+          errors.push(`Row ${rowNumber}: Category is required`);
+        if (!row.location)
+          errors.push(`Row ${rowNumber}: Location is required`);
         if (!row.salary) errors.push(`Row ${rowNumber}: Salary is required`);
 
         // Salary number check
         if (row.salary && isNaN(Number(row.salary))) {
-            errors.push(`Row ${rowNumber}: Salary must be a number`);
+          errors.push(`Row ${rowNumber}: Salary must be a number`);
         }
 
         if (row.salary_max && isNaN(Number(row.salary_max))) {
-            errors.push(`Row ${rowNumber}: Salary Max must be a number`);
+          errors.push(`Row ${rowNumber}: Salary Max must be a number`);
         }
 
         // Vacancies
         if (row.vacancies && isNaN(Number(row.vacancies))) {
-            errors.push(`Row ${rowNumber}: Vacancies must be a number`);
+          errors.push(`Row ${rowNumber}: Vacancies must be a number`);
         }
 
         // Boolean fields
-        if (row.is_urgent && !["true", "false"].includes(String(row.is_urgent).toLowerCase())) {
-            errors.push(`Row ${rowNumber}: is_urgent must be true/false`);
+        if (
+          row.is_urgent &&
+          !["true", "false"].includes(String(row.is_urgent).toLowerCase())
+        ) {
+          errors.push(`Row ${rowNumber}: is_urgent must be true/false`);
         }
 
-        if (row.is_remote && !["true", "false"].includes(String(row.is_remote).toLowerCase())) {
-            errors.push(`Row ${rowNumber}: is_remote must be true/false`);
+        if (
+          row.is_remote &&
+          !["true", "false"].includes(String(row.is_remote).toLowerCase())
+        ) {
+          errors.push(`Row ${rowNumber}: is_remote must be true/false`);
         }
-
 
         // Work mode validation
         if (row.work_mode) {
-            const validModes = ["remote", "onsite", "hybrid"];
-            if (!validModes.includes(String(row.work_mode).toLowerCase())) {
+          const validModes = ["remote", "onsite", "hybrid"];
+          if (!validModes.includes(String(row.work_mode).toLowerCase())) {
             errors.push(`Row ${rowNumber}: Invalid work_mode`);
-            }
+          }
         }
 
         // Website URL check
         if (row.website_apply) {
-            try {
+          try {
             new URL(row.website_apply);
-            } catch {
+          } catch {
             errors.push(`Row ${rowNumber}: Invalid website URL`);
-            }
+          }
         }
-        });
+      });
 
-        if (errors.length > 0) {
+      if (errors.length > 0) {
         setUploadErrors(errors);
         toast.error("Fix all errors before uploading");
         return;
-        }
+      }
 
       const token = localStorage.getItem("employeer_token");
 
@@ -183,31 +191,31 @@ const formatExcelDate = (excelDate: any) => {
             salary: String(row.salary || ""),
             salary_max: String(row.salary_max || ""),
             job_type: row.job_type
-            ? String(row.job_type)
-                .split(",")
-                .map((item) => item.trim().toLowerCase())
-            : [],
+              ? String(row.job_type)
+                  .split(",")
+                  .map((item) => item.trim().toLowerCase())
+              : [],
             work_mode: row.work_mode || "",
             vacancies: Number(row.vacancies) || 1,
             application_deadline: row.application_deadline
-            ? formatExcelDate(row.application_deadline)
-            : "",
+              ? formatExcelDate(row.application_deadline)
+              : "",
             description: row.description || "",
             requirements: row.requirements || "",
             benefits: row.benefits || "",
             skills: row.skills
-            ? String(row.skills)
-                .split(",")
-                .map((item) => item.trim())
-            : [],
+              ? String(row.skills)
+                  .split(",")
+                  .map((item) => item.trim())
+              : [],
             is_urgent: String(row.is_urgent).toLowerCase() === "true",
             is_remote: String(row.is_remote).toLowerCase() === "true",
             status: "active",
-           questions: row.questions
-            ? String(row.questions)
-                .split("|")
-                .map((item) => item.trim())
-            : [],
+            questions: row.questions
+              ? String(row.questions)
+                  .split("|")
+                  .map((item) => item.trim())
+              : [],
             website_apply: row.website_apply || "",
           };
 
@@ -229,10 +237,10 @@ const formatExcelDate = (excelDate: any) => {
               `Row ${index + 1}: ${payload.title} uploaded successfully`,
             ]);
           }
-           if (onUploadSuccess) {
+          if (onUploadSuccess) {
             await onUploadSuccess();
-            }
-            setUploadCompleted(true);
+          }
+          setUploadCompleted(true);
           if (!response.ok) {
             let errorMessage = `Row ${index + 1}: Upload failed`;
 
@@ -259,15 +267,15 @@ const formatExcelDate = (excelDate: any) => {
 
   return (
     <Dialog
-    open={dialogOpen}
-    onOpenChange={(open) => {
+      open={dialogOpen}
+      onOpenChange={(open) => {
         setDialogOpen(open);
 
         // Dialog close hone par reset
         if (!open) {
-        resetDialog();
+          resetDialog();
         }
-    }}
+      }}
     >
       <DialogTrigger asChild>
         {triggerButton || (
@@ -307,28 +315,30 @@ const formatExcelDate = (excelDate: any) => {
                 setSelectedFile(file);
                 setUploadCompleted(false);
                 const validTypes = [
-                    "application/vnd.ms-excel",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                  "application/vnd.ms-excel",
+                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 ];
 
                 if (!validTypes.includes(file.type)) {
-                    setUploadErrors(["Only Excel files (.xls, .xlsx) are allowed"]);
-                    e.target.value = "";
-                    return;
+                  setUploadErrors([
+                    "Only Excel files (.xls, .xlsx) are allowed",
+                  ]);
+                  e.target.value = "";
+                  return;
                 }
 
                 const maxSize = 700 * 1024;
 
                 if (file.size > maxSize) {
-                    setUploadErrors(["File size must be less than 700 KB"]);
-                    e.target.value = "";
-                    return;
+                  setUploadErrors(["File size must be less than 700 KB"]);
+                  e.target.value = "";
+                  return;
                 }
 
                 const reader = new FileReader();
 
                 reader.onload = (event) => {
-                    try {
+                  try {
                     const data = event.target?.result;
 
                     const workbook = XLSX.read(data, { type: "binary" });
@@ -340,33 +350,33 @@ const formatExcelDate = (excelDate: any) => {
                     const errors: string[] = [];
 
                     jsonData.forEach((row, index) => {
-                    const rowNumber = index + 1;
+                      const rowNumber = index + 1;
 
-                    if (!row.title) {
+                      if (!row.title) {
                         errors.push(`Row ${rowNumber}: Title is required`);
-                    }
+                      }
 
-                    if (!row.job_title) {
+                      if (!row.job_title) {
                         errors.push(`Row ${rowNumber}: Job Title is required`);
-                    }
+                      }
 
-                    if (!row.company) {
+                      if (!row.company) {
                         errors.push(`Row ${rowNumber}: Company is required`);
-                    }
+                      }
 
-                    if (!row.category) {
+                      if (!row.category) {
                         errors.push(`Row ${rowNumber}: Category is required`);
-                    }
+                      }
 
-                    if (!row.salary) {
+                      if (!row.salary) {
                         errors.push(`Row ${rowNumber}: Salary is required`);
-                    }
+                      }
                     });
                     setUploadErrors(errors);
-                    } catch (error) {
+                  } catch (error) {
                     console.error(error);
                     setUploadErrors(["Excel validation failed"]);
-                    }
+                  }
                 };
 
                 reader.readAsBinaryString(file);
@@ -434,30 +444,26 @@ const formatExcelDate = (excelDate: any) => {
 
         {/* Footer */}
         <div className="flex justify-end gap-3 px-4 sm:px-6 py-4 border-t bg-gray-50">
-        <Button
-            variant="outline"
-            onClick={resetDialog}
-            disabled={uploading}
-        >
+          <Button variant="outline" onClick={resetDialog} disabled={uploading}>
             Cancel
-        </Button>
+          </Button>
 
-        {!uploadCompleted && (
+          {!uploadCompleted && (
             <Button
-            className="bg-green-600 hover:bg-green-700 text-white"
-            disabled={uploading || !selectedFile || uploadErrors.length > 0}
-            onClick={async () => {
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={uploading || !selectedFile || uploadErrors.length > 0}
+              onClick={async () => {
                 try {
-                setUploading(true);
-                await handleExcelUpload();
+                  setUploading(true);
+                  await handleExcelUpload();
                 } finally {
-                setUploading(false);
+                  setUploading(false);
                 }
-            }}
+              }}
             >
-            {uploading ? "Uploading..." : "Upload"}
+              {uploading ? "Uploading..." : "Upload"}
             </Button>
-        )}
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -43,7 +43,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import AdminExcelUpload from "@/app/admin-excel-upload/page";
+import AdminExcelUpload from "@/components/AdminExcelUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

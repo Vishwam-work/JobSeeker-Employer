@@ -270,7 +270,7 @@ export default function EmployerLogin() {
                     </div>
                     <div className="text-right mt-2">
                       <Link
-                        href="#"
+                        href="/forgot-password"
                         className="text-sm text-blue-600 hover:underline"
                       >
                         Forgot Password?

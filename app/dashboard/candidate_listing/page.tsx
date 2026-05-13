@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, FileText, Mail, CheckSquare, ChevronDown, Bookmark,Check ,ChevronLeft,ChevronRight } from "lucide-react";
+import { Phone, FileText, Mail, CheckSquare, ChevronDown, Bookmark,Check,MapPin ,ChevronLeft,ChevronRight,Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highlighter from "react-highlight-words";
 import { Label } from "@/components/ui/label";
@@ -257,8 +257,65 @@ useEffect(() => {
   if (!value) return "-";
   return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
 };
-  const cleanSearch = search.trim().replace(/\s+/g, " ");
+  const cleanSearch = appliedFilters.keywords.trim().replace(/\s+/g, " ");
+// Current Company filter options ke liye sabhi pages ka data fetch karo
+useEffect(() => {
+  const token = localStorage.getItem("employeer_token");
+  if (!token) return;
 
+  const fetchAllCompanies = async () => {
+    try {
+      let nextUrl = `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/?page=1`;
+      const companySet = new Set<string>();
+
+      while (nextUrl) {
+        const res = await fetch(nextUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        (data.results || []).forEach((candidate: Candidate) => {
+          // Direct current_company
+          if (candidate.current_company?.trim()) {
+            companySet.add(candidate.current_company.trim());
+          }
+
+          // Fallback: current experience company
+          const currentExp = candidate.experiences?.find(
+            (exp) =>
+              !exp.end_date ||
+              String(exp.end_date).toLowerCase() === "present"
+          );
+
+          if (currentExp?.company?.trim()) {
+            companySet.add(currentExp.company.trim());
+          }
+        });
+
+        // Django REST Framework pagination next URL
+        nextUrl = data.next;
+      }
+
+      setAllCompanies(
+        Array.from(companySet).sort((a, b) =>
+          a.localeCompare(b)
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      setAllCompanies([]);
+    }
+  };
+
+  fetchAllCompanies();
+}, []);
 // fetch with pagination
 useEffect(() => {
   const token = localStorage.getItem("employeer_token");
@@ -269,15 +326,17 @@ useEffect(() => {
   const params = new URLSearchParams();
   params.append("page", page.toString());
 
-  // keywords
-  if (appliedFilters.keywords) {
-    params.append("keywords", appliedFilters.keywords);
+   // Keywords
+  if (appliedFilters.keywords.trim()) {
+    params.append("keywords", appliedFilters.keywords.trim());
   }
 
-  // location
-  if (appliedFilters.locationSearch) {
-    params.append("location", appliedFilters.locationSearch);
-  }
+  // Location filter
+if (appliedFilters.locations.length > 0) {
+  appliedFilters.locations.forEach((location) => {
+    params.append("location", location);
+  });
+}
 
   // current company
   appliedFilters.currentCompany.forEach((company) => {
@@ -306,8 +365,8 @@ appliedFilters.salary.forEach((sal) => {
 
   // degree
   appliedFilters.degree.forEach((degree) => {
-    params.append("degree", degree);
-  });
+  params.append("degree_course", degree);
+});
 
   const url = `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/?${params.toString()}`;
 
@@ -339,12 +398,14 @@ appliedFilters.salary.forEach((sal) => {
     });
 }, [page, appliedFilters]);
 
-// Apply Filters function
+// Apply Filters button
 const applyFilters = () => {
-  setPage(1); // first page pe jao
-  setAppliedFilters({ ...filters });
+  setPage(1);
+  setAppliedFilters({
+    ...filters,
+    keywords: search.trim(),
+  });
 };
-
   // Save profile function
 useEffect(() => {
   fetchSavedProfiles();
@@ -539,7 +600,7 @@ const viewProfile = async (profileId: number) => {
 // Filter candidates based on search and filters
   const filteredCandidates = candidates.filter((c) => {
     // 1. Global Search (Search Bar)
-    const q = search.trim().toLowerCase();
+    const q = appliedFilters.keywords.trim().toLowerCase();
     let matchesSearch = true;
     if (q) {
       const matches = (value: any) =>
@@ -585,16 +646,16 @@ const viewProfile = async (profileId: number) => {
     // 2. Specific Filters
 
     // Keywords
-    if (appliedFilters.keywords) {
-      const k = appliedFilters.keywords.toLowerCase();
-      const hasKeyword =
-        c.skills?.some((s) => s.name.toLowerCase().includes(k)) ||
-        c.full_name.toLowerCase().includes(k) ||
-        c.city?.name.toLowerCase().includes(k) ||
-        c.state?.name.toLowerCase().includes(k) ||
-        c.country?.name.toLowerCase().includes(k);
-      if (!hasKeyword) return false;
-    }
+    // if (appliedFilters.keywords) {
+    //   const k = appliedFilters.keywords.toLowerCase();
+    //   const hasKeyword =
+    //     c.skills?.some((s) => s.name.toLowerCase().includes(k)) ||
+    //     c.full_name.toLowerCase().includes(k) ||
+    //     c.city?.name.toLowerCase().includes(k) ||
+    //     c.state?.name.toLowerCase().includes(k) ||
+    //     c.country?.name.toLowerCase().includes(k);
+    //   if (!hasKeyword) return false;
+    // }
 
     // Current Company
       if (appliedFilters.currentCompany.length > 0) {
@@ -630,42 +691,37 @@ const viewProfile = async (profileId: number) => {
 }
 
   // filteredCandidates ke andar Experience Filter
-if (appliedFilters.experience.length > 0) {
-  const expVal = parseFloat(c.experience) || 0;
+// if (appliedFilters.experience.length > 0) {
+//   const expVal = parseFloat(c.experience) || 0;
 
-  const matchesExperience = appliedFilters.experience.some((range) => {
-    if (range === "fresher") {
-      return expVal === 0;
-    }
+//   const matchesExperience = appliedFilters.experience.some((range) => {
+//     if (range === "fresher") {
+//       return expVal === 0;
+//     }
 
-    if (range === "20+") {
-      return expVal >= 20;
-    }
+//     if (range === "20+") {
+//       return expVal >= 20;
+//     }
 
-    const [min, max] = range.split("-").map(Number);
-    return expVal >= min && expVal <= max;
-  });
+//     const [min, max] = range.split("-").map(Number);
+//     return expVal >= min && expVal <= max;
+//   });
 
-  if (!matchesExperience) return false;
-}
+//   if (!matchesExperience) return false;
+// }
 
 // Salary Filter
 if (appliedFilters.salary.length > 0) {
-  // Backend expected_salary ko rupees me store karta hai
-  // Example: 12 LPA = 1200000
   const salVal = Number(c.expected_salary || 0);
 
   const matchesSalary = appliedFilters.salary.some((range) => {
-    // "20+ LPA"
     if (range === "20+ LPA") {
       return salVal >= 20 * 100000;
     }
 
-    // "10-15 LPA" -> ["10", "15"]
     const cleanedRange = range.replace(" LPA", "");
     const [min, max] = cleanedRange.split("-").map(Number);
 
-    // Convert LPA to rupees
     const minSalary = min * 100000;
     const maxSalary = max * 100000;
 
@@ -844,11 +900,19 @@ const toggleCompany = (company: string) => {
             <summary className="cursor-pointer font-medium flex justify-between">
               Keywords <span><ChevronDown className="w-4 h-4" /></span>
             </summary>
+
             <div className="mt-2">
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearch(value); // only update input value
+                  setFilters((prev) => ({
+                    ...prev,
+                    keywords: value, // store in filters
+                  }));
+                }}
                 placeholder="Search by skill, keyword, company, designation..."
                 className="w-full border rounded px-2 py-1 text-sm"
               />
@@ -1190,57 +1254,116 @@ const toggleCompany = (company: string) => {
                   </span>
                 </h3>
 
-                {/* ROLE + COMPANY */}
-                {(c.current_role || c.current_company) && (
-                  <p className="text-sm text-gray-700">
-                    <Highlight text={c.current_role || ""} />
-                    {c.current_role && c.current_company && " at "}
-                    <Highlight text={c.current_company || ""} />
-                  </p>
-                )}
+               {/* Candidate Details Section */}
+                <div className="mt-4 space-y-3 text-sm text-gray-700">
 
-                {/* EXPERIENCE + SALARY + LOCATION */}
-                <div className="text-xs md:text-sm text-gray-600 flex flex-wrap gap-2 md:gap-3">
-                  <span>
-                    <Highlight text={c.experience} />
-                  </span>
-
-                  <span>
-                    <Highlight text={formatSalary(c.current_salary)} />
-                  </span>
-
-                  {c.expected_salary && (
-                    <span>
-                      Expected:{" "}
-                      <Highlight text={formatSalary(c.expected_salary)} />
-                    </span>
-                  )}
-
-                  {c.notice_period && (
-                    <span>Notice: <Highlight text={c.notice_period} /></span>
-                  )}
-
-                  <span>
-                    <Highlight text={c.country?.name || ""} />,{" "}
-                    <Highlight text={c.city?.name || ""} />,{" "}
-                    <Highlight text={c.state?.name || ""} />
-
-                  </span>
-                </div>
-
-                {/* SKILLS */}
-                {c.skills && c.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {c.skills.slice(0, 3).map((skill, i) => (
-                      <span
-                        key={i}
-                        className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-md"
-                      >
-                        <Highlight text={skill.name} />
+                  {/* Top Info Row */}
+                  <div className="flex flex-wrap items-center gap-4 text-gray-600">
+                    {c.experience && (
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="w-4 h-4 text-gray-500" />
+                        <Highlight text={c.experience} />
                       </span>
-                    ))}
+                    )}
+
+                    {c.current_salary && (
+                      <span className="flex items-center gap-1">
+                        <Highlight text={formatSalary(c.current_salary)} />
+                      </span>
+                    )}
+
+                    {(c.city?.name || c.state?.name) && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4 text-gray-500" />
+                        <Highlight text={c.city?.name || ""} />
+                        {c.city?.name && c.state?.name && ","}
+                        <Highlight text={c.state?.name || ""} />
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Current Role */}
+                  {c.current_role && (
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="font-medium text-gray-600">Current</span>
+                      <span className="text-gray-900">
+                        <Highlight text={c.current_role} />
+                        {c.current_company && (
+                          <>
+                            {" "}at <Highlight text={c.current_company} />
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Notice Period */}
+                  {c.notice_period && (
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="font-medium text-gray-600">Notice Period</span>
+                      <span className="text-gray-900">
+                        <Highlight text={c.notice_period} />
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Preferred Location */}
+                  {(c.country?.name || c.city?.name || c.state?.name) && (
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="font-medium text-gray-600">Pref. Locations</span>
+                      <span className="text-gray-900">
+                        <Highlight
+                          text={[
+                            c.city?.name,
+                            c.state?.name,
+                            c.country?.name,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        />
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Professional Summary */}
+                  {c.professional_summary && (
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="font-medium text-gray-600">
+                      Summary
+                      </span>
+
+                      <div
+                        className="text-gray-700 leading-relaxed prose max-w-none
+                          [&_ul]:list-disc [&_ul]:pl-6
+                          [&_ol]:list-decimal [&_ol]:pl-6
+                          [&_li]:mb-1"
+                        dangerouslySetInnerHTML={{
+                          __html: c.professional_summary || "",
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Key Skills */}
+                {c.skills && (
+                  <div className="grid grid-cols-[140px_1fr] gap-2">
+                    <span className="font-medium text-gray-600">Key Skills</span>
+                    <span className="text-gray-900 leading-relaxed">
+                      <Highlight
+                        text={
+                          Array.isArray(c.skills)
+                            ? c.skills.map((skill: { name: string }) => skill.name).join(" | ")
+                            : typeof c.skills === "string"
+                            ? c.skills
+                            : ""
+                        }
+                      />
+                    </span>
                   </div>
                 )}
+
+                </div>
+
                 <Button
                 variant="ghost"
                 size="sm"
