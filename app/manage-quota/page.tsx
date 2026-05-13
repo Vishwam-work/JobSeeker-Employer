@@ -7,7 +7,7 @@ export default function ManageQuotaPage() {
   return (
     <>
     <EmployerHeader />
-    <div className="min-h-screen bg-[#f5f5f5] px-6 py-8">
+    <div className="min-h-screen px-6 py-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-semibold text-gray-800 mb-12">
           Manage Quota
