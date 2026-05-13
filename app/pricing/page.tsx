@@ -95,56 +95,80 @@ export default function PricingPage() {
   return (
     <div>
       <EmployerHeader />
-      <section className="bg-gray-50 py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Floating Background Blur Circles */}
-          <div className="absolute top-[-100px] left-[-100px] w-72 h-72 bg-blue-400 opacity-30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-indigo-400 opacity-30 rounded-full blur-3xl animate-pulse" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 py-20 px-4">
+        {/* Decorative Background Elements */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-0 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-0 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-cyan-200/20 rounded-full blur-3xl" />
+        </div>
 
+        <div className="max-w-7xl mx-auto">
+          {/* HERO SECTION */}
           <div className="relative max-w-4xl mx-auto text-center">
-            {/* Animated Heading */}
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium border border-blue-200"
+            >
+              ✨ Transparent Pricing
+            </motion.div>
+
+            {/* Heading */}
             <motion.h1
               initial={{ opacity: 0, y: -40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-4xl md:text-6xl font-bold leading-tight"
+              className="mt-6 text-4xl md:text-6xl font-bold tracking-tight text-gray-900 leading-tight"
             >
-              Simple Pricing for <br />
-              <span className="text-yellow-300">Every Business</span>
+              Simple Pricing for
+              <br />
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Every Business
+              </span>
             </motion.h1>
 
-            {/* Animated Subtext */}
+            {/* Subtitle */}
             <motion.p
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="mt-6 text-lg md:text-xl text-blue-100"
+              className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed"
             >
-              Flexible plans designed to grow with you. No hidden fees.
+              Flexible plans designed to scale with your hiring needs.
+              No hidden charges. Cancel anytime.
             </motion.p>
-            {/* Currency Select */}
-            <div className="mt-6 text-center relative max-w-sm mx-auto">
+
+            {/* Currency Dropdown */}
+            <div className="mt-8 relative max-w-sm mx-auto">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                Select Currency
+              </label>
+
               <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="px-4 py-2 rounded-lg border border-gray-300 bg-white cursor-pointer"
+                className="flex items-center justify-between px-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm cursor-pointer hover:border-blue-500 transition"
               >
-                {selectedCountry
-                  ? `${selectedCountry.currency_name} (${selectedCountry.currency})`
-                  : "Select Currency"}
+                <span className="text-gray-700">
+                  {selectedCountry
+                    ? `${selectedCountry.currency_name} (${selectedCountry.currency})`
+                    : "Select Currency"}
+                </span>
+                <span className="text-gray-400">⌄</span>
               </div>
 
               {isOpen && (
-                <div className="absolute z-50 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
-                  {/* Search Input */}
+                <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
                   <input
                     type="text"
                     placeholder="Search currency..."
-                    className="w-full px-3 py-2 border-b border-gray-200 outline-none"
+                    className="w-full px-4 py-3 border-b border-gray-100 outline-none"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
 
-                  {/* Options */}
                   <div className="max-h-60 overflow-y-auto">
                     {filteredCountries.map((country, index) => (
                       <div
@@ -154,14 +178,14 @@ export default function PricingPage() {
                           setIsOpen(false);
                           setSearch("");
                         }}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-left"
+                        className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-left text-sm"
                       >
                         {country.currency_name} ({country.currency})
                       </div>
                     ))}
 
                     {filteredCountries.length === 0 && (
-                      <div className="px-4 py-2 text-gray-500 text-sm">
+                      <div className="px-4 py-3 text-gray-500 text-sm">
                         No results found
                       </div>
                     )}
@@ -177,119 +201,95 @@ export default function PricingPage() {
               transition={{ duration: 1 }}
               className="mt-10"
             >
-              <div className="inline-flex bg-gray-200 rounded-full p-1">
+              <div className="inline-flex items-center bg-white border border-gray-200 rounded-full p-1 shadow-sm">
                 {(["monthly", "yearly"] as BillingType[]).map((type) => (
                   <button
                     key={type}
                     onClick={() => setBilling(type)}
-                    className={`px-6 py-2 rounded-full text-sm font-medium transition ${
+                    className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
                       billing === type
-                        ? "bg-white text-blue-600"
-                        : "text-white/70 hover:text-white"
+                        ? "bg-blue-600 text-white shadow"
+                        : "text-gray-600 hover:text-blue-600"
                     }`}
                   >
                     {type === "monthly" ? "Monthly" : "Annually"}
                   </button>
                 ))}
               </div>
-              {billing === "monthly" && <p className="mt-4 text-sm "></p>}
 
-              {billing === "yearly" && <p className="mt-4 text-sm "></p>}
+              {billing === "yearly" && (
+                <p className="mt-3 text-sm text-green-600 font-medium">
+                  Save up to 20% with annual billing
+                </p>
+              )}
             </motion.div>
           </div>
 
           {/* PRICING CARDS */}
-          <section className="px-4 pb-24">
-            <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+          <section className="mt-20">
+            <div className="grid md:grid-cols-3 gap-8">
               {plans.map((plan, index) => (
-                <div
+                <motion.div
                   key={index}
-                  className={`bg-white text-gray-900 rounded-2xl p-8 shadow-2xl transition hover:scale-105 ${
-                    plan.highlight ? " " : ""
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.15 }}
+                  className={`relative bg-white rounded-3xl border shadow-lg p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${
+                    plan.highlight
+                      ? "border-blue-500 ring-2 ring-blue-100"
+                      : "border-gray-200"
                   }`}
                 >
-                  <h3 className="text-xl font-semibold text-center">
+                  {plan.highlight && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-semibold shadow">
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
+
+                  <h3 className="text-2xl font-bold text-center text-gray-900">
                     {plan.name}
                   </h3>
 
-                  <p className="text-center text-sm text-gray-500 mt-2">
+                  <p className="text-center text-gray-500 mt-2 text-sm">
                     {plan.description}
                   </p>
 
                   <div className="mt-6 text-center">
-                    <span className="text-5xl font-bold">
+                    <span className="text-5xl font-bold tracking-tight text-gray-900">
                       {selectedCountry?.currency_symbol || "$"}
                       {plan.price[billing]}
                     </span>
-
-                    <span className="text-gray-500 text-sm">
-                      {billing === "monthly" ? " /mo" : " /yr"}
+                    <span className="text-gray-500 ml-1 text-sm">
+                      {billing === "monthly" ? "/mo" : "/yr"}
                     </span>
                   </div>
 
                   <button
-                    className={`mt-6 mb-8 w-full rounded-lg py-3 text-sm font-medium transition ${
+                    className={`mt-8 w-full py-3 rounded-xl font-semibold transition ${
                       plan.highlight
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border border-gray-300 hover:bg-gray-100"
+                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                        : "bg-gray-100 text-gray-900 hover:bg-gray-200"
                     }`}
                   >
                     {plan.buttonText}
                   </button>
 
-                  <ul className="space-y-3 text-sm text-gray-600">
+                  <ul className="mt-8 space-y-3 text-sm text-gray-600">
                     {plan.features.map((feature, i) => (
-                      <li key={i}>✔ {feature}</li>
+                      <li key={i} className="flex items-start gap-3">
+                        <span className="text-green-500 mt-0.5">✔</span>
+                        <span>{feature}</span>
+                      </li>
                     ))}
                   </ul>
-                </div>
+                </motion.div>
               ))}
             </div>
           </section>
-
-          {/* FAQ Section */}
-          <div className="mt-20 max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-8">
-              Frequently Asked Questions
-            </h2>
-
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold">Can I cancel anytime?</h3>
-                <p className="text-gray-600 text-sm mt-1">
-                  Yes, you can cancel your subscription anytime from dashboard.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold">Is there a free trial?</h3>
-                <p className="text-gray-600 text-sm mt-1">
-                  Yes, we offer a 14-day free trial on paid plans.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold">Do you offer refunds?</h3>
-                <p className="text-gray-600 text-sm mt-1">
-                  Yes, refunds are available within the first 7 days.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Section */}
-          <div className="mt-20 bg-blue-600 text-white rounded-2xl p-12 text-center">
-            <h2 className="text-3xl font-bold">Ready to get started?</h2>
-            <p className="mt-3 text-blue-100">
-              Start your free trial today. No credit card required.
-            </p>
-            <button className="mt-6 bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100">
-              Get Started Now
-            </button>
-          </div>
         </div>
       </section>
-
       <EmployerFooter />
     </div>
   );
