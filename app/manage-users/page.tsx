@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Search, MoreVertical, Check, X } from "lucide-react";
 import EmployerHeader from "@/components/Employerheader";
 import EmployerFooter from "@/components/Employerfooter";
+import { toast } from "sonner";
+import { jwtDecode } from "jwt-decode";
 export default function ManageUsersPage() {
   const [showModal, setShowModal] = useState(false);
   const users = [
@@ -15,6 +17,115 @@ export default function ManageUsersPage() {
       jobPromotion: false,
     },
   ];
+
+const [userForm, setUserForm] = useState({
+  full_name: "",
+  email: "",
+  password: "",
+  job_posting: true,
+
+  // Required fields for API
+  contact_person_name: "",
+  designation: "",
+  phone: "",
+  phone_code: "",
+});
+
+useEffect(() => {
+  const fetchCompanyDetails = async () => {
+    try {
+      const token = localStorage.getItem("employeer_token");
+      if (!token) return;
+
+      const decoded: any = jwtDecode(token);
+      const userId = decoded?.user_id;
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/company/${userId}/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      // Auto-fill required backend fields
+      setUserForm((prev) => ({
+        ...prev,
+        contact_person_name: data.contact_person_name || "",
+        designation: data.designation || "",
+        phone: data.phone || "",
+      }));
+    } catch (error) {
+      console.error("Error fetching company details:", error);
+    }
+  };
+
+  fetchCompanyDetails();
+}, []);
+
+// 4. Replace handleAddUser function with this
+const handleAddUser = async () => {
+  try {
+    const token = localStorage.getItem("employeer_token");
+
+    // Prepare payload
+    const payload = {
+      email: userForm.email,
+      password: userForm.password,
+      job_posting: userForm.job_posting,
+
+      // Required fields from company details
+      contact_person_name: userForm.full_name,
+      designation: userForm.designation,
+      phone: userForm.phone,
+
+    };
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/add-sub-user/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const data = await response.json();
+    console.log("API Response:", data);
+
+    if (response.ok) {
+      toast.success("User added successfully");
+      setShowModal(false);
+
+      // Reset only user input fields
+      setUserForm((prev) => ({
+        ...prev,
+        full_name: "",
+        email: "",
+        password: "",
+        job_posting: true,
+      }));
+    } else {
+      const errorMessage =
+        data?.error ||
+        data?.message ||
+        Object.values(data)
+          .flat()
+          .join(", ");
+
+      toast.error(errorMessage);
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong");
+  }
+};
 
   return (
     <>
@@ -67,6 +178,10 @@ export default function ManageUsersPage() {
                   <input
                     type="text"
                     placeholder="Enter full name"
+                    value={userForm.full_name}
+                    onChange={(e) =>
+                      setUserForm({ ...userForm, full_name: e.target.value })
+                    }
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   />
                   <p className="mt-2 text-xs text-slate-500">
@@ -81,6 +196,10 @@ export default function ManageUsersPage() {
                   <input
                     type="email"
                     placeholder="name@company.com"
+                    value={userForm.email}
+                    onChange={(e) =>
+                      setUserForm({ ...userForm, email: e.target.value })
+                    }
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   />
                   <p className="mt-2 text-xs text-slate-500">
@@ -96,6 +215,10 @@ export default function ManageUsersPage() {
                   <input
                     type="password"
                     placeholder="Enter a secure password"
+                    value={userForm.password}
+                    onChange={(e) =>
+                      setUserForm({ ...userForm, password: e.target.value })
+                    }
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   />
                   <p className="mt-2 text-xs text-slate-500">
@@ -113,11 +236,17 @@ export default function ManageUsersPage() {
                   </p>
 
                   <label className="flex items-start gap-3 rounded-xl bg-white border border-slate-200 p-4 hover:border-blue-300 transition cursor-pointer">
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
+                      <input
+                        type="checkbox"
+                        checked={userForm.job_posting}
+                        onChange={(e) =>
+                          setUserForm({
+                            ...userForm,
+                            job_posting: e.target.checked,
+                          })
+                        }
+                        className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
                     <div>
                       <p className="text-sm font-medium text-slate-800">
                         Job Posting
@@ -145,8 +274,10 @@ export default function ManageUsersPage() {
                   >
                     Cancel
                   </button>
-
-                  <button className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition">
+                  <button
+                    onClick={handleAddUser}
+                    className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition"
+                  >
                     Save User
                   </button>
                 </div>
