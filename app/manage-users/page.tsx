@@ -132,7 +132,7 @@ const handleAddUser = async () => {
     const data = await response.json();
 
     if (response.ok) {
-      toast.success("User added successfully");
+      toast.success("Successfully sent OTP to user email");
       setShowModal(false);
 
       setUserForm((prev) => ({
@@ -638,10 +638,10 @@ const handleDeleteUser = async (userId: number) => {
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                         user.is_verified
                           ? "bg-green-100 text-green-700"
-                          : "bg-orange-100 text-orange-700"
+                          : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {user.is_verified ? "Verified" : "Pending"}
+                      {user.is_verified ? "Verified" : "Unverified"}
                     </span>
                   </td>
 
