@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function ConfirmOtpPage() {
-  // Route: /confirm-otp/[uid]/[token]
   const params = useParams();
   const uid = params.uid as string;
   const token = params.token as string;
@@ -29,7 +28,6 @@ export default function ConfirmOtpPage() {
         setLoading(true);
         setMessage("");
 
-        // Get employer token from localStorage
         const employerToken = localStorage.getItem("employeer_token");
 
         if (!employerToken) {
@@ -37,12 +35,6 @@ export default function ConfirmOtpPage() {
         router.push("/login");
         return;
         }
-
-        // Debug logs
-        console.log("UID:", uid);
-        console.log("Token:", token);
-        console.log("OTP:", otp);
-        console.log("Employer Token:", employerToken);
 
         const payload = {
         uid,

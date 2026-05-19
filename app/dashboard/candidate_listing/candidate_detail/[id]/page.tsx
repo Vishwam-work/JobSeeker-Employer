@@ -68,34 +68,52 @@ export default function CandidateDetailPage() {
     return;
   }
 
-  fetch(`${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("API Response:", data);
+  const fetchAllProfiles = async () => {
+    try {
+      let allProfiles: Candidate[] = [];
+      let nextUrl: string | null =
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`;
 
-      const profiles = Array.isArray(data)
-        ? data
-        : Array.isArray(data.results)
-        ? data.results
-        : [];
+      while (nextUrl) {
+        const res = await fetch(nextUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      setCandidates(profiles);
+        const data = await res.json();
 
-      const found = profiles.find(
-        (item: Candidate) => item.id === Number(params.id)
+        console.log("Page Response:", data);
+
+        if (Array.isArray(data.results)) {
+          allProfiles = [...allProfiles, ...data.results];
+        } else if (Array.isArray(data)) {
+          allProfiles = [...allProfiles, ...data];
+        }
+        nextUrl = data.next;
+      }
+
+      console.log("All Profiles:", allProfiles);
+
+      setCandidates(allProfiles);
+
+      const currentId = Number(params.id);
+
+      const found = allProfiles.find(
+        (item) => Number(item.id) === currentId
       );
+
+      console.log("Found Candidate:", found);
 
       setCandidate(found || null);
       setLoading(false);
-    })
-    .catch((err) => {
-      console.error("Fetch error:", err);
+    } catch (error) {
+      console.error("Fetch error:", error);
       setLoading(false);
-    });
+    }
+  };
+
+  fetchAllProfiles();
 }, [params.id]);
 
   const formatSalary = (value?: string | number) => {
@@ -188,10 +206,10 @@ export default function CandidateDetailPage() {
                         onClick={() =>
                           window.open(
                             `${process.env.NEXT_PUBLIC_URL}${candidate.resume}`,
-                            "_blank",
+                            "_blank"
                           )
                         }
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium shadow hover:shadow-lg hover:scale-[1.02] transition"
+                        className="inline-flex items-center justify-center self-start bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow hover:shadow-md hover:scale-[1.02] transition"
                       >
                         View Resume
                       </button>
@@ -367,13 +385,12 @@ export default function CandidateDetailPage() {
                             {c.issuer}
                           </p>
                         )}
-                      </div>
-
-                      {c.year && (
-                        <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                        {c.year && (
+                        <span className="text-sm text-gray-500 mt-1">
                           {c.year}
                         </span>
                       )}
+                      </div>
                     </div>
                   ))}
                 </div>
