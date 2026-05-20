@@ -21,7 +21,7 @@ export default function AdminExcelUpload({
   triggerButton,
   onUploadSuccess,
 }: AdminExcelUploadProps) {
-  const [isAdmin, setIsAdmin] = useState(false);
+  // const [isAdmin, setIsAdmin] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -31,13 +31,13 @@ export default function AdminExcelUpload({
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [uploadedRows, setUploadedRows] = useState<string[]>([]);
   const [uploadCompleted, setUploadCompleted] = useState(false);
-  useEffect(() => {
-    const role = localStorage.getItem("admin_role");
+  // useEffect(() => {
+  //   const role = localStorage.getItem("admin_role");
 
-    if (role === "admin") {
-      setIsAdmin(true);
-    }
-  }, []);
+  //   if (role === "admin") {
+  //     setIsAdmin(true);
+  //   }
+  // }, []);
 
   const resetDialog = () => {
     setDialogOpen(false);
@@ -263,7 +263,7 @@ export default function AdminExcelUpload({
     reader.readAsBinaryString(selectedFile);
   };
 
-  if (!isAdmin) return null;
+  // if (!isAdmin) return null;
 
   return (
     <Dialog

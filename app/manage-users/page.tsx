@@ -17,6 +17,8 @@ export default function ManageUsersPage() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [errors, setErrors] = useState<any>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [userForm, setUserForm] = useState({
     full_name: "",
     email: "",
@@ -199,35 +201,60 @@ export default function ManageUsersPage() {
   }, []);
 
   // Delete Sub User API
-  const handleDeleteUser = async (userId: number) => {
-    try {
-      const token = localStorage.getItem("employeer_token");
+ const handleDeleteUser = async () => {
+  if (!deleteUserId) return;
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/sub-users/${userId}/delete/`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+  try {
+    setDeleteLoading(true);
+
+    const token = localStorage.getItem(
+      "employeer_token"
+    );
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/sub-users/${deleteUserId}/delete/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
+      }
+    );
+
+    const data = await response
+      .json()
+      .catch(() => ({}));
+
+    if (response.ok) {
+      toast.success(
+        "User deleted successfully"
       );
 
-      const data = await response.json().catch(() => ({}));
+      setUsers((prevUsers) =>
+        prevUsers.filter(
+          (user) => user.id !== deleteUserId
+        )
+      );
 
-      if (response.ok) {
-        toast.success("User deleted successfully");
-
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-
-      } else {
-        toast.error(data?.error || data?.message || "Failed to delete user");
-      }
-    } catch (error) {
-      console.error("Delete user error:", error);
-      toast.error("Something went wrong");
+      setDeleteUserId(null);
+    } else {
+      toast.error(
+        data?.error ||
+          data?.message ||
+          "Failed to delete user"
+      );
     }
-  };
+  } catch (error) {
+    console.error(
+      "Delete user error:",
+      error
+    );
+
+    toast.error("Something went wrong");
+  } finally {
+    setDeleteLoading(false);
+  }
+};
 
   // Resend OTP API Call
 const handleResendOTP = async (userId: number) => {
@@ -530,6 +557,7 @@ const handleResendOTP = async (userId: number) => {
                                   job_posting: e.target.checked,
                                 })
                               }
+                              required
                               className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                             />
 
@@ -724,9 +752,11 @@ const handleResendOTP = async (userId: number) => {
 
                               {/* Delete User */}
                               <button
-                                onClick={() => handleDeleteUser(user.id)}
+                                onClick={() => setDeleteUserId(user.id)}
                                 className={`w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 ${
-                                  !user.is_verified ? "rounded-b-xl" : "rounded-xl"
+                                  !user.is_verified
+                                    ? "rounded-b-xl"
+                                    : "rounded-xl"
                                 }`}
                               >
                                 <Trash2 size={16} />
@@ -745,6 +775,43 @@ const handleResendOTP = async (userId: number) => {
           </div>
         </div>
       </div>
+      {/* Delete Confirmation Modal */}
+      {deleteUserId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="text-xl font-bold text-slate-900">
+              Delete User
+            </h2>
+
+            <p className="mt-3 text-sm text-slate-600">
+              Are you sure you want to delete
+              this user? This action cannot be
+              undone.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() =>
+                  setDeleteUserId(null)
+                }
+                className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDeleteUser}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteLoading
+                  ? "Deleting..."
+                  : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <EmployerFooter />
     </>
   );

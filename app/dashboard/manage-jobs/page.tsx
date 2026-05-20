@@ -93,7 +93,7 @@ const ManageJobs = () => {
   const [open, setOpen] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  // const [isAdmin, setIsAdmin] = useState(false);
   const [jobForm, setJobForm] = useState<JobForm>({
     title: "",
     category: "",
@@ -319,13 +319,13 @@ const ManageJobs = () => {
   return () => clearTimeout(delayDebounce);
 }, [searchTerm, jobFilter, dateFilter]);
 
-useEffect(() => {
-  const role = localStorage.getItem("admin_role");
+// useEffect(() => {
+//   const role = localStorage.getItem("admin_role");
 
-  if (role === "admin") {
-    setIsAdmin(true);
-  }
-}, []);
+//   if (role === "admin") {
+//     setIsAdmin(true);
+//   }
+// }, []);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -557,41 +557,61 @@ useEffect(() => {
     }
   };
   const handleDeleteJob = async (job: any) => {
-    const token = localStorage.getItem("employeer_token");
-    try {
-      if (
-        window.confirm(`Are you sure you want to delete the job: ${job.title}?`)
-      ) {
-        // console.log("Deleting job:", job);
+  const token = localStorage.getItem("employeer_token");
 
-        toast.success("Job deleted", {
-          description: `The job "${job.title}" has been successfully removed.`,
-        });
-      }
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/employeer/job-postings/${job.id}/delete/`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+  if (!token) {
+    toast.error("Authentication required", {
+      description: "Please login again.",
+    });
+    return;
+  }
+
+  const confirmDelete = window.confirm(
+    `Are you sure you want to delete the job: ${job.title}?`
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_URL}/employeer/job-postings/${job.id}/delete/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
-      if (response.ok) {
-        setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
-        toast.success("Job deleted", {
-          description: `The job "${job.title}" has been successfully removed.`,
-        });
-      } else {
-        console.error("Failed to delete job");
-        toast.error("Failed to delete job", {
-          description: "Please try again or check your internet connection.",
-        });
       }
-    } catch (err) {
-      console.error("Error fetching job details for edit", err);
+    );
+
+    // Response body read karo
+    const data = await response.json().catch(() => ({}));
+
+    if (response.ok) {
+      // UI se remove karo
+      setPostedJobs((prev) => prev.filter((j) => j.id !== job.id));
+
+      toast.success("Job deleted", {
+        description: `The job "${job.title}" has been successfully removed.`,
+      });
+    } else {
+      console.error("Delete failed:", data);
+
+      toast.error("Failed to delete job", {
+        description:
+          data.detail ||
+          data.error ||
+          data.message ||
+          "Please try again or check your internet connection.",
+      });
     }
-  };
+  } catch (err) {
+    console.error("Error deleting job:", err);
+
+    toast.error("Something went wrong", {
+      description: "Unable to delete the job.",
+    });
+  }
+};
   const getWorkModeColor = (work_mode: string) => {
     switch (work_mode) {
       case "Remote":
@@ -968,7 +988,6 @@ const handleAddQuestion = () => {
 
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
 
-              {isAdmin && (
                 <AdminExcelUpload
                   onUploadSuccess={fetchPostedJobs}
                   triggerButton={
@@ -979,7 +998,6 @@ const handleAddQuestion = () => {
                   </Button>
                    }
                 />
-              )}
               {/* Date Filter */}
               <Select value={dateFilter} onValueChange={setDateFilter}>
                 <SelectTrigger className="w-full sm:w-32">

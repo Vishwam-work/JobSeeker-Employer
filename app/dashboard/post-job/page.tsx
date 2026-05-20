@@ -188,9 +188,9 @@ useEffect(() => {
           return;
         }
       }
-      if (askQuestionEnabled) {
-        if (!newQuestion.trim()) {
-          toast.error("Ask Question Checkbox Enabled but Question is empty.");
+     if (askQuestionEnabled) {
+        if (questions.length === 0) {
+          toast.error("Please add at least one question.");
           return;
         }
       }
@@ -224,7 +224,8 @@ useEffect(() => {
         is_urgent: jobForm.isUrgent,
         is_remote: jobForm.isRemote,
         status: "active",
-        questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
+        // questions: Array.isArray(jobForm.questions) ? jobForm.questions : [],
+        questions: askQuestionEnabled ? questions : [],
         website_apply: websiteEnabled && websiteUrl.trim() !== ""
           ? websiteUrl
           : "",
