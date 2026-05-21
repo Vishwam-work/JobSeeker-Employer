@@ -830,6 +830,92 @@ const toggleCompany = (company: string) => {
     );
   }
 
+  // Subscription check
+// if (!isSubscribed) {
+//   return (
+//     <div className="flex items-center justify-center">
+//       <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+//         <div className="grid md:grid-cols-2">
+//           {/* Left Section */}
+//           <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white p-6 md:p-8">
+//             <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 text-[10px] font-semibold uppercase tracking-wider">
+//               Premium Access
+//             </span>
+
+//             <h1 className="mt-4 text-2xl md:text-4xl font-bold leading-tight">
+//               Unlock Full
+//               <br />
+//               Candidate Database
+//             </h1>
+
+//             <p className="mt-3 text-blue-100 text-sm md:text-base leading-relaxed">
+//               Subscribe to access unlimited candidate profiles, resumes,
+//               contact details, and advanced search filters.
+//             </p>
+
+//             {/* Features */}
+//             <div className="mt-5 space-y-2.5">
+//               {[
+//                 "Unlimited Profile Views",
+//                 "Download Resumes",
+//                 "Access Email & Phone",
+//                 "Advanced Search Filters",
+//                 "Save Unlimited Profiles",
+//                 "Priority Support",
+//               ].map((feature) => (
+//                 <div key={feature} className="flex items-center gap-2">
+//                   <div className="w-5 h-5 rounded-full bg-green-400/20 flex items-center justify-center">
+//                     <Check className="w-3.5 h-3.5 text-green-300" />
+//                   </div>
+//                   <span className="text-sm">{feature}</span>
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+
+//           {/* Right Section */}
+//           <div className="p-6 md:p-8 flex flex-col justify-center bg-white">
+//             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+//               Starting From
+//             </p>
+
+//             <div className="mt-2 flex items-end gap-1">
+//               <span className="text-4xl font-bold text-gray-900">₹999</span>
+//               <span className="text-base text-gray-500 mb-1">/month</span>
+//             </div>
+
+//             <p className="mt-2 text-sm text-gray-500">
+//               Cancel anytime • Instant activation
+//             </p>
+
+//             <div className="my-5 border-t border-gray-200" />
+
+//             <div className="space-y-3">
+//               <Link href="/pricing" className="block">
+//                 <Button className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold">
+//                   Upgrade Now
+//                 </Button>
+//               </Link>
+
+//               <Link href="/pricing" className="block">
+//                 <Button
+//                   variant="outline"
+//                   className="w-full h-11 rounded-xl text-sm font-semibold"
+//                 >
+//                   View All Plans
+//                 </Button>
+//               </Link>
+//             </div>
+
+//             <p className="mt-4 text-xs text-gray-400 text-center md:text-left">
+//               Trusted by recruiters across India.
+//             </p>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
   return (
     <div className="min-h-screen">
       <div className="p-4 md:hidden flex justify-between items-center">
@@ -1190,6 +1276,8 @@ const toggleCompany = (company: string) => {
           </details>
         </aside>
 
+
+
       {/* mobile filter */}
 
 
@@ -1230,8 +1318,6 @@ const toggleCompany = (company: string) => {
 
                     </div>
                   )}
-                {/* Checkbox */}
-                {/* <input type="checkbox" className="mt-2 md:mt-0" /> */}
 
                 {/* MAIN INFO */}
                 <div className="flex-1 flex flex-col gap-2">
@@ -1410,17 +1496,6 @@ const toggleCompany = (company: string) => {
                   <p className="text-xs text-gray-500 flex items-center gap-1">
                     <Mail size={14} /> <Highlight text={c.email} />
                   </p>
-
-                  {c.resume && (
-                    <a
-                      href={`${process.env.NEXT_PUBLIC_URL}${c.resume}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-gray-600 flex items-center gap-1 hover:underline"
-                    >
-                      <FileText size={14} /> View CV
-                    </a>
-                  )}
                 </div>
               </div>
               );

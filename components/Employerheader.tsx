@@ -25,7 +25,8 @@ export default function EmployerHeader() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-    const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     company_name: "",
     company_type: "",
@@ -78,6 +79,14 @@ export default function EmployerHeader() {
     router.push("/login");
   };
 
+  // Check if user is admin
+  useEffect(() => {
+    const role = localStorage.getItem("admin_role");
+    if (role === "admin") {
+      setIsAdmin(true);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchCompanyDetails = async () => {
       try {
@@ -97,24 +106,24 @@ export default function EmployerHeader() {
         const data = await response.json();
         //  console.log("Company Details:", data);
         setFormData({
-          company_name: data.company_name || "",
-          company_type: data.company_type || "",
-          industry: data.industry || "",
-          company_size: data.company_size || "",
-          website: data.website || "",
-          description: data.description || "",
+         company_name: data.company?.company_name || "",
+          company_type: data.company?.company_type || "",
+          industry: data.company?.industry || "",
+          company_size: data.company?.company_size || "",
+          website: data.company?.website || "",
+          description: data.company?.description || "",
+          address: data.company?.address || "",
+          pincode: data.company?.pincode || "",
           contact_person_name: data.contact_person_name || "",
           designation: data.designation || "",
           phone: data.phone || "",
           phone_code: data.phone_code || "",
-          address: data.address || "",
-          country: data.country || "",
-          countryLabel: data.country_name || "",
-          state: data.state || "",
-          city: data.city || "",
-          pincode: data.pincode || "",
-          company_logo: data.company_logo
-            ? process.env.NEXT_PUBLIC_URL + data.company_logo
+          country: data.company?.country?.toString() || "",
+          state: data.company?.state?.toString() || "",
+          city: data.company?.city?.toString() || "",
+          countryLabel: "",
+          company_logo: data.company?.company_logo
+            ? process.env.NEXT_PUBLIC_URL + data.company.company_logo
             : "",
         });
       } catch (err) {
@@ -223,12 +232,14 @@ export default function EmployerHeader() {
                             <h2 className="text-lg font-semibold">
                               {formData.company_name || "User"}
                             </h2>
+                            {!isAdmin && (
                             <Link
                               href="/account"
                               className="text-blue-600 text-sm font-medium"
                             >
                               View & Update Account
                             </Link>
+                            )}
                           </div>
 
                           <button
@@ -246,7 +257,8 @@ export default function EmployerHeader() {
                               Dashboard
                             </div>
                           </Link>
-
+                          {!isAdmin && (
+                            <>
                           <Link href="/pricing">
                             <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
                               <CreditCard size={18} />
@@ -305,6 +317,8 @@ export default function EmployerHeader() {
                               FAQs
                             </div>
                           </Link>
+                            </>
+                          )}
 
                           <div
                             onClick={handleLogout}

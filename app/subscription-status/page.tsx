@@ -6,7 +6,7 @@ export default function SubscriptionStatusPage() {
   return (
     <>
     <EmployerHeader />
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="grid lg:grid-cols-[1fr_280px] gap-8">
           <div>

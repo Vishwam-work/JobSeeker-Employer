@@ -136,24 +136,24 @@ export default function EmployerAccountEdit() {
         const data = await response.json();
         console.log("Company Details:", data);
         setFormData({
-          company_name: data.company_name || "",
-          company_type: data.company_type || "",
-          industry: data.industry || "",
-          company_size: data.company_size || "",
-          website: data.website || "",
-          description: data.description || "",
+          company_name: data.company?.company_name || "",
+          company_type: data.company?.company_type || "",
+          industry: data.company?.industry || "",
+          company_size: data.company?.company_size || "",
+          website: data.company?.website || "",
+          description: data.company?.description || "",
+          address: data.company?.address || "",
+          pincode: data.company?.pincode || "",
           contact_person_name: data.contact_person_name || "",
           designation: data.designation || "",
           phone: data.phone || "",
           phone_code: data.phone_code || "",
-          address: data.address || "",
-          country: data.country || "",
-          countryLabel: data.country_name || "",
-          state: data.state || "",
-          city: data.city || "",
-          pincode: data.pincode || "",
-          company_logo: data.company_logo
-            ? process.env.NEXT_PUBLIC_URL + data.company_logo
+          country: data.company?.country?.toString() || "",
+          state: data.company?.state?.toString() || "",
+          city: data.company?.city?.toString() || "",
+          countryLabel: "",
+          company_logo: data.company?.company_logo
+            ? process.env.NEXT_PUBLIC_URL + data.company.company_logo
             : "",
         });
       } catch (err) {

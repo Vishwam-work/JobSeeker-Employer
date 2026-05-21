@@ -106,15 +106,6 @@ export default function PricingPage() {
         <div className="max-w-7xl mx-auto">
           {/* HERO SECTION */}
           <div className="relative max-w-4xl mx-auto text-center">
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium border border-blue-200"
-            >
-              ✨ Transparent Pricing
-            </motion.div>
 
             {/* Heading */}
             <motion.h1
