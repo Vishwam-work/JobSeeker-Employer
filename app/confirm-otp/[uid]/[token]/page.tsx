@@ -22,7 +22,9 @@ export default function ConfirmOtpPage() {
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [messageType, setMessageType] = useState<
+  "success" | "error" | ""
+  >("");
   const inputRefs = useRef<
     (HTMLInputElement | null)[]
   >([]);
@@ -125,12 +127,14 @@ const handlePaste = (
       setMessage(
         "Please enter a valid 6-digit OTP"
       );
+       setMessageType("error");
       return;
     }
 
     try {
       setLoading(true);
       setMessage("");
+      setMessageType("");
 
       const payload = {
         uid,
@@ -160,7 +164,7 @@ const handlePaste = (
           data.message ||
             "OTP verified successfully."
         );
-
+        setMessageType("success");
         setTimeout(() => {
           router.push("/login");
         }, 3000);
@@ -176,8 +180,10 @@ const handlePaste = (
               data.error ||
               "Invalid OTP"
           );
+          setMessageType("error");
         } else {
           setMessage("Invalid OTP");
+          setMessageType("error");
         }
       }
     } catch (error) {
@@ -189,6 +195,7 @@ const handlePaste = (
       setMessage(
         "Something went wrong. Please try again."
       );
+      setMessageType("error");
     } finally {
       setLoading(false);
     }
@@ -240,11 +247,17 @@ const handlePaste = (
             : "Confirm OTP"}
         </button>
 
-        {message && (
-          <p className="text-sm text-center text-red-600">
-            {message}
-          </p>
-        )}
+       {message && (
+        <p
+          className={`mt-2 text-sm font-medium ${
+            messageType === "success"
+              ? "text-green-600"
+              : "text-red-500"
+          }`}
+        >
+          {message}
+        </p>
+      )}
       </form>
     </div>
   );

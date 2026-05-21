@@ -99,6 +99,11 @@ export default function ManageUsersPage() {
       newErrors.password = "Password must be at least 8 characters";
     }
 
+    //job_posting
+    if (!userForm.job_posting) {
+      newErrors.job_posting = "Job posting is required";
+    }
+
 
     setErrors(newErrors);
 
@@ -560,7 +565,6 @@ const handleResendOTP = async (userId: number) => {
                               required
                               className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                             />
-
                             <div>
                               <p className="text-sm font-medium text-slate-800">
                                 Job Posting
@@ -569,6 +573,11 @@ const handleResendOTP = async (userId: number) => {
                                 Allow the user to create, edit, and manage job
                                 postings.
                               </p>
+                              {errors.job_posting && (
+                                <p className="mt-1 text-sm text-red-500">
+                                  {errors.job_posting}
+                                </p>
+                              )}
                             </div>
                           </label>
 

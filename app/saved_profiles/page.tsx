@@ -190,9 +190,15 @@ export default function SavedProfilesPage() {
                         </h2>
 
                         {c.professional_summary && (
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                            {c.professional_summary}
-                          </p>
+                           <div
+                          className="text-gray-700 leading-relaxed prose max-w-none
+                          [&_ul]:list-disc [&_ul]:pl-6
+                          [&_ol]:list-decimal [&_ol]:pl-6
+                          [&_li]:mb-1"
+                          dangerouslySetInnerHTML={{
+                            __html: c.professional_summary || "",
+                          }}
+                      />
                         )}
                       </div>
                     </div>
