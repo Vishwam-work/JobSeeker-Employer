@@ -7,6 +7,7 @@ import PostJobPage from "./post-job/page";
 import ManageJobs from "./manage-jobs/page";
 import Candidates from "./candidates/page";
 import QuotaUsagePage from "@/app/dashboard/quota-usage/page";
+import FindJobs from "./find-jobs/page";
 import EmployerHeader from "@/components/Employerheader";
 import EmployerFooter from "@/components/Employerfooter";
 import {
@@ -15,6 +16,7 @@ import {
   Plus,
   UserCircle,
   BarChart3,
+  Search,
 } from "lucide-react";
 
 export default function EmployerDashboard() {
@@ -251,6 +253,12 @@ interface CandidateQA {
     icon: BarChart3,
     component: <QuotaUsagePage />,
   },
+
+   ]
+    : []),
+    ...(isAdmin
+    ? [
+      {id: "find-jobs", label: "Find Jobs", icon: Search, component: <FindJobs /> ,  }
    ]
     : []),
   ];
@@ -322,6 +330,10 @@ interface CandidateQA {
          {!isAdmin && activeTab === "quota" && (
         <QuotaUsagePage />
          )}
+
+         {isAdmin && activeTab === "find-jobs" && (
+          <FindJobs />
+        )}
       </div>
       <EmployerFooter />
     </div>
