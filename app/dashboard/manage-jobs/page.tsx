@@ -1100,7 +1100,10 @@ const handleAddQuestion = () => {
                                   job.currencyCode === "INR" ? "en-IN" : "en-US"
                                 ).format(Number(job.salary))
                               : ""}
-                            -
+                             {job.salary &&
+                              job.salary_max &&
+                              " - "}
+
                             {job.salary_max
                               ? new Intl.NumberFormat(
                                   job.currencyCode === "INR" ? "en-IN" : "en-US"
@@ -1256,17 +1259,23 @@ const handleAddQuestion = () => {
                     {/* <DollarSign className="w-4 h-4 mr-2" /> */}
                     <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
                     <span>
-                      {selectedJob.salary
-                        ? new Intl.NumberFormat(
-                            selectedJob.currencyCode === "INR" ? "en-IN" : "en-US"
-                          ).format(Number(selectedJob.salary))
-                        : ""}
-                      -
-                      {selectedJob.salary_max
-                        ? new Intl.NumberFormat(
-                            selectedJob.currencyCode === "INR" ? "en-IN" : "en-US"
-                          ).format(Number(selectedJob.salary_max))
-                        : ""}
+                      {selectedJob.salary &&
+                        new Intl.NumberFormat(
+                          selectedJob.currencyCode === "INR"
+                            ? "en-IN"
+                            : "en-US"
+                        ).format(Number(selectedJob.salary))}
+
+                      {selectedJob.salary &&
+                        selectedJob.salary_max &&
+                        " - "}
+
+                      {selectedJob.salary_max &&
+                        new Intl.NumberFormat(
+                          selectedJob.currencyCode === "INR"
+                            ? "en-IN"
+                            : "en-US"
+                        ).format(Number(selectedJob.salary_max))}
                     </span>
                   </div>
                 </div>

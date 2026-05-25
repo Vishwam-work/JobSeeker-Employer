@@ -116,16 +116,6 @@ export default function AdminExcelUpload({
           errors.push(`Row ${rowNumber}: Category is required`);
         if (!row.location)
           errors.push(`Row ${rowNumber}: Location is required`);
-        if (!row.salary) errors.push(`Row ${rowNumber}: Salary is required`);
-
-        // Salary number check
-        if (row.salary && isNaN(Number(row.salary))) {
-          errors.push(`Row ${rowNumber}: Salary must be a number`);
-        }
-
-        if (row.salary_max && isNaN(Number(row.salary_max))) {
-          errors.push(`Row ${rowNumber}: Salary Max must be a number`);
-        }
 
         // Vacancies
         if (row.vacancies && isNaN(Number(row.vacancies))) {
@@ -186,7 +176,7 @@ export default function AdminExcelUpload({
             company: row.company || "",
             category: row.category || "",
             location: row.location || "",
-            currency_id: Number(row.currency_id) || 293,
+            currency_id: Number(row.currency_id),
             experience: row.experience || "",
             salary: String(row.salary || ""),
             salary_max: String(row.salary_max || ""),
@@ -366,10 +356,6 @@ export default function AdminExcelUpload({
 
                       if (!row.category) {
                         errors.push(`Row ${rowNumber}: Category is required`);
-                      }
-
-                      if (!row.salary) {
-                        errors.push(`Row ${rowNumber}: Salary is required`);
                       }
                     });
                     setUploadErrors(errors);
