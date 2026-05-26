@@ -140,18 +140,18 @@ export default function EmployerRegister() {
   ];
 
   const industries = [
-    "Information Technology",
-    "Banking & Financial Services",
-    "Healthcare",
-    "Manufacturing",
-    "Retail",
-    "Education",
-    "Real Estate",
-    "Automotive",
-    "Telecommunications",
-    "Media & Entertainment",
-    "Consulting",
-    "Other",
+  "Automotive",
+  "Banking & Financial Services",
+  "Consulting",
+  "Education",
+  "Healthcare",
+  "Information Technology",
+  "Manufacturing",
+  "Media & Entertainment",
+  "Other",
+  "Real Estate",
+  "Retail",
+  "Telecommunications",
   ];
 
   const companySizes = [

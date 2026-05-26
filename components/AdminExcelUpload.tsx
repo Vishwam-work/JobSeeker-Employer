@@ -136,15 +136,6 @@ export default function AdminExcelUpload({
         ) {
           errors.push(`Row ${rowNumber}: is_remote must be true/false`);
         }
-
-        // Work mode validation
-        if (row.work_mode) {
-          const validModes = ["remote", "onsite", "hybrid"];
-          if (!validModes.includes(String(row.work_mode).toLowerCase())) {
-            errors.push(`Row ${rowNumber}: Invalid work_mode`);
-          }
-        }
-
         // Website URL check
         if (row.website_apply) {
           try {
@@ -185,11 +176,11 @@ export default function AdminExcelUpload({
                   .split(",")
                   .map((item) => item.trim().toLowerCase())
               : [],
-            work_mode: row.work_mode || "",
-            vacancies: Number(row.vacancies) || 1,
-            application_deadline: row.application_deadline
-              ? formatExcelDate(row.application_deadline)
+            work_mode: row.work_mode
+              ? String(row.work_mode).trim().toLowerCase()
               : "",
+            vacancies: Number(row.vacancies) || 1,
+            application_deadline: row.application_deadline,
             description: row.description || "",
             requirements: row.requirements || "",
             benefits: row.benefits || "",

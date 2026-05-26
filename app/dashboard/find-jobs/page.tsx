@@ -1,268 +1,147 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AsyncCreatableSelect from "react-select/async-creatable";
 import AsyncSelect from "react-select/async";
-import { Search, Download } from "lucide-react";
+import axios from "axios";
+import {
+  Search,
+  Download,
+  MapPin,
+  Briefcase,
+  Building2,
+  Clock3,
+} from "lucide-react";
+
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-const jobsData = [
-  {
-    title: "Flutter Developer",
-    job_title: "Mobile App Developer",
-    company: "AppVerse",
-    category: "Mobile Development",
-    location: "Germany",
-    currency_id: 293,
-    experience: "2-5 Years",
-    salary: "70000",
-    salary_max: "110000",
-    job_type: ["full-time"],
-    work_mode: "remote",
-    vacancies: 2,
-    application_deadline: "2026-07-25",
-    description: "Develop cross-platform mobile applications.",
-    requirements: "Flutter, Firebase, REST API",
-    benefits: "Remote Work",
-    skills: ["Flutter", "Dart", "Firebase"],
-    is_urgent: true,
-    is_remote: true,
-    status: "active",
-    questions: ["Explain Flutter widgets", "What is state management?"],
-    website_apply: "https://example.com/flutter-job",
-  },
-  {
-    title: "React Native Developer",
-    job_title: "Mobile Engineer",
-    company: "MobixSoft",
-    category: "Mobile Development",
-    location: "Canada",
-    currency_id: 293,
-    experience: "1-3 Years",
-    salary: "65000",
-    salary_max: "95000",
-    job_type: ["full-time"],
-    work_mode: "hybrid",
-    vacancies: 3,
-    application_deadline: "2026-07-30",
-    description: "Build mobile apps using React Native.",
-    requirements: "React Native, Redux",
-    benefits: "Insurance",
-    skills: ["React Native", "Redux", "JavaScript"],
-    is_urgent: false,
-    is_remote: false,
-    status: "active",
-    questions: ["Explain React Native lifecycle"],
-    website_apply: "",
-  },
-  {
-    title: "UI Designer",
-    job_title: "Creative Designer",
-    company: "DesignHub",
-    category: "Design",
-    location: "Australia",
-    currency_id: 293,
-    experience: "2 Years",
-    salary: "45000",
-    salary_max: "75000",
-    job_type: ["full-time"],
-    work_mode: "",
-    vacancies: 1,
-    application_deadline: "2026-08-05",
-    description: "Design modern interfaces.",
-    requirements: "Figma, Adobe XD",
-    benefits: "Flexible Timing",
-    skills: ["Figma", "UI Design"],
-    is_urgent: true,
-    is_remote: false,
-    status: "active",
-    questions: ["What is wireframing?"],
-    website_apply: "https://example.com/ui-job",
-  },
-  {
-    title: "UX Researcher",
-    job_title: "UX Specialist",
-    company: "PixelFlow",
-    category: "Design",
-    location: "United Kingdom",
-    currency_id: 293,
-    experience: "3-5 Years",
-    salary: "60000",
-    salary_max: "90000",
-    job_type: ["full-time"],
-    work_mode: "remote",
-    vacancies: 2,
-    application_deadline: "2026-08-10",
-    description: "Research user experience patterns.",
-    requirements: "UX Research, Analytics",
-    benefits: "WFH",
-    skills: ["UX", "Research", "Analytics"],
-    is_urgent: false,
-    is_remote: true,
-    status: "active",
-    questions: ["Explain UX process"],
-    website_apply: "",
-  },
-  {
-    title: "Data Scientist",
-    job_title: "AI Engineer",
-    company: "DataMind",
-    category: "Data Science",
-    location: "United States",
-    currency_id: 293,
-    experience: "3-6 Years",
-    salary: "90000",
-    salary_max: "140000",
-    job_type: ["full-time"],
-    work_mode: "hybrid",
-    vacancies: 2,
-    application_deadline: "2026-08-15",
-    description: "Develop ML models.",
-    requirements: "Python, ML",
-    benefits: "Health Insurance",
-    skills: ["Python", "Machine Learning", "TensorFlow"],
-    is_urgent: true,
-    is_remote: false,
-    status: "active",
-    questions: ["What is overfitting?"],
-    website_apply: "https://example.com/ds-job",
-  },
-  {
-    title: "Business Analyst",
-    job_title: "Data Analyst",
-    company: "InsightCorp",
-    category: "Data Science",
-    location: "Singapore",
-    currency_id: 293,
-    experience: "2-4 Years",
-    salary: "55000",
-    salary_max: "85000",
-    job_type: ["full-time"],
-    work_mode: "hybrid",
-    vacancies: 3,
-    application_deadline: "2026-08-20",
-    description: "Analyze business data.",
-    requirements: "SQL, Power BI",
-    benefits: "Bonus",
-    skills: ["SQL", "Power BI"],
-    is_urgent: false,
-    is_remote: false,
-    status: "active",
-    questions: ["Explain joins"],
-    website_apply: "",
-  },
-  {
-    title: "Finance Manager",
-    job_title: "Accounts Head",
-    company: "FinEdge",
-    category: "Finance & Accounting",
-    location: "Dubai",
-    currency_id: 293,
-    experience: "5+ Years",
-    salary: "80000",
-    salary_max: "130000",
-    job_type: ["full-time"],
-    work_mode: "",
-    vacancies: 1,
-    application_deadline: "2026-08-25",
-    description: "Manage financial operations.",
-    requirements: "Accounting, Taxation",
-    benefits: "PF",
-    skills: ["Accounting", "Finance"],
-    is_urgent: true,
-    is_remote: false,
-    status: "active",
-    questions: ["Explain balance sheet"],
-    website_apply: "",
-  },
-  {
-    title: "Accountant",
-    job_title: "Junior Accountant",
-    company: "MoneyCare",
-    category: "Finance & Accounting",
-    location: "India",
-    currency_id: 293,
-    experience: "1-2 Years",
-    salary: "30000",
-    salary_max: "50000",
-    job_type: ["full-time"],
-    work_mode: "",
-    vacancies: 4,
-    application_deadline: "2026-08-30",
-    description: "Maintain financial records.",
-    requirements: "Tally, GST",
-    benefits: "Paid Leave",
-    skills: ["Tally", "GST"],
-    is_urgent: false,
-    is_remote: false,
-    status: "active",
-    questions: ["Explain GST"],
-    website_apply: "https://example.com/account-job",
-  },
-  {
-    title: "HR Executive",
-    job_title: "Recruitment Specialist",
-    company: "TalentBridge",
-    category: "Human Resources",
-    location: "France",
-    currency_id: 293,
-    experience: "2 Years",
-    salary: "40000",
-    salary_max: "65000",
-    job_type: ["full-time"],
-    work_mode: "hybrid",
-    vacancies: 2,
-    application_deadline: "2026-09-05",
-    description: "Handle recruitment process.",
-    requirements: "Communication",
-    benefits: "Bonus",
-    skills: ["Recruitment", "HR"],
-    is_urgent: false,
-    is_remote: false,
-    status: "active",
-    questions: ["How do you hire candidates?"],
-    website_apply: "",
-  },
-  {
-    title: "HR Manager",
-    job_title: "People Operations Manager",
-    company: "HireSmart",
-    category: "Human Resources",
-    location: "Japan",
-    currency_id: 293,
-    experience: "4-6 Years",
-    salary: "70000",
-    salary_max: "110000",
-    job_type: ["full-time"],
-    work_mode: "remote",
-    vacancies: 1,
-    application_deadline: "2026-09-10",
-    description: "Manage HR operations.",
-    requirements: "HRMS, Leadership",
-    benefits: "Remote Work",
-    skills: ["HRMS", "Leadership"],
-    is_urgent: true,
-    is_remote: true,
-    status: "active",
-    questions: ["Explain HR policies"],
-    website_apply: "https://example.com/hr-manager",
-  },
-];
+
+interface Job {
+  id?: number;
+  title: string;
+  job_title: string;
+  company: string;
+  category: string;
+  location: string;
+  currency_id: number;
+  experience: string;
+  salary: string;
+  salary_max: string;
+  job_type: string[];
+  work_mode: string;
+  vacancies: number;
+  application_deadline: string;
+  description: string;
+  requirements: string;
+  benefits: string;
+  skills: string[];
+  is_urgent: boolean;
+  is_remote: boolean;
+  status: string;
+  questions: string[];
+  website_apply: string;
+}
 
 export default function FindJobs() {
+  const [jobsData, setJobsData] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
-  const [searchResults, setSearchResults] = useState(jobsData);
+  const [searchResults, setSearchResults] = useState<Job[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [isSearched, setIsSearched] = useState(false);
+
+  //  FETCH JOBS
+const fetchJobs = async () => {
+  try {
+    setLoading(true);
+
+    const token = localStorage.getItem("employeer_token");
+
+    // START SCRAPING TASK
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/find-jobs/`,
+      {
+        keyword: keyword || "",
+        category: selectedCategory?.value || "",
+        location: selectedLocation?.label || "",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Task Response:", response.data);
+
+    const taskId = response.data.task_id;
+
+    // POLL TASK STATUS
+    const checkStatus = async () => {
+      try {
+        const statusResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/task-status/${taskId}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log("Task Status:", statusResponse.data);
+
+        // COMPLETED
+        if (statusResponse.data.status === "completed") {
+          const jobs = statusResponse.data.data || [];
+
+          setJobsData(jobs);
+
+          setSearchResults(jobs);
+
+          setIsSearched(true);
+
+          setLoading(false);
+        }
+
+        // FAILED
+        else if (statusResponse.data.status === "failed") {
+          console.error("Task failed");
+
+          setLoading(false);
+        }
+
+        // PENDING / PROCESSING
+        else {
+          setTimeout(checkStatus, 3000);
+        }
+      } catch (error) {
+        console.error("Polling Error:", error);
+
+        setLoading(false);
+      }
+    };
+
+    // START POLLING
+    checkStatus();
+  } catch (error) {
+    console.error("Fetch Jobs Error:", error);
+
+    setLoading(false);
+  }
+};
+
+  //  CATEGORY
   const getJobCategoryOptions = async (inputValue: string) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category?q=${inputValue || ""}`,
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/jobs_category?q=${
+          inputValue || ""
+        }`
       );
 
       const data = await res.json();
-      console.log("category", data);
+
       return data.map((category: any) => ({
         label: category.name,
         value: category.name,
@@ -273,10 +152,13 @@ export default function FindJobs() {
     }
   };
 
+  //  LOCATION 
   const loadLocationOptions = async (inputValue: string) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/locations/search/?q=${inputValue || ""}`,
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/locations/search/?q=${
+          inputValue || ""
+        }`
       );
 
       const data = await res.json();
@@ -291,76 +173,39 @@ export default function FindJobs() {
     }
   };
 
-  // Handle Search
-  const handleSearch = () => {
-    const filteredJobs = jobsData.filter((job) => {
-      // Keyword Match
-      const matchKeyword =
-        keyword === "" ||
-        job.title.toLowerCase().includes(keyword.toLowerCase()) ||
-        job.job_title.toLowerCase().includes(keyword.toLowerCase()) ||
-        job.company.toLowerCase().includes(keyword.toLowerCase()) ||
-        job.skills.some((skill) =>
-          skill.toLowerCase().includes(keyword.toLowerCase()),
-        );
-
-      // Category Match
-      const matchCategory =
-        !selectedCategory ||
-        job.category
-          .toLowerCase()
-          .includes(selectedCategory.value.toLowerCase());
-
-      // Location Match
-      const matchLocation =
-        !selectedLocation ||
-        job.location
-          .toLowerCase()
-          .includes(selectedLocation.label.toLowerCase());
-
-      return matchKeyword && matchCategory && matchLocation;
-    });
-
-    setSearchResults(filteredJobs);
+  //  SEARCH
+  const handleSearch = async () => {
     setIsSearched(true);
+
+    await fetchJobs();
   };
 
+  //  DOWNLOAD
   const handleDownloadExcel = () => {
     if (searchResults.length === 0) return;
 
     const excelData = searchResults.map((job) => ({
-      title: job.title,
+      title: job.job_title,
       job_title: job.job_title,
       company: job.company,
-      category: job.category,
+      category: selectedCategory?.value || "",
       location: job.location,
       currency_id: job.currency_id,
       experience: job.experience,
-      salary: job.salary,
-      salary_max: job.salary_max,
-
+      salary: job.salary|| "No Disclosed",
+      salary_max: job.salary_max|| "No Disclosed",
       job_type: Array.isArray(job.job_type)
         ? job.job_type.join(", ")
         : job.job_type,
-
       work_mode: job.work_mode,
       vacancies: job.vacancies,
-      application_deadline: job.application_deadline
-        ? new Date(job.application_deadline).toLocaleDateString("en-GB")
-        : "",
+      application_deadline: job.application_deadline,
       description: job.description,
       requirements: job.requirements,
       benefits: job.benefits,
-
       skills: Array.isArray(job.skills) ? job.skills.join(", ") : "",
-
       is_urgent: job.is_urgent,
       is_remote: job.is_remote,
-
-      status: job.status,
-
-      questions: Array.isArray(job.questions) ? job.questions.join(" | ") : "",
-
       website_apply: job.website_apply,
     }));
 
@@ -368,7 +213,7 @@ export default function FindJobs() {
 
     const workbook = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Search Results");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Jobs");
 
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
@@ -379,15 +224,15 @@ export default function FindJobs() {
       type: "application/octet-stream",
     });
 
-    saveAs(fileData, "search-results.xlsx");
+    saveAs(fileData, "jobs.xlsx");
   };
 
   return (
-    <div className="w-full max-w-6xl text-center">
-      {/* Search Box */}
+    <div className="w-full max-w-7xl mx-auto px-4">
+      {/* SEARCH BOX */}
       <div className="bg-white rounded-3xl lg:rounded-full shadow-xl p-4 border border-gray-100">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
-          {/* Category Select */}
+          {/* CATEGORY */}
           <div className="w-full lg:w-[30%] lg:border-r border-gray-200 lg:pr-4">
             <AsyncCreatableSelect
               cacheOptions
@@ -412,7 +257,7 @@ export default function FindJobs() {
             />
           </div>
 
-          {/* Keyword Input */}
+          {/* KEYWORD */}
           <div className="w-full lg:w-[30%] lg:border-r border-gray-200 lg:px-4">
             <input
               type="text"
@@ -423,9 +268,9 @@ export default function FindJobs() {
             />
           </div>
 
-          {/* Location Select */}
+          {/* LOCATION */}
           <div className="w-full lg:w-[25%] lg:px-2">
-            <AsyncSelect
+            <AsyncCreatableSelect
               cacheOptions
               defaultOptions
               loadOptions={loadLocationOptions}
@@ -448,7 +293,7 @@ export default function FindJobs() {
             />
           </div>
 
-          {/* Search Button */}
+          {/* BUTTON */}
           <div className="w-full lg:w-auto">
             <button
               onClick={handleSearch}
@@ -461,55 +306,37 @@ export default function FindJobs() {
         </div>
       </div>
 
-      {/* Default Empty UI */}
+      {/* DEFAULT UI */}
       {!isSearched && (
         <div className="mt-16 bg-white rounded-3xl shadow-md border border-gray-100 p-10 sm:p-14 text-center">
-          {/* Icon */}
           <div className="flex justify-center">
             <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center">
               <Search size={42} className="text-blue-600" />
             </div>
           </div>
 
-          {/* Title */}
           <h2 className="mt-6 text-3xl sm:text-4xl font-bold text-[#1b1833]">
             Find Jobs
           </h2>
 
-          {/* Description */}
           <p className="mt-3 text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
             Search jobs by category, keyword, and location.
           </p>
-
-          {/* Tags */}
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            {[
-              "React Developer",
-              "Flutter",
-              "Python",
-              "Node.js",
-              "SEO",
-              "UI/UX",
-              "DevOps",
-            ].map((tag, index) => (
-              <span
-                key={index}
-                className="bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
         </div>
       )}
 
+     {/* RESULTS */}
       {isSearched && (
         <>
-          {searchResults.length > 0 ? (
+          {loading ? (
+            <div className="mt-10 text-center text-lg font-medium">
+              Loading jobs...
+            </div>
+          ) : searchResults.length > 0 ? (
             <div className="mt-16 bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden">
+              {/* HEADER */}
               <div className="px-4 sm:px-6 py-5 border-b bg-white">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  {/* Left Content */}
                   <div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-[#1b1833]">
                       Search Results
@@ -524,7 +351,6 @@ export default function FindJobs() {
                     </p>
                   </div>
 
-                  {/* Right Button */}
                   <div className="flex md:justify-end">
                     <button
                       onClick={handleDownloadExcel}
@@ -537,16 +363,13 @@ export default function FindJobs() {
                 </div>
               </div>
 
+              {/* TABLE */}
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[800px]">
+                <table className="w-full min-w-[1200px]">
                   <thead className="bg-[#f7f7fb]">
                     <tr>
                       <th className="text-left px-6 py-4 font-semibold text-gray-700">
-                        Category
-                      </th>
-
-                      <th className="text-left px-6 py-4 font-semibold text-gray-700">
-                        Location
+                        Job Title
                       </th>
 
                       <th className="text-left px-6 py-4 font-semibold text-gray-700">
@@ -554,7 +377,23 @@ export default function FindJobs() {
                       </th>
 
                       <th className="text-left px-6 py-4 font-semibold text-gray-700">
+                        Location
+                      </th>
+
+                      <th className="text-left px-6 py-4 font-semibold text-gray-700">
                         Experience
+                      </th>
+
+                      <th className="text-left px-6 py-4 font-semibold text-gray-700">
+                        Min Salary
+                      </th>
+
+                      <th className="text-left px-6 py-4 font-semibold text-gray-700">
+                        Max Salary
+                      </th>
+
+                      <th className="text-left px-6 py-4 font-semibold text-gray-700">
+                        Work Mode
                       </th>
 
                       <th className="text-left px-6 py-4 font-semibold text-gray-700">
@@ -566,31 +405,69 @@ export default function FindJobs() {
                   <tbody>
                     {searchResults.map((job, index) => (
                       <tr
-                        key={index}
+                        key={job.id || index}
                         className="border-t hover:bg-gray-50 transition"
                       >
-                        <td className="px-6 py-4 text-gray-700">
-                          {job.category}
+                        {/* JOB TITLE */}
+                        <td className="px-6 py-5">
+                          <div>
+                            <h3 className="font-semibold text-gray-900">
+                              {job.job_title }
+                            </h3>
+                          </div>
                         </td>
 
-                        <td className="px-6 py-4 text-gray-700">
-                          {job.location}
-                        </td>
-
-                        <td className="px-6 py-4 text-gray-700">
+                        {/* COMPANY */}
+                        <td className="px-6 py-5 text-gray-700">
                           {job.company}
                         </td>
 
-                        <td className="px-6 py-4 text-gray-700">
+                        {/* LOCATION */}
+                        <td className="px-6 py-5 text-gray-700">
+                          {job.location}
+                        </td>
+
+                        {/* EXPERIENCE */}
+                        <td className="px-6 py-5 text-gray-700">
                           {job.experience}
                         </td>
 
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            {job.skills.map((skill, i) => (
+                        {/* MIN SALARY */}
+                        <td className="px-6 py-5">
+                          <p className="font-semibold text-green-600">
+                             {job.salary || "No Disclosed"}
+                          </p>
+                        </td>
+
+                        {/* MAX SALARY */}
+                        <td className="px-6 py-5">
+                          <p className="font-semibold text-green-600">
+                           {job.salary_max || "No Disclosed"}
+                          </p>
+                        </td>
+
+                        {/* WORK MODE */}
+                        <td className="px-6 py-5">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                              job.work_mode === "remote"
+                                ? "bg-green-100 text-green-700"
+                                : job.work_mode === "hybrid"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {job.work_mode || " "}
+                          </span>
+                        </td>
+
+                        {/* SKILLS */}
+                        <td className="px-6 py-5">
+                          <div className="flex flex-wrap gap-2 max-w-[250px]">
+                            {job.skills?.slice(0, 3).map((skill, i) => (
                               <span
                                 key={i}
-                                className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
+                                className="bg-gray-100 text-gray-700 px-2 py-1 rounded-lg text-xs"
                               >
                                 {skill}
                               </span>
@@ -604,42 +481,34 @@ export default function FindJobs() {
               </div>
             </div>
           ) : (
-            // No Results UI
+            // NO RESULTS
             <div className="mt-16 bg-white rounded-3xl shadow-md border border-gray-100 p-10 sm:p-14 text-center">
-              {/* Icon */}
               <div className="flex justify-center">
                 <div className="w-24 h-24 rounded-full bg-red-50 flex items-center justify-center">
                   <Search size={42} className="text-red-500" />
                 </div>
               </div>
 
-              {/* Title */}
               <h2 className="mt-6 text-3xl sm:text-4xl font-bold text-[#1b1833]">
                 No Jobs Found
               </h2>
 
-              {/* Description */}
               <p className="mt-3 text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-                We couldn't find any jobs matching your search criteria. Try
-                changing the keyword, category, or location to get better
-                results.
+                Try changing keyword, category, or location.
               </p>
 
-              {/* Actions */}
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button
-                  onClick={() => {
-                    setKeyword("");
-                    setSelectedCategory(null);
-                    setSelectedLocation(null);
-                    setSearchResults([]);
-                    setIsSearched(false);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                  Clear Search
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  setKeyword("");
+                  setSelectedCategory(null);
+                  setSelectedLocation(null);
+                  setSearchResults([]);
+                  setIsSearched(false);
+                }}
+                className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-semibold"
+              >
+                Clear Search
+              </button>
             </div>
           )}
         </>
