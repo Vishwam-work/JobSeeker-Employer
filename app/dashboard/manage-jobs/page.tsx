@@ -1095,20 +1095,32 @@ const handleAddQuestion = () => {
                         <div className="flex items-center">
                           <span className="w-3 h-5">{job.currency?.symbol_native}</span>
                           <span>
-                            {job.salary
-                              ? new Intl.NumberFormat(
-                                  job.currencyCode === "INR" ? "en-IN" : "en-US"
-                                ).format(Number(job.salary))
-                              : ""}
-                             {job.salary &&
-                              job.salary_max &&
-                              " - "}
+                            {(() => {
+                            const minSalary = Number(job.salary);
+                            const maxSalary = Number(job.salary_max);
 
-                            {job.salary_max
-                              ? new Intl.NumberFormat(
-                                  job.currencyCode === "INR" ? "en-IN" : "en-US"
-                                ).format(Number(job.salary_max))
-                              : ""}
+                            const isMinValid = !isNaN(minSalary) && minSalary > 0;
+                            const isMaxValid = !isNaN(maxSalary) && maxSalary > 0;
+
+                            const formatSalary = (amount: number) =>
+                              new Intl.NumberFormat(
+                                job.currencyCode === "INR" ? "en-IN" : "en-US"
+                              ).format(amount);
+
+                            if (isMinValid && isMaxValid) {
+                              return `${formatSalary(minSalary)} - ${formatSalary(maxSalary)}`;
+                            }
+
+                            if (isMinValid) {
+                              return formatSalary(minSalary);
+                            }
+
+                            if (isMaxValid) {
+                              return formatSalary(maxSalary);
+                            }
+
+                            return "Salary - Not Disclosed";
+                          })()}
                           </span>
                         </div>
                         <div className="flex items-center">
@@ -1259,23 +1271,34 @@ const handleAddQuestion = () => {
                     {/* <DollarSign className="w-4 h-4 mr-2" /> */}
                     <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
                     <span>
-                      {selectedJob.salary &&
+                    {(() => {
+                      const minSalary = Number(selectedJob.salary);
+                      const maxSalary = Number(selectedJob.salary_max);
+
+                      const isMinValid = !isNaN(minSalary) && minSalary > 0;
+                      const isMaxValid = !isNaN(maxSalary) && maxSalary > 0;
+
+                      const formatSalary = (amount: number) =>
                         new Intl.NumberFormat(
                           selectedJob.currencyCode === "INR"
                             ? "en-IN"
                             : "en-US"
-                        ).format(Number(selectedJob.salary))}
+                        ).format(amount);
 
-                      {selectedJob.salary &&
-                        selectedJob.salary_max &&
-                        " - "}
+                      if (isMinValid && isMaxValid) {
+                        return `${formatSalary(minSalary)} - ${formatSalary(maxSalary)}`;
+                      }
 
-                      {selectedJob.salary_max &&
-                        new Intl.NumberFormat(
-                          selectedJob.currencyCode === "INR"
-                            ? "en-IN"
-                            : "en-US"
-                        ).format(Number(selectedJob.salary_max))}
+                      if (isMinValid) {
+                        return formatSalary(minSalary);
+                      }
+
+                      if (isMaxValid) {
+                        return formatSalary(maxSalary);
+                      }
+
+                      return "Salary - Not Disclosed";
+                    })()}
                     </span>
                   </div>
                 </div>

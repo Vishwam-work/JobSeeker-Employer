@@ -755,40 +755,44 @@ useEffect(() => {
               </Select>
             </div>
 
-            <div>
-              <Label htmlFor="salary" className="text-sm font-medium">
-                Salary Range (Annual)
-              </Label>
-              <div className="flex gap-2 mt-1">
-                <AsyncSelect
-                  cacheOptions
-                  defaultOptions
-                  placeholder="Currency"
-                  loadOptions={getCurrencyOptions}
-                  value={
-                    jobForm.currency
-                      ? {
-                          value: jobForm.currency,
-                          label: jobForm.currencyLabel,
-                        }
-                      : null
-                  }
-                  onChange={(selectedOption: any) => {
-                    setJobForm((prev) => ({
-                      ...prev,
-                      currency: selectedOption?.value || "",
-                      currencyCode: selectedOption?.code || "INR",
-                      currencyLabel: selectedOption?.label || "",
-                    }));
-                  }}
-                  // isClearable
-                  menuPortalTarget={
-                    typeof window !== "undefined" ? document.body : null
-                  }
-                  styles={{
-                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  }}
-                />
+          <div>
+            <Label htmlFor="salary" className="text-sm font-medium">
+              Salary Range (Annual)
+            </Label>
+
+            <div className="flex gap-2 mt-1">
+              <AsyncSelect
+                cacheOptions
+                defaultOptions
+                isSearchable={false}
+                placeholder="Currency"
+                loadOptions={getCurrencyOptions}
+                value={
+                  jobForm.currency
+                    ? {
+                        value: jobForm.currency,
+                        label: jobForm.currencyLabel,
+                      }
+                    : null
+                }
+                onChange={(selectedOption: any) => {
+                  setJobForm((prev) => ({
+                    ...prev,
+                    currency: selectedOption?.value || "",
+                    currencyCode: selectedOption?.code || "INR",
+                    currencyLabel: selectedOption?.label || "",
+                  }));
+                }}
+                menuPortalTarget={
+                  typeof window !== "undefined" ? document.body : null
+                }
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                }}
+              />
+
+              {/* Minimum Salary */}
+              <div className="flex-1">
                 <Input
                   type="text"
                   id="salary"
@@ -817,8 +821,26 @@ useEffect(() => {
                     }
                   }}
                   placeholder="Minimum Annual Salary"
-                  className="flex-1"
-                />-
+                  className={`flex-1 ${
+                    Number(jobForm.salary) > Number(jobForm.salary_max) &&
+                    jobForm.salary_max
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }`}
+                />
+
+                {Number(jobForm.salary) > Number(jobForm.salary_max) &&
+                  jobForm.salary_max && (
+                    <p className="text-red-500 text-xs mt-1">
+                      Minimum salary cannot be greater than maximum salary
+                    </p>
+                  )}
+              </div>
+
+              <span className="flex items-center">-</span>
+
+              {/* Maximum Salary */}
+              <div className="flex-1">
                 <Input
                   type="text"
                   id="salary_max"
@@ -847,10 +869,16 @@ useEffect(() => {
                     }
                   }}
                   placeholder="Maximum Annual Salary"
-                  className="flex-1"
+                  className={`flex-1 ${
+                    Number(jobForm.salary) > Number(jobForm.salary_max) &&
+                    jobForm.salary_max
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }`}
                 />
               </div>
             </div>
+          </div>
 
             <div>
               <Label className="text-sm font-medium">Job Type *</Label>
