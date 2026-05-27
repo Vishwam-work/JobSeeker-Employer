@@ -18,6 +18,7 @@ import {
   BarChart3,
   Search,
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("post-job");
@@ -103,7 +104,9 @@ interface CandidateQA {
         const data = await res.json();
         console.log("Employer applications:", data);
         // Map API to UI candidate shape
-        const mapped = (Array.isArray(data) ? data : []).map((app) => ({
+        const applications = data?.data || data?.results || data || [];
+
+        const mapped = applications.map((app: any) => ({
           id: app.id,
           name: app.profile?.full_name || app.user_email || "Unknown",
           email: app.profile?.email || app.user_email,
@@ -117,6 +120,7 @@ interface CandidateQA {
           ]
             .filter(Boolean)
             .join(", "),
+
           experience: app.profile?.experience || "N/A",
           currentRole: "",
           currentCompany: "",
@@ -124,16 +128,17 @@ interface CandidateQA {
           education: "",
           appliedFor: app.job_title,
           appliedDate: app.applied_at,
-          // status: app.application_status || "Under Review",
+
           status:
-             app.application_status &&
-             app.application_status !== "application_status"
-             ? app.application_status
-             : "Under Review",
+            app.application_status &&
+            app.application_status !== "application_status"
+              ? app.application_status
+              : "Under Review",
 
           resumeUrl: app.profile?.resume
             ? `${process.env.NEXT_PUBLIC_URL}${app.profile.resume}`
             : "#",
+
           profileImage: null,
           summary: "",
           workExperience: app.profile?.experiences || [],
@@ -141,8 +146,10 @@ interface CandidateQA {
           certifications: app.profile?.certifications || [],
           qa: app.answers || [],
         }));
+
+
         setCandidates(mapped);
-        console.log("MAPPED:", mapped);
+
       } catch (e) {
         console.error("Failed to fetch employer applications", e);
       }
@@ -151,82 +158,101 @@ interface CandidateQA {
   }, []);
 
   const exportToExcel = async () => {
-    const XLSX = await import("xlsx");
+  const XLSX = await import("xlsx");
 
-    const data = filteredCategories.map((c) => ({
-      name: c.name || "",
-      email: c.email || "",
-      phone: `+${c.phoneCode}${c.phone}` || "",
-      // phone: `${c.phone || ""}`,
-      appliedFor: c.appliedFor || c.job_title || "",
-      status: c.status || "",
-      experience: c.experience || "",
-      location: c.location || "",
-    }));
+  if (!filteredCategories || filteredCategories.length === 0) {
+    toast.warning("No data available to export");
+    return;
+  }
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
+  const data = filteredCategories.map((c: any) => ({
+    Name: c.name || "",
+    Email: c.email || "",
+    Phone: c.phone
+      ? `+${c.phoneCode || ""}${c.phone}`
+      : "",
+    AppliedFor: c.appliedFor || c.job_title || "",
+    Status: c.status || "",
+    Experience: c.experience || "",
+    Location: c.location || "",
+  }));
 
-    XLSX.utils.book_append_sheet(wb, ws, "Candidates");
+  console.log("exportToExcel :",data);
 
-    XLSX.writeFile(wb, "filtered_candidates.xlsx");
-  };
+  const worksheet = XLSX.utils.json_to_sheet(data);
+
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    "Candidates"
+  );
+
+  XLSX.writeFile(workbook, "filtered_candidates.xlsx");
+};
 
   const filteredCategories = candidates.filter((c) => {
-    const nameMatch =
-      c.name?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.currentRole?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.appliedFor?.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
-      c.skills?.some((skill) =>
-      skill.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const search = searchTerm.toLowerCase();
 
-    const statusMatch =
-      statusFilter === "All" ||
-      c.status?.toLowerCase() === statusFilter.toLowerCase();
-
-    const locationMatch =
-      locationFilter === "All" ||
-      c.location?.toLowerCase() === locationFilter.toLowerCase();
-
-    const jobTitleMatch =
-      jobTitleFilter === "All" ||
-      c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
-
-    const salary = parseInt(c.expectedSalary ?? "0", 10);
-    const salaryMatch =
-      salaryFilter === "All" ||
-      (salaryFilter === "Below 20000" && salary < 20000) ||
-      (salaryFilter === "20000-50000" && salary >= 20000 && salary <= 50000) ||
-      (salaryFilter === "Above 50000" && salary > 50000);
-
-    const expMatch =
-      experienceFilter === "All" ||
-      (experienceFilter === "Fresher" &&
-        (c.experience?.toLowerCase().includes("fresher") ||
-          c.experience?.includes("0"))) ||
-      (experienceFilter === "1-3 Years" &&
-        (c.experience?.includes("1") ||
-          c.experience?.includes("2") ||
-          c.experience?.includes("3"))) ||
-      (experienceFilter === "3-5 Years" &&
-        (c.experience?.includes("3") ||
-          c.experience?.includes("4") ||
-          c.experience?.includes("5"))) ||
-      (experienceFilter === "5+ Years" &&
-        (c.experience?.includes("5") ||
-          c.experience?.includes("6") ||
-          c.experience?.includes("7")));
-
-    return (
-      nameMatch &&
-      statusMatch &&
-      locationMatch &&
-      salaryMatch &&
-      expMatch &&
-      jobTitleMatch
+  const nameMatch =
+    !search ||
+    c.name?.toLowerCase().includes(search) ||
+    c.currentRole?.toLowerCase().includes(search) ||
+    c.appliedFor?.toLowerCase().includes(search) ||
+    c.skills?.some((skill: string) =>
+      skill.toLowerCase().includes(search)
     );
-  });
+
+  const statusMatch =
+    statusFilter === "All" ||
+    c.status?.toLowerCase() === statusFilter.toLowerCase();
+
+  const locationMatch =
+    locationFilter === "All" ||
+    c.location?.toLowerCase() === locationFilter.toLowerCase();
+
+  const jobTitleMatch =
+    jobTitleFilter === "All" ||
+    c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
+
+  const salary = parseInt(c.expectedSalary ?? "0", 10);
+
+  const salaryMatch =
+    salaryFilter === "All" ||
+    (salaryFilter === "Below 20000" && salary < 20000) ||
+    (salaryFilter === "20000-50000" &&
+      salary >= 20000 &&
+      salary <= 50000) ||
+    (salaryFilter === "Above 50000" && salary > 50000);
+
+  const expMatch =
+    experienceFilter === "All" ||
+    (experienceFilter === "Fresher" &&
+      (c.experience?.toLowerCase().includes("fresher") ||
+        c.experience?.includes("0"))) ||
+    (experienceFilter === "1-3 Years" &&
+      ["1", "2", "3"].some((y) =>
+        c.experience?.includes(y)
+      )) ||
+    (experienceFilter === "3-5 Years" &&
+      ["3", "4", "5"].some((y) =>
+        c.experience?.includes(y)
+      )) ||
+    (experienceFilter === "5+ Years" &&
+      ["5", "6", "7", "8", "9", "10"].some((y) =>
+        c.experience?.includes(y)
+      ));
+
+  return (
+    nameMatch &&
+    statusMatch &&
+    locationMatch &&
+    salaryMatch &&
+    expMatch &&
+    jobTitleMatch
+  );
+});
   useEffect(() => {
   const role = localStorage.getItem("admin_role");
   if (role === "admin") {
@@ -279,7 +305,11 @@ interface CandidateQA {
             </p>
           </div>
           {activeTab === "candidates" && (
-            <Button onClick={exportToExcel} className="bg-green-600 text-white">
+            <Button
+              type="button"
+              onClick={exportToExcel}
+              className="bg-green-600 text-white"
+            >
               Export Excel
             </Button>
           )}
