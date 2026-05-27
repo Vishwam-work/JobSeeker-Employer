@@ -93,7 +93,7 @@ const ManageJobs = () => {
   const [open, setOpen] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [loading, setLoading] = useState(true);
-  // const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [jobForm, setJobForm] = useState<JobForm>({
     title: "",
     category: "",
@@ -106,7 +106,7 @@ const ManageJobs = () => {
     currency_id: "",
     currencyCode: "INR",
     currencyLabel: "",
-    job_type: [],
+    job_type: [] as string[],
     work_mode: "",
     description: "",
     requirements: "",
@@ -132,7 +132,7 @@ const ManageJobs = () => {
     salary: string;
     salary_max: string;
     currency_id: string;
-      currencyCode?: "INR" | "USD";
+    currencyCode?: "INR" | "USD";
     currencyLabel?: string;
     job_type: string[];
     work_mode: string;
@@ -162,7 +162,7 @@ const ManageJobs = () => {
       symbol_native: string;
     };
     currencyCode?: "INR" | "USD";
-    job_type: string;
+    job_type: string[];
     work_mode: string;
     vacancies: number;
     application_deadline: string;
@@ -273,6 +273,14 @@ const ManageJobs = () => {
   }
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const role = localStorage.getItem("admin_role");
+
+    if (role === "admin") {
+      setIsAdmin(true);
+    }
+  }, []);
   const fetchPostedJobs = async (page = 1, search = "", status = "all",date = "") => {
     try {
       setLoading(true);
@@ -480,9 +488,13 @@ const ManageJobs = () => {
         salary: data.salary || "",
         salary_max: data.salary_max || "",
         currency_id: data.currency?.id?.toString() || data.currency || "",
-         currencyCode: "INR",
+        currencyCode: "INR",
         currencyLabel: data.currency?.code || "",
-        job_type: data.job_type || "",
+        job_type: Array.isArray(data.job_type)
+        ? data.job_type.map((type: string) =>
+            type.toLowerCase().replace(/\s+/g, "-")
+          )
+        : [],
         work_mode: data.work_mode || "",
         description: data.description || "",
         requirements: data.requirements || "",
@@ -1282,17 +1294,13 @@ const handleAddQuestion = () => {
                 <div className="space-y-2">
                   <div className="flex items-center text-gray-600">
                   <Clock className="w-4 h-4 mr-2" />
-                 <span>
-                    {Array.isArray(selectedJob.job_type)
-                      ? selectedJob.job_type
-                          .map(
-                            (type) =>
-                              type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
-                          )
-                          .join(", ")
-                      : selectedJob.job_type
-                          ?.charAt(0).toUpperCase() +
-                        selectedJob.job_type?.slice(1).toLowerCase()}
+                  <span>
+                    {selectedJob.job_type
+                      ?.map(
+                        (type: string) =>
+                          jobTypeOptions.find((opt) => opt.value === type)?.label || type
+                      )
+                      .join(", ")}
                   </span>
                 </div>
                   <div className="flex items-center text-gray-600">
@@ -1304,10 +1312,11 @@ const handleAddQuestion = () => {
                   <div className="flex items-center text-gray-600">
                     <Calendar className="w-4 h-4 mr-2" />
                     <span>
-                      Posted{" "}
-                      {selectedJob.created_at
-                        ? getTimeSincePosted(selectedJob.created_at)
-                        : "N/A"}
+                            {selectedJob.created_at
+                              ? new Date(selectedJob.created_at).toLocaleDateString(
+                                  "en-GB",
+                                )
+                              : "N/A"}
                     </span>
                   </div>
                 </div>
@@ -1828,23 +1837,23 @@ const handleAddQuestion = () => {
               />
             </div>
           </div>
-            <div>
-              <Label className="text-sm font-medium">Job Type *</Label>
-              <Selectt
-                required
-                isMulti
-                options={jobTypeOptions}
-                value={jobTypeOptions.filter(option =>
-                  jobForm.job_type.includes(option.value)
-                )}
-                onChange={(selectedOptions) =>
-                  setJobForm((prev) => ({
-                    ...prev,
-                    job_type: selectedOptions.map((opt) => opt.value),
-                  }))
-                }
-              />
-            </div>
+          <div>
+            <Label className="text-sm font-medium">Job Type *</Label>
+
+            <Selectt
+            isMulti
+            options={jobTypeOptions}
+            value={jobTypeOptions.filter((option) =>
+              jobForm.job_type?.includes(option.value)
+            )}
+            onChange={(selectedOptions: any) =>
+              setJobForm((prev) => ({
+                ...prev,
+                job_type: selectedOptions.map((item: any) => item.value),
+              }))
+            }
+          />
+          </div>
              <div>
                 <Label className="text-sm font-medium"> Skills</Label>
                 <div className="mt-1 space-y-2">
@@ -1948,7 +1957,9 @@ const handleAddQuestion = () => {
               }
             />
           </div>
-          <div className="flex items-center space-x-2">
+                  {isAdmin && (
+                    <>
+                   <div className="flex items-center space-x-2">
                       <Checkbox
                         id="add-website"
                         checked={websiteEnabled}
@@ -1964,6 +1975,8 @@ const handleAddQuestion = () => {
                         Website URL
                       </Label>
                     </div>
+                    </>
+                    )}
                     {websiteEnabled && (
                       <div className="mt-4 w-full sm:w-3/5 lg:w-2/5">
                         <Input

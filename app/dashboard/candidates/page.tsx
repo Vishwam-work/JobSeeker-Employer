@@ -13,6 +13,7 @@ import {
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
+import { TimeField } from "@mui/x-date-pickers/TimeField";
 import { DigitalClock } from "@mui/x-date-pickers/DigitalClock";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
@@ -129,7 +130,7 @@ export default function Candidates() {
       courd: string;
       institution: string;
       year: string;
-      course_detail?: { name: string };
+      course: string;
       start_year?: string;
       end_year?: string;
       grade?: string;
@@ -512,7 +513,7 @@ const formatDate = (date?: any) => {
           },
           body: JSON.stringify({
             interview_date: interviewDate,
-            interview_time: time ? time.format("HH:mm:ss") : "",
+            interview_time: time ? time.format("HH:mm") : "",
             interview_mode: interviewMode,
             meet_link: interviewLink,
             timezone : timeZone,
@@ -1312,7 +1313,7 @@ const formatDate = (date?: any) => {
                       <h4 className="font-medium text-gray-900">
                         {edu.education}
                       </h4>
-                      <p className="text-green-600 font-medium">{edu.course_detail?.name || "Course Details Not Available"}</p>
+                      <p className="text-green-600 font-medium">{edu.course || "Course Details Not Available"}</p>
                       <p className="text-gray-600">{edu.institution}</p>
                       <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
                         <span>
@@ -1381,13 +1382,13 @@ const formatDate = (date?: any) => {
                 </div>
               )}
 
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowResume((prev) => !prev)}
               >
                 View Resume
-              </Button>
+              </Button> */}
 
               {showResume && selectedCandidate?.resumeUrl && (
                 <div className="mt-4 h-[500px] border rounded">
@@ -1620,14 +1621,20 @@ const formatDate = (date?: any) => {
 
                           {/* ✅ Input + Timezone */}
                           <div className="flex gap-2">
-                            <input
-                              type="text"
-                              readOnly
-                              value={time ? time.format("hh:mm A") : ""}
-                              onClick={() => setTimeopen(!timeopen)}
-                              className="border rounded-lg p-2 w-40 bg-gray-100 cursor-pointer"
-                              placeholder="Select time"
-                            />
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                              <TimeField
+                                label="Interview Time"
+                                value={time}
+                                onChange={(newValue) => setTime(newValue)}
+                                format="hh:mm A"
+                                fullWidth
+                                slotProps={{
+                                  textField: {
+                                    size: "small",
+                                  },
+                                }}
+                              />
+                            </LocalizationProvider>
 
                             {/* Timezone */}
                             <select
@@ -1952,7 +1959,7 @@ const formatDate = (date?: any) => {
                               <h4 className="font-medium text-gray-900">
                                 {edu.education}
                               </h4>
-                              <p className="text-green-600 font-medium">{edu.course_detail?.name || "Course Details Not Available"}</p>
+                              <p className="text-green-600 font-medium">{edu.course || "Course Details Not Available"}</p>
                               <p className="text-gray-600">{edu.institution}</p>
                               <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
                                 <span>
