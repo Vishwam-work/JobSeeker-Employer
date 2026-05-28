@@ -103,6 +103,14 @@ export default function Candidates() {
     email: string;
     phone: string;
     location: string;
+    current_salary: string;
+    expected_salary: string;
+    current_currency:{
+      name: string;
+      symbol: string;
+      code: string;
+      symbol_native: string;
+    }
     experience: string;
     gender: string;
     skills: string[];
@@ -159,6 +167,20 @@ export default function Candidates() {
   job_title?: string;
 };
 
+const formatNumber = (
+  value: string | number,
+  currency: string = "INR"
+): string => {
+  if (!value) return "";
+
+  return new Intl.NumberFormat(
+    currency === "INR" ? "en-IN" : "en-US"
+  ).format(Number(String(value).replace(/,/g, "")));
+};
+
+const parseNumber = (value: string): string => {
+  return value.replace(/,/g, "");
+};
   const fetchApplications = async ( page=1,search = "", status = "All", gender = "All", title = "All", location = "All", exp = "All", salary = "All" ) => {
       try {
         setLoading(true);
@@ -193,7 +215,9 @@ export default function Candidates() {
           email: app.profile?.email || app.user_email,
           phone: app.profile?.phone || "Not provided",
           phoneCode: app.profile?.phone_code || "",
-
+          current_salary: app.profile?.current_salary || "",
+          expected_salary: app.profile?.expected_salary || "",
+          current_currency: app.profile?.current_currency || "",
           location: [
             app.profile?.city,
             app.profile?.state,
@@ -1198,6 +1222,29 @@ const formatDate = (date?: any) => {
                       <Phone className="w-4 h-4 text-gray-400" />
                       <span className="font-medium">
                         +{selectedCandidate.phoneCode} {selectedCandidate.phone}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      Current Salary:
+                      <span className="font-medium">
+                        {selectedCandidate.current_currency?.symbol_native}
+                        {formatNumber(
+                          selectedCandidate.current_salary,
+                          selectedCandidate.current_currency?.code
+                        )}{" "}
+                        / yr
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      Expected Salary:
+                      <span className="font-medium">
+                        {selectedCandidate.current_currency?.symbol_native}
+                        {formatNumber(
+                          selectedCandidate.expected_salary,
+                          selectedCandidate.current_currency?.code
+                        )}{" "}
+                        / yr
                       </span>
                     </div>
                 </div>
