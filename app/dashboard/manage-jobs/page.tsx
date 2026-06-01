@@ -159,6 +159,7 @@ const ManageJobs = () => {
     currency: {
       value: string;
       label: string;
+      code: string;
       symbol_native: string;
     };
     currencyCode?: "INR" | "USD";
@@ -647,22 +648,23 @@ const ManageJobs = () => {
     if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
     return `${Math.ceil(diffDays / 30)} months ago`;
   };
- const formatNumber = (
+const formatNumber = (
   value: string | number,
-  currency: "INR" | "USD" = "INR"
+  currency: string = "INR"
 ): string => {
   if (!value) return "";
 
   return new Intl.NumberFormat(
     currency === "INR" ? "en-IN" : "en-US"
-  ).format(Number(value));
+  ).format(Number(String(value).replace(/,/g, "")));
 };
-  const parseNumber = (value: string): string => {
-    return value.replace(/,/g, "");
-  };
+
+const parseNumber = (value: string): string => {
+  return value.replace(/,/g, "");
+};
   const handleUpdateJob = async () => {
-     const minSalary = Number(jobForm.salary);
-        const maxSalary = Number(jobForm.salary_max);
+     const minSalary = Number(parseNumber(String(jobForm.salary)));
+        const maxSalary = Number(parseNumber(String(jobForm.salary_max)));
 
         if (minSalary && maxSalary && minSalary > maxSalary) {
           toast.error("Minimum salary cannot be greater than maximum salary");
@@ -1107,28 +1109,25 @@ const handleAddQuestion = () => {
                         <div className="flex items-center">
                           <span className="w-3 h-5">{job.currency?.symbol_native}</span>
                           <span>
-                            {(() => {
-                            const minSalary = Number(job.salary);
-                            const maxSalary = Number(job.salary_max);
+                          {(() => {
+                            const minSalary = job.salary
+                              ? formatNumber(job.salary, job.currency?.code)
+                              : "";
 
-                            const isMinValid = !isNaN(minSalary) && minSalary > 0;
-                            const isMaxValid = !isNaN(maxSalary) && maxSalary > 0;
+                            const maxSalary = job.salary_max
+                              ? formatNumber(job.salary_max, job.currency?.code)
+                              : "";
 
-                            const formatSalary = (amount: number) =>
-                              new Intl.NumberFormat(
-                                job.currencyCode === "INR" ? "en-IN" : "en-US"
-                              ).format(amount);
-
-                            if (isMinValid && isMaxValid) {
-                              return `${formatSalary(minSalary)} - ${formatSalary(maxSalary)}`;
+                            if (minSalary && maxSalary) {
+                              return `${minSalary} - ${maxSalary} / yr`;
                             }
 
-                            if (isMinValid) {
-                              return formatSalary(minSalary);
+                            if (minSalary) {
+                              return `${minSalary} / yr`;
                             }
 
-                            if (isMaxValid) {
-                              return formatSalary(maxSalary);
+                            if (maxSalary) {
+                              return `${maxSalary} / yr`;
                             }
 
                             return "Salary - Not Disclosed";
@@ -1283,34 +1282,29 @@ const handleAddQuestion = () => {
                     {/* <DollarSign className="w-4 h-4 mr-2" /> */}
                     <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
                     <span>
-                    {(() => {
-                      const minSalary = Number(selectedJob.salary);
-                      const maxSalary = Number(selectedJob.salary_max);
+                       {(() => {
+                            const minSalary = selectedJob.salary
+                              ? formatNumber(selectedJob.salary, selectedJob.currency?.code)
+                              : "";
 
-                      const isMinValid = !isNaN(minSalary) && minSalary > 0;
-                      const isMaxValid = !isNaN(maxSalary) && maxSalary > 0;
+                            const maxSalary = selectedJob.salary_max
+                              ? formatNumber(selectedJob.salary_max, selectedJob.currency?.code)
+                              : "";
 
-                      const formatSalary = (amount: number) =>
-                        new Intl.NumberFormat(
-                          selectedJob.currencyCode === "INR"
-                            ? "en-IN"
-                            : "en-US"
-                        ).format(amount);
+                            if (minSalary && maxSalary) {
+                              return `${minSalary} - ${maxSalary} / yr`;
+                            }
 
-                      if (isMinValid && isMaxValid) {
-                        return `${formatSalary(minSalary)} - ${formatSalary(maxSalary)}`;
-                      }
+                            if (minSalary) {
+                              return `${minSalary} / yr`;
+                            }
 
-                      if (isMinValid) {
-                        return formatSalary(minSalary);
-                      }
+                            if (maxSalary) {
+                              return `${maxSalary} / yr`;
+                            }
 
-                      if (isMaxValid) {
-                        return formatSalary(maxSalary);
-                      }
-
-                      return "Salary - Not Disclosed";
-                    })()}
+                            return "Salary - Not Disclosed";
+                          })()}
                     </span>
                   </div>
                 </div>
@@ -1328,8 +1322,11 @@ const handleAddQuestion = () => {
                 </div>
                   <div className="flex items-center text-gray-600">
                     <Building2 className="w-4 h-4 mr-2" />
-                    <Badge className={getWorkModeColor(selectedJob.work_mode)}>
-                      {selectedJob.work_mode}
+                    <Badge className={getWorkModeColor(selectedJob.work_mode ?? "")}>
+                      {selectedJob.work_mode
+                        ? selectedJob.work_mode.charAt(0).toUpperCase() +
+                          selectedJob.work_mode.slice(1).toLowerCase()
+                        : ""}
                     </Badge>
                   </div>
                   <div className="flex items-center text-gray-600">
@@ -1653,21 +1650,8 @@ const handleAddQuestion = () => {
                 />
               </div>
             </div>
-          
-            {/* <div>
-              <Label>Work Mode</Label>
-              <Input
-                name="work_mode"
-                value={jobForm.work_mode || ""}
-                onChange={(e) =>
-                  setJobForm({
-                    ...jobForm,
-                    [e.target.name]: e.target.value,
-                  })
-                }
-              />
-            </div> */}
-            <div>
+
+                        <div>
                          <Label className="text-sm font-medium">Work Mode</Label>
                          <Select
                            value={jobForm.work_mode}
@@ -1685,20 +1669,6 @@ const handleAddQuestion = () => {
                            </SelectContent>
                          </Select>
                        </div>
-            {/* <div>
-              <Label>Application Deadline</Label>
-              <Input
-                type="date"
-                name="application_deadline" // ✅ correct
-                value={jobForm.application_deadline || ""}
-                onChange={(e) =>
-                  setJobForm({
-                    ...jobForm,
-                    application_deadline: e.target.value,
-                  })
-                }
-              />
-            </div> */}
             <div className="w-full">
               <label className="text-sm font-medium">
                 Application Deadline *
@@ -1764,7 +1734,7 @@ const handleAddQuestion = () => {
                       application_deadline: parsed.format("DD/MM/YYYY"),
                     }));
                   }}
-                  className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                  className={`w-full h-[44px] px-3 pr-12 text-sm border rounded-md outline-none
                                 ${
                                   deadlineError
                                     ? "border-red-500 focus:ring-red-500"
@@ -1774,11 +1744,12 @@ const handleAddQuestion = () => {
                 />
 
                 {/* CALENDAR */}
-                <div ref={calendarRef} className="absolute right-2 top-1/2">
+                <div ref={calendarRef} className="absolute right-2 inset-y-0 flex items-center">
                   {/* ICON */}
                   <button
                     type="button"
                     onClick={() => setOpen((prev) => !prev)}
+                     className="flex items-center justify-center h-5 w-5 text-gray-500"
                   >
                     <Calendar size={18} />
                   </button>

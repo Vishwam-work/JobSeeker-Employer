@@ -129,14 +129,14 @@ export default function EmployerRegister() {
     agreeMarketing: false,
   });
   const companyTypes = [
+    "Government",
+    "LLP",
+    "NGO",
+    "Partnership",
     "Private Limited Company",
     "Public Limited Company",
-    "Partnership",
-    "Sole Proprietorship",
-    "LLP",
-    "Government",
-    "NGO",
     "Startup",
+    "Sole Proprietorship",
   ];
 
   const industries = [
@@ -319,8 +319,6 @@ if (!name) {
 
       if (!formData.pincode) {
       newErrors.pincode = "Pincode is required";
-    } else if (formData.pincode.length !== 6) {
-      newErrors.pincode = "Enter valid 6 digit pincode";
     }
       }
 
@@ -956,191 +954,7 @@ const handleResendOTP = async () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Email *</Label>
-
-                          <div className="relative mt-1">
-                            <Input
-                              type="email"
-                              disabled={IsOtpVerified}
-                              value={email}
-                              placeholder="Enter your email"
-                              className={`h-12 pr-10 ${
-                                errors.email
-                                  ? "border-red-500 focus:ring-red-500"
-                                  : IsOtpVerified
-                                  ? "border-green-500 focus:ring-green-500"
-                                  : ""
-                              }`}
-                              onChange={(e) => {
-                                const value = e.target.value;
-
-                                setemail(value);
-                                setIsOtpVerified(false);
-                                setIsOtpOpen(false);
-                                setErrors((prev) => ({
-                                  ...prev,
-                                  email: validateEmail(value),
-                                }));
-
-                              }}
-                            />
-
-                            {/* Error */}
-                            {errors.email && (
-                              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-                            )}
-
-                            {/* Helper text */}
-                            {!errors.email && !email && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Verify your email before continuing
-                              </p>
-                            )}
-
-                            {!errors.email && email && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                We'll send updates to this email
-                              </p>
-                            )}
-
-                            {/* Verified icon */}
-                            {IsOtpVerified && (
-                              <CheckCircle className="absolute right-3 top-6 -translate-y-1/2 text-green-600 w-5 h-5" />
-                            )}
-                          </div>
-
-                          {/* Verify Button */}
-                          {!IsOtpVerified && !isOtpOpen && (
-                            <Button
-                              type="button"
-                              className="mt-2"
-                              disabled={!email || !!validateEmail(email)}
-                              onClick={handlesendotp}
-                            >
-                              Verify Email OTP
-                            </Button>
-                          )}
-
-                          {/* OTP Section */}
-                          {isOtpOpen && !IsOtpVerified && (
-                            <div className="mt-3">
-                              <InputOTP
-                                maxLength={6}
-                                value={otp}
-                                onChange={(value) => {
-                                  setOtp(value);
-                                  setOtpError("");
-                                }}
-                              >
-                                <InputOTPGroup className="gap-3">
-                                  {[0, 1, 2, 3, 4, 5].map((i) => (
-                                    <InputOTPSlot
-                                      key={i}
-                                      index={i}
-                                      className="w-10 h-10 text-lg border"
-                                    />
-                                  ))}
-                                </InputOTPGroup>
-                              </InputOTP>
-                              <div className="flex items-center gap-2 mt-2 text-sm">
-                                {!canResend ? (
-                                  <span className="text-gray-500">
-                                    Expired OTP in <span className="font-medium">{timer}s</span>
-                                  </span>
-                                ) : (
-                                  <>
-                                    <span className="text-gray-500">Didn't receive OTP?</span>
-                                    <button
-                                      type="button"
-                                      onClick={handleResendOTP}
-                                      className="text-blue-600 font-medium hover:underline"
-                                    >
-                                      Resend
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                              {otpError && (
-                                <p className="text-sm text-red-500 mt-1">{otpError}</p>
-                              )}
-
-                              <Button
-                                type="button"
-                                className="mt-3 bg-blue-600 text-white w-full"
-                                onClick={handleVerifyOTP}
-                              >
-                                Verify OTP
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <div>
-                            <Label
-                              htmlFor="phone"
-                              className="text-sm font-medium text-gray-700"
-                            >
-                              Phone Number *
-                            </Label>
-
-                            <div className="flex gap-2 mt-1">
-
-                              <input
-                                className="w-20 h-10 lg:h-11 border rounded px-3 bg-gray-100 text-gray-700"
-                                value={
-                                  formData.phoneCode
-                                    ? `+${formData.phoneCode}`
-                                    : ""
-                                }
-                                readOnly
-
-                              />
-
-                              <Input
-                                id="phone"
-                                type="tel"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={formData.phone}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-
-                                  if (!/^\d*$/.test(value)) return;
-
-                                  if (value.length > 10) return;
-
-                                  handleInputChange("phone", value);
-                                  if (value.length > 0 && value.length < 10) {
-                                    setPhoneError("Phone number must be 10 digits");
-                                  } else {
-                                    setPhoneError("");
-                                  }
-                                }}
-                                className="flex-1 h-10 lg:h-11"
-                                placeholder="Enter phone number"
-                                maxLength={10}
-                                required
-                              />
-
-                            </div>
-                            {phoneError ? (
-                                <p className="text-red-500 text-xs mt-1">{phoneError}</p>
-                              ) : showErrors && errors.phone ? (
-                                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                              ) : showErrors && !formData.countryId ? (
-                                <p className="text-red-500 text-sm mt-1">
-                                  Please select country
-                                </p>
-                              ) : (
-                                <p className="text-xs text-gray-500 mt-1">
-                                </p>
-                              )}
-                          </div>
-                        </div>
-                      </div>
-
+                      
                       <div>
                         <Label
                           htmlFor="address"
@@ -1386,7 +1200,7 @@ const handleResendOTP = async () => {
                           )}
                         </div>
                       </div>
-                        <div className="mt-4">
+                                              <div className="mt-4">
                           <Label
                             htmlFor="pincode"
                             className="text-sm font-medium text-gray-700"
@@ -1401,17 +1215,200 @@ const handleResendOTP = async () => {
                               handleInputChange("pincode", value);
                             }}
                             placeholder="Enter pincode"
-                             maxLength={6}
+                            //  maxLength={6}
                             className="mt-1 h-12"
                             required
                           />
-                        </div>
-                      </div>
-                        {showErrors && errors.pincode   && (
+                          {showErrors && errors.pincode   && (
                             <p className="text-red-500 text-sm mt-1">
                               {errors.pincode  }
                             </p>
                           )}
+                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                          <Label>Email *</Label>
+                           <div className="relative mt-1">
+                            <Input
+                              type="email"
+                              disabled={IsOtpVerified}
+                              value={email}
+                              placeholder="Enter your email"
+                              className={`h-12 pr-10 ${
+                                errors.email
+                                  ? "border-red-500 focus:ring-red-500"
+                                  : IsOtpVerified
+                                  ? "border-green-500 focus:ring-green-500"
+                                  : ""
+                              }`}
+                              onChange={(e) => {
+                                const value = e.target.value;
+
+                                setemail(value);
+                                setIsOtpVerified(false);
+                                setIsOtpOpen(false);
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  email: validateEmail(value),
+                                }));
+
+                              }}
+                            />
+
+                            {/* Error */}
+                            {errors.email && (
+                              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                            )}
+
+                            {/* Helper text */}
+                            {!errors.email && !email && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Verify your email before continuing
+                              </p>
+                            )}
+
+                            {!errors.email && email && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                We'll send updates to this email
+                              </p>
+                            )}
+
+                            {/* Verified icon */}
+                            {IsOtpVerified && (
+                              <CheckCircle className="absolute right-3 top-6 -translate-y-1/2 text-green-600 w-5 h-5" />
+                            )}
+                          </div>
+                          {/* Verify Button */}
+                          {!IsOtpVerified && !isOtpOpen && (
+                            <Button
+                              type="button"
+                              className="mt-2"
+                              disabled={!email || !!validateEmail(email)}
+                              onClick={handlesendotp}
+                            >
+                              Verify Email OTP
+                            </Button>
+                          )}
+
+                          {/* OTP Section */}
+                          {isOtpOpen && !IsOtpVerified && (
+                            <div className="mt-3">
+                              <InputOTP
+                                maxLength={6}
+                                value={otp}
+                                onChange={(value) => {
+                                  setOtp(value);
+                                  setOtpError("");
+                                }}
+                              >
+                                <InputOTPGroup className="gap-3">
+                                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                                    <InputOTPSlot
+                                      key={i}
+                                      index={i}
+                                      className="w-10 h-10 text-lg border"
+                                    />
+                                  ))}
+                                </InputOTPGroup>
+                              </InputOTP>
+                              <div className="flex items-center gap-2 mt-2 text-sm">
+                                {!canResend ? (
+                                  <span className="text-gray-500">
+                                    Expired OTP in <span className="font-medium">{timer}s</span>
+                                  </span>
+                                ) : (
+                                  <>
+                                    <span className="text-gray-500">Didn't receive OTP?</span>
+                                    <button
+                                      type="button"
+                                      onClick={handleResendOTP}
+                                      className="text-blue-600 font-medium hover:underline"
+                                    >
+                                      Resend
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              {otpError && (
+                                <p className="text-sm text-red-500 mt-1">{otpError}</p>
+                              )}
+
+                              <Button
+                                type="button"
+                                className="mt-3 bg-blue-600 text-white w-full"
+                                onClick={handleVerifyOTP}
+                              >
+                                Verify OTP
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div>
+                            <Label
+                              htmlFor="phone"
+                              className="text-sm font-medium text-gray-700"
+                            >
+                              Phone Number *
+                            </Label>
+
+                            <div className="flex gap-2 mt-1">
+
+                              <input
+                                className="w-20 h-10 lg:h-11 border rounded px-3 bg-gray-100 text-gray-700"
+                                value={
+                                  formData.phoneCode
+                                    ? `+${formData.phoneCode}`
+                                    : ""
+                                }
+                                readOnly
+
+                              />
+
+                              <Input
+                                id="phone"
+                                type="tel"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={formData.phone}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+
+                                  if (!/^\d*$/.test(value)) return;
+
+                                  if (value.length > 10) return;
+
+                                  handleInputChange("phone", value);
+                                  if (value.length > 0 && value.length < 10) {
+                                    setPhoneError("Phone number must be 10 digits");
+                                  } else {
+                                    setPhoneError("");
+                                  }
+                                }}
+                                className="flex-1 h-10 lg:h-11"
+                                placeholder="Enter phone number"
+                                maxLength={10}
+                                required
+                              />
+
+                            </div>
+                            {phoneError ? (
+                                <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+                              ) : showErrors && errors.phone ? (
+                                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                              ) : showErrors && !formData.countryId ? (
+                                <p className="text-red-500 text-sm mt-1">
+                                  Please select country
+                                </p>
+                              ) : (
+                                <p className="text-xs text-gray-500 mt-1">
+                                </p>
+                              )}
+                          </div>
+                        </div>
+                      </div>
+
+                      </div>
                     </div>
                   )}
 

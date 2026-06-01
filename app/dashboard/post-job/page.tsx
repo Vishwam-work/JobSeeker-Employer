@@ -328,9 +328,14 @@ useEffect(() => {
         }
 
         const data = await res.json();
-        // console.log("Applications:", data);
-        setCompanyName(data.company_name);
-        // console.log(data.company_name)
+
+        setCompanyName(data.company.company_name);
+
+        setJobForm((prev) => ({
+          ...prev,
+          company: data.company.company_name,
+        }));
+
       } catch (err) {
         console.error("Error:", err);
       }
@@ -699,7 +704,7 @@ useEffect(() => {
               </Label>
               <Input
                 id="company"
-                
+                value={jobForm.company || ""}
                 onChange={(e) =>
                   setJobForm((prev) => ({
                     ...prev,
@@ -765,7 +770,7 @@ useEffect(() => {
                 cacheOptions
                 defaultOptions
                 isSearchable={false}
-                placeholder="Currency"
+                placeholder=""
                 loadOptions={getCurrencyOptions}
                 value={
                   jobForm.currency
@@ -1021,7 +1026,7 @@ useEffect(() => {
                       application_deadline: parsed.format("DD/MM/YYYY"),
                     }));
                   }}
-                  className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                  className={`w-full h-[44px] px-3 pr-12 text-sm border rounded-md outline-none
                     ${
                       deadlineError
                         ? "border-red-500 focus:ring-red-500"
@@ -1033,11 +1038,12 @@ useEffect(() => {
                 {/* CALENDAR */}
                 <div
   ref={calendarRef}
-  className="absolute right-2 top-1/2"
+  className="absolute right-2 inset-y-0 flex items-center"
 >
   {/* ICON */}
   <button
     type="button"
+    className="flex items-center justify-center h-5 w-5 text-gray-500"
     onClick={() => setOpen((prev) => !prev)}
   >
     <Calendar size={18} />

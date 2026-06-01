@@ -103,6 +103,14 @@ export default function Candidates() {
     email: string;
     phone: string;
     location: string;
+    current_salary: string;
+    expected_salary: string;
+    current_currency:{
+      name: string;
+      symbol: string;
+      code: string;
+      symbol_native: string;
+    }
     experience: string;
     gender: string;
     skills: string[];
@@ -159,6 +167,20 @@ export default function Candidates() {
   job_title?: string;
 };
 
+const formatNumber = (
+  value: string | number,
+  currency: string = "INR"
+): string => {
+  if (!value) return "";
+
+  return new Intl.NumberFormat(
+    currency === "INR" ? "en-IN" : "en-US"
+  ).format(Number(String(value).replace(/,/g, "")));
+};
+
+const parseNumber = (value: string): string => {
+  return value.replace(/,/g, "");
+};
   const fetchApplications = async ( page=1,search = "", status = "All", gender = "All", title = "All", location = "All", exp = "All", salary = "All" ) => {
       try {
         setLoading(true);
@@ -193,7 +215,9 @@ export default function Candidates() {
           email: app.profile?.email || app.user_email,
           phone: app.profile?.phone || "Not provided",
           phoneCode: app.profile?.phone_code || "",
-
+          current_salary: app.profile?.current_salary || "",
+          expected_salary: app.profile?.expected_salary || "",
+          current_currency: app.profile?.current_currency || "",
           location: [
             app.profile?.city,
             app.profile?.state,
@@ -727,18 +751,33 @@ const formatDate = (date?: any) => {
             {/*  Filters */}
             <div className="hidden sm:grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
               {/*  Status Filter */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full h-10">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Status</SelectItem>
-                  <SelectItem value="Under Review">Under Review</SelectItem>
-                  <SelectItem value="Shortlisted">Shortlisted</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                  <SelectItem value="Interview Scheduled">Interview Scheduled </SelectItem>
-                </SelectContent>
-              </Select>
+               <Select value={statusFilter} onValueChange={setStatusFilter}>
+                 <SelectTrigger className="w-full h-10">
+                   <SelectValue placeholder="Status" />
+                 </SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="All">All Status</SelectItem>
+                   <SelectItem value="Under Review">Under Review</SelectItem>
+                   <SelectItem value="Shortlisted">Shortlisted</SelectItem>
+                   <SelectItem value="Rejected">Rejected</SelectItem>
+                   <SelectItem value="Interview Scheduled">Interview Scheduled </SelectItem>
+                 </SelectContent>
+               </Select>
+              {/* <Selectt
+                isMulti
+                options={jobTypeOptions}
+                value={jobTypeOptions.filter(option =>
+                  jobForm.job_type.includes(option.value)
+                )}
+                onChange={(selectedOptions) =>
+                  setJobForm((prev) => ({
+                    ...prev,
+                    job_type: selectedOptions.map((opt) => opt.value),
+                  }))
+                }
+              /> */}
+
+
 
               {/* Location Filter */}
               <Select value={locationFilter} onValueChange={setLocationFilter}>
@@ -1200,6 +1239,29 @@ const formatDate = (date?: any) => {
                         +{selectedCandidate.phoneCode} {selectedCandidate.phone}
                       </span>
                     </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      Current Salary:
+                      <span className="font-medium">
+                        {selectedCandidate.current_currency?.symbol_native}
+                        {formatNumber(
+                          selectedCandidate.current_salary,
+                          selectedCandidate.current_currency?.code
+                        )}{" "}
+                        / yr
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      Expected Salary:
+                      <span className="font-medium">
+                        {selectedCandidate.current_currency?.symbol_native}
+                        {formatNumber(
+                          selectedCandidate.expected_salary,
+                          selectedCandidate.current_currency?.code
+                        )}{" "}
+                        / yr
+                      </span>
+                    </div>
                 </div>
               </div>
 
@@ -1319,11 +1381,14 @@ const formatDate = (date?: any) => {
                         <span>
                           Year: {edu.start_year} - {edu.end_year}
                         </span>
-                        <span>
-                          Score
-                          : {edu.grade}({edu.score_type
-                            ? edu.score_type.charAt(0).toUpperCase() + edu.score_type.slice(1)
-                            : ""})
+                       <span>
+                          Score: {edu.grade} (
+                          {edu.score_type
+                            ? edu.score_type.toLowerCase() === "cgpa"
+                              ? "CGPA"
+                              : edu.score_type.charAt(0).toUpperCase() + edu.score_type.slice(1)
+                            : ""}
+                          )
                         </span>
                       </div>
                     </div>
