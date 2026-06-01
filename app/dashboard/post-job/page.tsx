@@ -328,9 +328,9 @@ useEffect(() => {
         }
 
         const data = await res.json();
-        // console.log("Applications:", data);
-        setCompanyName(data.company_name);
-        // console.log(data.company_name)
+        console.log("Applications:", data);
+        setCompanyName(data.company.company_name);
+        console.log(">>>>>",data.company.company_name)
       } catch (err) {
         console.error("Error:", err);
       }
@@ -699,7 +699,7 @@ useEffect(() => {
               </Label>
               <Input
                 id="company"
-                
+                // value={CompanyName || ""}
                 onChange={(e) =>
                   setJobForm((prev) => ({
                     ...prev,

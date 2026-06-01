@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/dialog";
 import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import Selectt from "react-select";
 // import { set } from "lodash";
 
 dayjs.extend(customParseFormat);
@@ -751,18 +752,33 @@ const formatDate = (date?: any) => {
             {/*  Filters */}
             <div className="hidden sm:grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
               {/*  Status Filter */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full h-10">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Status</SelectItem>
-                  <SelectItem value="Under Review">Under Review</SelectItem>
-                  <SelectItem value="Shortlisted">Shortlisted</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                  <SelectItem value="Interview Scheduled">Interview Scheduled </SelectItem>
-                </SelectContent>
-              </Select>
+              // <Select value={statusFilter} onValueChange={setStatusFilter}>
+              //   <SelectTrigger className="w-full h-10">
+              //     <SelectValue placeholder="Status" />
+              //   </SelectTrigger>
+              //   <SelectContent>
+              //     <SelectItem value="All">All Status</SelectItem>
+              //     <SelectItem value="Under Review">Under Review</SelectItem>
+              //     <SelectItem value="Shortlisted">Shortlisted</SelectItem>
+              //     <SelectItem value="Rejected">Rejected</SelectItem>
+              //     <SelectItem value="Interview Scheduled">Interview Scheduled </SelectItem>
+              //   </SelectContent>
+              // </Select>
+              <Selectt
+                isMulti
+                options={jobTypeOptions}
+                value={jobTypeOptions.filter(option =>
+                  jobForm.job_type.includes(option.value)
+                )}
+                onChange={(selectedOptions) =>
+                  setJobForm((prev) => ({
+                    ...prev,
+                    job_type: selectedOptions.map((opt) => opt.value),
+                  }))
+                }
+              />
+            </div>
+
 
               {/* Location Filter */}
               <Select value={locationFilter} onValueChange={setLocationFilter}>
