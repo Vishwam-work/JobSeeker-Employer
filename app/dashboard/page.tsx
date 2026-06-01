@@ -112,7 +112,10 @@ interface CandidateQA {
           email: app.profile?.email || app.user_email,
           phone: app.profile?.phone || "Not provided",
           phoneCode: app.profile?.phone_code || "",
-
+          current_salary: app.profile?.current_salary || "",
+          expected_salary: app.profile?.expected_salary || "",
+          gender: app.profile?.gender || "",
+          professional_summary: app.profile?.professional_summary || "",
           location: [
             app.profile?.city,
             app.profile?.state,
@@ -175,6 +178,11 @@ interface CandidateQA {
     Status: c.status || "",
     Experience: c.experience || "",
     Location: c.location || "",
+    appliedDate: c.appliedDate || "",
+    current_salary: c.current_salary || "",
+    expected_salary: c.expected_salary || "",
+    gender: c.gender || "",
+    professional_summary: c.professional_summary || "",
   }));
 
   console.log("exportToExcel :",data);
@@ -264,9 +272,7 @@ interface CandidateQA {
   const tabs = [
     { id: "post-job", label: "Post a Job", icon: Plus ,component: <PostJobPage />},
     { id: "manage-jobs", label: "Manage Jobs", icon: Briefcase, component: <ManageJobs /> },
-     ...(!isAdmin
-    ? [
-    { id: "candidates", label: "Candidates", icon: Users ,component: <Candidates />},
+     { id: "candidates", label: "Candidates", icon: Users ,component: <Candidates />},
     {
     id: "profiles",
     label: "Profiles",
@@ -279,14 +285,17 @@ interface CandidateQA {
     icon: BarChart3,
     component: <QuotaUsagePage />,
   },
-
-   ]
-    : []),
-    ...(isAdmin
+  ...(isAdmin
     ? [
       {id: "find-jobs", label: "Find Jobs", icon: Search, component: <FindJobs /> ,  }
    ]
     : []),
+
+  //    ...(!isAdmin
+  //   ? [
+
+  //  ]
+  //   : []),
   ];
 
   return (
@@ -349,15 +358,15 @@ interface CandidateQA {
         )}
 
         {/* Candidates Tab */}
-        {!isAdmin && activeTab === "candidates" && (
+        {activeTab === "candidates" && (
          <Candidates/>
         )}
 
-        {!isAdmin && activeTab === "profiles" && (
+        {activeTab === "profiles" && (
         <CandidatesPage/>
          )}
 
-         {!isAdmin && activeTab === "quota" && (
+         {activeTab === "quota" && (
         <QuotaUsagePage />
          )}
 

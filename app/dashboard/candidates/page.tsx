@@ -56,7 +56,6 @@ import {
 } from "@/components/ui/dialog";
 import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import Selectt from "react-select";
 // import { set } from "lodash";
 
 dayjs.extend(customParseFormat);
@@ -752,19 +751,19 @@ const formatDate = (date?: any) => {
             {/*  Filters */}
             <div className="hidden sm:grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
               {/*  Status Filter */}
-              // <Select value={statusFilter} onValueChange={setStatusFilter}>
-              //   <SelectTrigger className="w-full h-10">
-              //     <SelectValue placeholder="Status" />
-              //   </SelectTrigger>
-              //   <SelectContent>
-              //     <SelectItem value="All">All Status</SelectItem>
-              //     <SelectItem value="Under Review">Under Review</SelectItem>
-              //     <SelectItem value="Shortlisted">Shortlisted</SelectItem>
-              //     <SelectItem value="Rejected">Rejected</SelectItem>
-              //     <SelectItem value="Interview Scheduled">Interview Scheduled </SelectItem>
-              //   </SelectContent>
-              // </Select>
-              <Selectt
+               <Select value={statusFilter} onValueChange={setStatusFilter}>
+                 <SelectTrigger className="w-full h-10">
+                   <SelectValue placeholder="Status" />
+                 </SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="All">All Status</SelectItem>
+                   <SelectItem value="Under Review">Under Review</SelectItem>
+                   <SelectItem value="Shortlisted">Shortlisted</SelectItem>
+                   <SelectItem value="Rejected">Rejected</SelectItem>
+                   <SelectItem value="Interview Scheduled">Interview Scheduled </SelectItem>
+                 </SelectContent>
+               </Select>
+              {/* <Selectt
                 isMulti
                 options={jobTypeOptions}
                 value={jobTypeOptions.filter(option =>
@@ -776,8 +775,8 @@ const formatDate = (date?: any) => {
                     job_type: selectedOptions.map((opt) => opt.value),
                   }))
                 }
-              />
-            </div>
+              /> */}
+
 
 
               {/* Location Filter */}
@@ -1382,11 +1381,14 @@ const formatDate = (date?: any) => {
                         <span>
                           Year: {edu.start_year} - {edu.end_year}
                         </span>
-                        <span>
-                          Score
-                          : {edu.grade}({edu.score_type
-                            ? edu.score_type.charAt(0).toUpperCase() + edu.score_type.slice(1)
-                            : ""})
+                       <span>
+                          Score: {edu.grade} (
+                          {edu.score_type
+                            ? edu.score_type.toLowerCase() === "cgpa"
+                              ? "CGPA"
+                              : edu.score_type.charAt(0).toUpperCase() + edu.score_type.slice(1)
+                            : ""}
+                          )
                         </span>
                       </div>
                     </div>

@@ -1734,7 +1734,7 @@ const handleAddQuestion = () => {
                       application_deadline: parsed.format("DD/MM/YYYY"),
                     }));
                   }}
-                  className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                  className={`w-full h-[44px] px-3 pr-12 text-sm border rounded-md outline-none
                                 ${
                                   deadlineError
                                     ? "border-red-500 focus:ring-red-500"
@@ -1744,11 +1744,12 @@ const handleAddQuestion = () => {
                 />
 
                 {/* CALENDAR */}
-                <div ref={calendarRef} className="absolute right-2 top-1/2">
+                <div ref={calendarRef} className="absolute right-2 inset-y-0 flex items-center">
                   {/* ICON */}
                   <button
                     type="button"
                     onClick={() => setOpen((prev) => !prev)}
+                     className="flex items-center justify-center h-5 w-5 text-gray-500"
                   >
                     <Calendar size={18} />
                   </button>

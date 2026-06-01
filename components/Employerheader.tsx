@@ -232,14 +232,14 @@ export default function EmployerHeader() {
                             <h2 className="text-lg font-semibold">
                               {formData.company_name || "User"}
                             </h2>
-                            {!isAdmin && (
+                            {/* {!isAdmin && ( */}
                             <Link
                               href="/account"
                               className="text-blue-600 text-sm font-medium"
                             >
                               View & Update Account
                             </Link>
-                            )}
+                            {/* )} */}
                           </div>
 
                           <button
@@ -257,7 +257,7 @@ export default function EmployerHeader() {
                               Dashboard
                             </div>
                           </Link>
-                          {!isAdmin && (
+                          {/* {!isAdmin && ( */}
                             <>
                           <Link href="/pricing">
                             <div className="px-6 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3">
@@ -318,7 +318,7 @@ export default function EmployerHeader() {
                             </div>
                           </Link>
                             </>
-                          )}
+                          {/* )} */}
 
                           <div
                             onClick={handleLogout}

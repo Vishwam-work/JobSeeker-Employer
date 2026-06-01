@@ -319,8 +319,6 @@ if (!name) {
 
       if (!formData.pincode) {
       newErrors.pincode = "Pincode is required";
-    } else if (formData.pincode.length !== 6) {
-      newErrors.pincode = "Enter valid 6 digit pincode";
     }
       }
 
@@ -1217,10 +1215,15 @@ const handleResendOTP = async () => {
                               handleInputChange("pincode", value);
                             }}
                             placeholder="Enter pincode"
-                             maxLength={6}
+                            //  maxLength={6}
                             className="mt-1 h-12"
                             required
                           />
+                          {showErrors && errors.pincode   && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.pincode  }
+                            </p>
+                          )}
                         </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div>
@@ -1406,11 +1409,6 @@ const handleResendOTP = async () => {
                       </div>
 
                       </div>
-                        {showErrors && errors.pincode   && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.pincode  }
-                            </p>
-                          )}
                     </div>
                   )}
 
