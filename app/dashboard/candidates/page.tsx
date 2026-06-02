@@ -537,7 +537,7 @@ const formatDate = (date?: any) => {
           },
           body: JSON.stringify({
             interview_date: interviewDate,
-            interview_time: time ? time.format("HH:mm") : "",
+            interview_time: time ? time.format("hh:mm A") : "",
             interview_mode: interviewMode,
             meet_link: interviewLink,
             timezone : timeZone,

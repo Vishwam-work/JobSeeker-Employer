@@ -160,34 +160,68 @@ interface CandidateQA {
     fetchApplications();
   }, []);
 
-  const exportToExcel = async () => {
+const exportToExcel = async () => {
   const XLSX = await import("xlsx");
 
-  if (!filteredCategories || filteredCategories.length === 0) {
+  if (!filteredCategories?.length) {
     toast.warning("No data available to export");
     return;
+  }
+  function formatDate(dateString: string) {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB");
+  }
+  function stripHtml(html: string) {
+    if (!html) return "";
+
+    return html
+      .replace(/<\/li>/gi, "\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]*>/g, "")
+      .trim();
   }
 
   const data = filteredCategories.map((c: any) => ({
     Name: c.name || "",
     Email: c.email || "",
-    Phone: c.phone
-      ? `+${c.phoneCode || ""}${c.phone}`
-      : "",
+    Phone: c.phone ? `+${c.phoneCode || ""}`+" "+`${c.phone}` : "",
     AppliedFor: c.appliedFor || c.job_title || "",
     Status: c.status || "",
     Experience: c.experience || "",
     Location: c.location || "",
-    appliedDate: c.appliedDate || "",
+    appliedDate: formatDate(c.appliedDate),
     current_salary: c.current_salary || "",
     expected_salary: c.expected_salary || "",
-    gender: c.gender || "",
-    professional_summary: c.professional_summary || "",
+    gender: c.gender ? c.gender.charAt(0).toUpperCase() + c.gender.slice(1).toLowerCase(): "",
+    professional_summary: stripHtml(c.professional_summary || ""),
   }));
 
-  console.log("exportToExcel :",data);
-
   const worksheet = XLSX.utils.json_to_sheet(data);
+
+  // Add hyperlink to Job Applied column
+  filteredCategories.forEach((c: any, index: number) => {
+    const rowNumber = index + 2; // Header row = 1
+
+    // Column D = AppliedFor
+    const cellAddress = `D${rowNumber}`;
+
+    if (worksheet[cellAddress]) {
+      worksheet[cellAddress].l = {
+        Target: `https://nvglobaltechtestserver90.vercel.app/job-details?id=${c.id}`,
+        Tooltip: "Open Job Details",
+      };
+
+      // Optional: blue underlined style
+      worksheet[cellAddress].s = {
+        font: {
+          color: { rgb: "0000FF" },
+          underline: true,
+        },
+      };
+    }
+  });
 
   const workbook = XLSX.utils.book_new();
 
