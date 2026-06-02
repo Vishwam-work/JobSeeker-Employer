@@ -42,6 +42,7 @@ export default function EmployerAccountEdit() {
     description: "",
     contact_person_name: "",
     designation: "",
+    email: "",
     phone_code: "",
     phone: "",
     address: "",
@@ -72,6 +73,7 @@ export default function EmployerAccountEdit() {
     description: string;
     contact_person_name: string;
     designation: string;
+    email: string;
     phone: string;
     address: string;
     country: string;
@@ -146,6 +148,7 @@ export default function EmployerAccountEdit() {
           pincode: data.company?.pincode || "",
           contact_person_name: data.contact_person_name || "",
           designation: data.designation || "",
+          email: data.user?.email || "",
           phone: data.phone || "",
           phone_code: data.phone_code || "",
           country: data.company?.country?.toString() || "",
@@ -403,30 +406,31 @@ export default function EmployerAccountEdit() {
       : null;
   };
   const companyTypes = [
+    "Government",
+    "LLP",
+    "NGO",
+    "Partnership",
     "Private Limited Company",
     "Public Limited Company",
-    "Partnership",
-    "Sole Proprietorship",
-    "LLP",
-    "Government",
-    "NGO",
     "Startup",
+    "Sole Proprietorship",
   ];
 
-  const industries = [
-    "Information Technology",
-    "Banking & Financial Services",
-    "Healthcare",
-    "Manufacturing",
-    "Retail",
-    "Education",
-    "Real Estate",
-    "Automotive",
-    "Telecommunications",
-    "Media & Entertainment",
-    "Consulting",
-    "Other",
+ const industries = [
+  "Automotive",
+  "Banking & Financial Services",
+  "Consulting",
+  "Education",
+  "Healthcare",
+  "Information Technology",
+  "Manufacturing",
+  "Media & Entertainment",
+  "Other",
+  "Real Estate",
+  "Retail",
+  "Telecommunications",
   ];
+
 
   const companySizes = [
     "1-10 employees",
@@ -651,7 +655,7 @@ export default function EmployerAccountEdit() {
                   Company Details
                 </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Company Name */}
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-600 mb-1">
@@ -797,42 +801,18 @@ export default function EmployerAccountEdit() {
                       </span>
                     )}
                   </div>
-
-                  {/* Country */}
+                    {/* Email */}
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-600 mb-1">
-                      Country
+                      Email
                     </label>
-
-                    <AsyncSelect
-                      cacheOptions
-                      defaultOptions={countries.map((c) => ({
-                        label: c.name ?? "",
-                        value: c.id.toString(),
-                        phonecode: c.phonecode,
-                      }))}
-                      loadOptions={loadCountryOptionss}
-                      value={getselectcountry()}
-                      onChange={(selected: any) => {
-                        setSelectedCountry(selected);
-                        setFormData((prev) => ({
-                          ...prev,
-                          country: selected?.value || "",
-                          countryLabel: selected?.label || "",
-                          phone_code: selected?.phonecode || "",
-                          state: "",
-                          city: "",
-                        }));
-                      }}
-                      required
-                      placeholder="Search Country..."
+                    <Input
+                      value={formData.email}
+                      disabled
+                      className="border p-2 rounded bg-gray-100"
                     />
-                    {showErrors && errors.country && (
-                      <span className="text-red-500 text-sm mt-1">
-                        {errors.country}
-                      </span>
-                    )}
                   </div>
+
                   {/* Phone */}
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-600 mb-1">
@@ -888,70 +868,105 @@ export default function EmployerAccountEdit() {
                       <p className="text-xs text-gray-500 mt-1"></p>
                     )}
                   </div>
-                  <div className="flex flex-col">
+
+                  <div className="md:col-span-2 flex flex-col">
                     <label className="text-sm font-medium text-gray-600 mb-1">
-                      State
+                      Address
                     </label>
 
-                    <AsyncSelect
-                      cacheOptions
-                      defaultOptions={states.map((s) => ({
-                        label: s.name ?? "",
-                        value: s.id.toString(),
-                      }))}
-                      loadOptions={loadStateOptions}
-                      value={getSelectedState()}
-                      onChange={(selected: any) => {
-                        setSelectedState(selected);
-
-                        setFormData((prev) => ({
-                          ...prev,
-                          state: selected?.value || "",
-                          city: "",
-                        }));
-                      }}
-                      placeholder="Search State..."
-                      isDisabled={!formData.country}
+                    <textarea
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      placeholder="Address"
+                      className="w-full border p-2 rounded"
+                      rows={3}
                       required
                     />
-                    {showErrors && errors.state && (
-                      <span className="text-red-500 text-sm mt-1">
-                        {errors.state}
-                      </span>
-                    )}
                   </div>
+                   {/* Country State City */}
+                  <div className="md:col-span-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                  {/* City */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-600 mb-1">
-                      City
-                    </label>
+                      {/* Country */}
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-600 mb-1">
+                          Country
+                        </label>
+                        <AsyncSelect
+                          cacheOptions
+                          defaultOptions={countries.map((c) => ({
+                            label: c.name ?? "",
+                            value: c.id.toString(),
+                            phonecode: c.phonecode,
+                          }))}
+                          loadOptions={loadCountryOptionss}
+                          value={getselectcountry()}
+                          onChange={(selected: any) => {
+                            setSelectedCountry(selected);
+                            setFormData((prev) => ({
+                              ...prev,
+                              country: selected?.value || "",
+                              countryLabel: selected?.label || "",
+                              phone_code: selected?.phonecode || "",
+                              state: "",
+                              city: "",
+                            }));
+                          }}
+                          placeholder="Search Country..."
+                        />
+                      </div>
 
-                    <AsyncSelect
-                      cacheOptions
-                      defaultOptions={cities.map((c) => ({
-                        label: c.name ?? "",
-                        value: c.id.toString(),
-                      }))}
-                      loadOptions={loadCityOptions}
-                      value={getSelectedCity()}
-                      onChange={(selected: any) => {
-                        setSelectedCity(selected);
+                      {/* State */}
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-600 mb-1">
+                          State
+                        </label>
+                        <AsyncSelect
+                          cacheOptions
+                          defaultOptions={states.map((s) => ({
+                            label: s.name ?? "",
+                            value: s.id.toString(),
+                          }))}
+                          loadOptions={loadStateOptions}
+                          value={getSelectedState()}
+                          onChange={(selected: any) => {
+                            setSelectedState(selected);
+                            setFormData((prev) => ({
+                              ...prev,
+                              state: selected?.value || "",
+                              city: "",
+                            }));
+                          }}
+                          placeholder="Search State..."
+                        />
+                      </div>
 
-                        setFormData((prev) => ({
-                          ...prev,
-                          city: selected?.value || "",
-                        }));
-                      }}
-                      placeholder="Search City..."
-                      isDisabled={!formData.state}
-                      required
-                    />
-                    {showErrors && errors.city && (
-                      <span className="text-red-500 text-sm mt-1">
-                        {errors.city}
-                      </span>
-                    )}
+                      {/* City */}
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-600 mb-1">
+                          City
+                        </label>
+                        <AsyncSelect
+                          cacheOptions
+                          defaultOptions={cities.map((c) => ({
+                            label: c.name ?? "",
+                            value: c.id.toString(),
+                          }))}
+                          loadOptions={loadCityOptions}
+                          value={getSelectedCity()}
+                          onChange={(selected: any) => {
+                            setSelectedCity(selected);
+                            setFormData((prev) => ({
+                              ...prev,
+                              city: selected?.value || "",
+                            }));
+                          }}
+                          placeholder="Search City..."
+                        />
+                      </div>
+
+                    </div>
                   </div>
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-600 mb-1">
@@ -985,40 +1000,22 @@ export default function EmployerAccountEdit() {
                       className="input-style  border p-2 rounded"
                     />
                   </div>
-                </div>
-              </div>
-              <div className="max-w-5xl mx-auto p-6 bg-white rounded-2xl">
-                <label className="text-sm font-medium text-gray-600 mb-1">
-                  Address
-                </label>
+                  <div className="md:col-span-2 flex flex-col">
+                    <label className="text-sm font-medium text-gray-600 mb-1">
+                      Description
+                    </label>
 
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="Address"
-                  className="w-full border p-2 rounded"
-                  required
-                />
-                {showErrors && errors.address && (
-                  <p className="text-red-500 text-sm mt-1">{errors.address}</p>
-                )}
-                <label className="text-sm font-medium text-gray-600 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Description"
-                  className="w-full border p-2 rounded"
-                  required
-                />
-                {showErrors && errors.description && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.description}
-                  </p>
-                )}
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      placeholder="Description"
+                      className="w-full border p-2 rounded"
+                      rows={5}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
               <div className="text-center">
                 <Button type="submit">Save Changes</Button>

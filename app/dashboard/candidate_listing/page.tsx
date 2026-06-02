@@ -24,6 +24,12 @@ interface Candidate {
   experience: string;
   current_salary: string;
   expected_salary?: string;
+  current_currency?: 
+  { 
+    symbol_native: string,
+    code: string,
+
+  };
   notice_period?: string;
 
   city?: { name: string };
@@ -253,9 +259,19 @@ useEffect(() => {
   fetchDegrees();
 }, []);
 
-  const formatSalary = (value: string | number) => {
-  if (!value) return "-";
-  return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
+  const formatNumber = (
+  value: string | number,
+  currency: string = "INR"
+): string => {
+  if (!value) return "";
+
+  return new Intl.NumberFormat(
+    currency === "INR" ? "en-IN" : "en-US"
+  ).format(Number(String(value).replace(/,/g, "")));
+};
+
+const parseNumber = (value: string): string => {
+  return value.replace(/,/g, "");
 };
   const cleanSearch = appliedFilters.keywords.trim().replace(/\s+/g, " ");
 // Current Company filter options ke liye sabhi pages ka data fetch karo
@@ -587,6 +603,7 @@ const viewProfile = async (profileId: number) => {
     }
 
     const data = await res.json();
+    console.log("View profile response:", data);
 
     // backend se latest ids
     setViewedCandidateIds(data.profile_ids || []);
@@ -615,6 +632,8 @@ const viewProfile = async (profileId: number) => {
         matches(c.current_company) ||
         matches(c.experience) ||
         matches(c.current_salary) ||
+        matches(c.expected_salary) ||
+        matches(c.current_currency?.symbol_native) ||
         matches(c.gender) ||
         matches(c.professional_summary) ||
         matches(c.expected_salary) ||
@@ -1354,7 +1373,23 @@ const toggleCompany = (company: string) => {
 
                     {c.current_salary && (
                       <span className="flex items-center gap-1">
-                        <Highlight text={formatSalary(c.current_salary)} />
+                        <Highlight
+                          text={`${c.current_currency?.symbol_native || ""}${formatNumber(
+                            c.current_salary,
+                            c.current_currency?.code
+                          )}`}
+                        />
+                      </span>
+                    )}
+                    -
+                      {c.expected_salary && (
+                      <span className="flex items-center gap-1">
+                        <Highlight
+                          text={`${formatNumber(
+                            c.expected_salary,
+                            c.current_currency?.code
+                          )}`}
+                        /> /yr
                       </span>
                     )}
 

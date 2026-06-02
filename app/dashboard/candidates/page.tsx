@@ -1635,7 +1635,7 @@ const formatDate = (date?: any) => {
                                 setInterviewError("");
                                 setInterviewDate(parsed.format("DD/MM/YYYY")); // ✅ final value
                               }}
-                              className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                              className={`w-full h-[44px] px-3 pr-12 text-sm border rounded-md outline-none
                                 ${
                                   interviewError
                                     ? "border-red-500 focus:ring-red-500"
@@ -1645,10 +1645,11 @@ const formatDate = (date?: any) => {
                             />
 
                             {/* CALENDAR */}
-                            <div ref={calendarRef} className="absolute right-2 top-1/2">
+                            <div ref={calendarRef} className="absolute right-2 inset-y-0 flex items-center">
                               <button
                                 type="button"
                                 onClick={() => setOpen((prev) => !prev)}
+                                className="absolute right-2 inset-y-0 flex items-center"
                               >
                                 <Calendar size={18} />
                               </button>
@@ -1707,11 +1708,15 @@ const formatDate = (date?: any) => {
                               value={timeZone}
                               onChange={(e) => setTimeZone(e.target.value)}
                             >
-                              <option value="IST">IST</option>
-                              <option value="UTC">UTC</option>
-                              <option value="EST">EST</option>
-                              <option value="PST">PST</option>
-                              <option value="CST">CST</option>
+                                      <option value="BST">BST</option>
+                                      <option value="CET">CET</option>
+                                      <option value="CST">CST</option>
+                                      <option value="EST">EST</option>
+                                      <option value="GMT">GMT</option>
+                                      <option value="GST">GST</option>
+                                      <option value="IST">IST</option>
+                                      <option value="PST">PST</option>
+                                      <option value="UTC">UTC</option>
                             </select>
                           </div>
 
@@ -2281,7 +2286,7 @@ const formatDate = (date?: any) => {
                                         setInterviewError("");
                                         setInterviewDate(parsed.format("DD/MM/YYYY")); // ✅ final value
                                       }}
-                                      className={`w-full h-[44px] px-3 pr-10 text-sm border rounded-md outline-none
+                                      className={`w-full h-[44px] px-3 pr-12 text-sm border rounded-md outline-none
                                         ${
                                           interviewError
                                             ? "border-red-500 focus:ring-red-500"
@@ -2291,10 +2296,15 @@ const formatDate = (date?: any) => {
                                     />
 
                                     {/* CALENDAR */}
-                                    <div ref={calendarRef} className="absolute right-2 top-1/2">
+                                    <div ref={calendarRef}
+                                      className="absolute right-2 inset-y-0 flex items-center"
+                                      >
+
                                       <button
                                         type="button"
                                         onClick={() => setOpen((prev) => !prev)}
+                                        className="flex items-center justify-center h-5 w-5 text-gray-500"
+
                                       >
                                         <Calendar size={18} />
                                       </button>
@@ -2347,11 +2357,15 @@ const formatDate = (date?: any) => {
                                       value={timeZone}
                                       onChange={(e) => setTimeZone(e.target.value)}
                                     >
-                                      <option value="IST">IST</option>
-                                      <option value="UTC">UTC</option>
-                                      <option value="EST">EST</option>
-                                      <option value="PST">PST</option>
+                                      <option value="BST">BST</option>
+                                      <option value="CET">CET</option>
                                       <option value="CST">CST</option>
+                                      <option value="EST">EST</option>
+                                      <option value="GMT">GMT</option>
+                                      <option value="GST">GST</option>
+                                      <option value="IST">IST</option>
+                                      <option value="PST">PST</option>
+                                      <option value="UTC">UTC</option>
                                     </select>
                                   </div>
 
