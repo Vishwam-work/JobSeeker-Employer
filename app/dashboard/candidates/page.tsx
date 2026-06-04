@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import Selectt from "react-select";
 import { 
   Calendar,
   User ,
@@ -66,7 +67,7 @@ export default function Candidates() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState("All");
   const [salaryFilter, setSalaryFilter] = useState("All");
   const [experienceFilter, setExperienceFilter] = useState("All");
@@ -178,24 +179,32 @@ const formatNumber = (
   ).format(Number(String(value).replace(/,/g, "")));
 };
 
-const parseNumber = (value: string): string => {
-  return value.replace(/,/g, "");
-};
-  const fetchApplications = async ( page=1,search = "", status = "All", gender = "All", title = "All", location = "All", exp = "All", salary = "All" ) => {
+const statusOptions = [
+  { value: "Under Review", label: "Under Review" },
+  { value: "Shortlisted", label: "Shortlisted" },
+  { value: "Rejected", label: "Rejected" },
+  { value: "Interview Scheduled", label: "Interview Scheduled" },
+];
+  const fetchApplications = async ( page=1,search = "",  status: string[] = [], gender = "All", title = "All", location = "All", exp = "All", salary = "All" ) => {
       try {
         setLoading(true);
         const token = localStorage.getItem("employeer_token");
         if (!token) return;
             const query = new URLSearchParams({
-      page: page.toString(),
-      search: searchTerm,
-      status: statusFilter,
-      gender: genderFilter,
-      job_title: jobTitleFilter,
-      location: locationFilter,
-      experience: experienceFilter,
-      salary_range: salaryFilter,
-    });
+              page: page.toString(),
+              search: searchTerm,
+              // status: statusFilter,
+              gender: genderFilter,
+              job_title: jobTitleFilter,
+              location: locationFilter,
+              experience: experienceFilter,
+              salary_range: salaryFilter,
+            });
+            // Multi Status
+            statusFilter.forEach((status) => {
+              query.append("status", status);
+            });
+            console.log(query.toString());
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/employer/applications/?${query.toString()}`,
           {
@@ -246,6 +255,7 @@ const parseNumber = (value: string): string => {
           certifications: app.profile?.certifications || [],
           qa: app.answers || [],
         }));
+        console.log(mapped[0]?.status);
         setCandidates(mapped);
         setCurrentPage(page);
         setTotalPages(Math.ceil(data.count / 5));
@@ -746,38 +756,24 @@ const formatDate = (date?: any) => {
                 </svg>
               </div>
             </div>
-            
 
             {/*  Filters */}
             <div className="hidden sm:grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
-              {/*  Status Filter */}
-               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                 <SelectTrigger className="w-full h-10">
-                   <SelectValue placeholder="Status" />
-                 </SelectTrigger>
-                 <SelectContent>
-                   <SelectItem value="All">All Status</SelectItem>
-                   <SelectItem value="Under Review">Under Review</SelectItem>
-                   <SelectItem value="Shortlisted">Shortlisted</SelectItem>
-                   <SelectItem value="Rejected">Rejected</SelectItem>
-                   <SelectItem value="Interview Scheduled">Interview Scheduled </SelectItem>
-                 </SelectContent>
-               </Select>
-              {/* <Selectt
-                isMulti
-                options={jobTypeOptions}
-                value={jobTypeOptions.filter(option =>
-                  jobForm.job_type.includes(option.value)
-                )}
-                onChange={(selectedOptions) =>
-                  setJobForm((prev) => ({
-                    ...prev,
-                    job_type: selectedOptions.map((opt) => opt.value),
-                  }))
-                }
-              /> */}
-
-
+               <Selectt
+                  isMulti
+                  options={statusOptions}
+                  value={statusOptions.filter((option) =>
+                    statusFilter.includes(option.value)
+                  )}
+                  onChange={(selectedOptions) =>
+                    setStatusFilter(
+                      selectedOptions
+                        ? selectedOptions.map((opt) => opt.value)
+                        : []
+                    )
+                  }
+                  placeholder="All Status"
+                />
 
               {/* Location Filter */}
               <Select value={locationFilter} onValueChange={setLocationFilter}>
@@ -889,18 +885,21 @@ const formatDate = (date?: any) => {
                 <div className="p-4 space-y-4 overflow-y-auto h-full pb-20">
 
                   {/* Status */}
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full h-10">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All Status</SelectItem>
-                      <SelectItem value="Under Review">Under Review</SelectItem>
-                      <SelectItem value="Shortlisted">Shortlisted</SelectItem>
-                      <SelectItem value="Rejected">Rejected</SelectItem>
-                      <SelectItem value="Interview Scheduled">Interview Scheduled</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Selectt
+                  isMulti
+                  options={statusOptions}
+                  value={statusOptions.filter((option) =>
+                    statusFilter.includes(option.value)
+                  )}
+                  onChange={(selectedOptions) =>
+                    setStatusFilter(
+                      selectedOptions
+                        ? selectedOptions.map((opt) => opt.value)
+                        : []
+                      )
+                    }
+                    placeholder="All Status"
+                  />
 
                   {/* Location */}
                   <Select value={locationFilter} onValueChange={setLocationFilter}>
@@ -961,7 +960,7 @@ const formatDate = (date?: any) => {
                 <div className="absolute bottom-0 w-full p-4 border-t bg-white flex gap-2">
                   <button
                     onClick={() => {
-                      setStatusFilter("All");
+                      setStatusFilter([]);
                       setLocationFilter("All");
                       setExperienceFilter("All");
                       setJobTitleFilter("All");
@@ -997,7 +996,7 @@ const formatDate = (date?: any) => {
 
               <button
                 onClick={() => {
-                  setStatusFilter("All");
+                  setStatusFilter([]);
                   setLocationFilter("All");
                   setSalaryFilter("All");
                   setExperienceFilter("All");
