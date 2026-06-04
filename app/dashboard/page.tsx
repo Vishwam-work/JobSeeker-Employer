@@ -57,6 +57,8 @@ interface Candidate {
     category?: string;
     start_date?: string;
     end_date?: string;
+    current_currency?: string;
+    current_currency_code?: string;
   }[];
 
   educationDetails: {
@@ -144,6 +146,8 @@ interface CandidateQA {
 
           profileImage: null,
           summary: "",
+          current_currency: app.profile?.current_currency?.code || "",
+          current_currency_code: app.profile?.current_currency?.symbol_native || "",
           workExperience: app.profile?.experiences || [],
           educationDetails: app.profile?.educations || [],
           certifications: app.profile?.certifications || [],
@@ -182,6 +186,16 @@ const exportToExcel = async () => {
       .replace(/<[^>]*>/g, "")
       .trim();
   }
+  const formatSalary = (
+  value: string | number,
+  currency: string = "INR"
+  ): string => {
+    if (!value) return "";
+    console.log("Formatting salary:", value, "Currency:", currency);
+    return new Intl.NumberFormat(
+      currency === "INR" ? "en-IN" : "en-US"
+    ).format(Number(String(value).replace(/,/g, "")));
+  };
 
   const data = filteredCategories.map((c: any) => ({
     Name: c.name || "",
@@ -192,12 +206,12 @@ const exportToExcel = async () => {
     Experience: c.experience || "",
     Location: c.location || "",
     appliedDate: formatDate(c.appliedDate),
-    current_salary: c.current_salary || "",
-    expected_salary: c.expected_salary || "",
+    current_salary: c.current_currency_code + " " + formatSalary(c.current_salary, c.current_currency) || "",
+    expected_salary: c.current_currency_code + " " + formatSalary(c.expected_salary, c.current_currency) || "",
     gender: c.gender ? c.gender.charAt(0).toUpperCase() + c.gender.slice(1).toLowerCase(): "",
     professional_summary: stripHtml(c.professional_summary || ""),
   }));
-
+  console.log("Data to export:", data);
   const worksheet = XLSX.utils.json_to_sheet(data);
 
   // Add hyperlink to Job Applied column
