@@ -59,6 +59,8 @@ interface Candidate {
     end_date?: string;
     current_currency?: string;
     current_currency_code?: string;
+    profile_id?: number;
+    job_id?: number;
   }[];
 
   educationDetails: {
@@ -152,6 +154,8 @@ interface CandidateQA {
           educationDetails: app.profile?.educations || [],
           certifications: app.profile?.certifications || [],
           qa: app.answers || [],
+          profile_id: app.profile?.id,
+          job_id: app.job,
         }));
 
 
@@ -222,7 +226,7 @@ const exportToExcel = async () => {
 
     if (worksheet[nameCellAddress]) {
       worksheet[nameCellAddress].l = {
-        Target: `https://nvglobaltechtestemployerv10.vercel.app/dashboard/candidate_listing/candidate_detail/${c.id}`,
+        Target: `https://nvglobaltechtestemployerv10.vercel.app/dashboard/candidate_listing/candidate_detail/${c.profile_id}`,
         Tooltip: "Open Candidate Details",
       };
       // https://nvglobaltechtestemployerv10.vercel.app/
@@ -240,7 +244,7 @@ const exportToExcel = async () => {
 
     if (worksheet[jobCellAddress]) {
       worksheet[jobCellAddress].l = {
-        Target: `https://nvglobaltechtestserver90.vercel.app/job-details?id=${c.id}`,
+        Target: `https://nvglobaltechtestserver90.vercel.app/job-details?id=${c.job_id}`,
         Tooltip: "Open Job Details",
       };
 
