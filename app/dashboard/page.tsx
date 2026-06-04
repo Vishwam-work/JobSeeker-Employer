@@ -59,6 +59,8 @@ interface Candidate {
     end_date?: string;
     current_currency?: string;
     current_currency_code?: string;
+    profile_id?: number;
+    job_id?: number;
   }[];
 
   educationDetails: {
@@ -152,6 +154,8 @@ interface CandidateQA {
           educationDetails: app.profile?.educations || [],
           certifications: app.profile?.certifications || [],
           qa: app.answers || [],
+          profile_id: app.profile?.id,
+          job_id: app.job,
         }));
 
 
@@ -217,18 +221,34 @@ const exportToExcel = async () => {
   // Add hyperlink to Job Applied column
   filteredCategories.forEach((c: any, index: number) => {
     const rowNumber = index + 2; // Header row = 1
+    console.log("Row Data:", c);
+    const nameCellAddress = `A${rowNumber}`;
 
-    // Column D = AppliedFor
-    const cellAddress = `D${rowNumber}`;
+    if (worksheet[nameCellAddress]) {
+      worksheet[nameCellAddress].l = {
+        Target: `https://nvglobaltechtestemployerv10.vercel.app/dashboard/candidate_listing/candidate_detail/${c.profile_id}`,
+        Tooltip: "Open Candidate Details",
+      };
+      // https://nvglobaltechtestemployerv10.vercel.app/
 
-    if (worksheet[cellAddress]) {
-      worksheet[cellAddress].l = {
-        Target: `https://nvglobaltechtestserver90.vercel.app/job-details?id=${c.id}`,
+      worksheet[nameCellAddress].s = {
+        font: {
+          color: { rgb: "0000FF" },
+          underline: true,
+        },
+      };
+    }
+
+    // Column D = Applied For
+    const jobCellAddress = `D${rowNumber}`;
+
+    if (worksheet[jobCellAddress]) {
+      worksheet[jobCellAddress].l = {
+        Target: `https://nvglobaltechtestserver90.vercel.app/job-details?id=${c.job_id}`,
         Tooltip: "Open Job Details",
       };
 
-      // Optional: blue underlined style
-      worksheet[cellAddress].s = {
+      worksheet[jobCellAddress].s = {
         font: {
           color: { rgb: "0000FF" },
           underline: true,
