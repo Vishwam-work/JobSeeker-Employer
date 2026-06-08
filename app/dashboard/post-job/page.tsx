@@ -37,6 +37,8 @@ export default function PostJobPage() {
     company: "",
     location: "",
     experience: "",
+    max_experience: "",
+    min_experience: "",
     salary: "",
     salary_max: "",
     currency: "",
@@ -76,6 +78,8 @@ export default function PostJobPage() {
     company: string;
     location: string;
     experience: string;
+    max_experience: string;
+    min_experience: string;
     salary: string;
     salary_max: string;
     currency: string;
@@ -102,6 +106,8 @@ export default function PostJobPage() {
     company: string;
     location_id: number;
     experience: string;
+    max_experience: string;
+    min_experience: string;
     salary: string;
     salary_max: string;
     job_type: string;
@@ -137,6 +143,10 @@ export default function PostJobPage() {
   { value: "Part Time", label: "Part Time" },
   { value: "Contract", label: "Contract" },
   { value: "Internship", label: "Internship" },
+];
+
+const experienceOptions = [
+  "0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20+",
 ];
 
   const fetchPostedJobs = async () => {
@@ -211,6 +221,8 @@ useEffect(() => {
         location: (jobForm.location),
         currency_id: parseInt(jobForm.currency),
         experience: jobForm.experience,
+         max_experience: jobForm.max_experience,
+         min_experience: jobForm.min_experience,
         salary: jobForm.salary,
         salary_max: jobForm.salary_max,
         job_type: jobForm.job_type,
@@ -274,6 +286,8 @@ useEffect(() => {
         company: "",
         location: "",
         experience: "",
+        max_experience: "",
+        min_experience: "",
         salary: "",
         salary_max: "",
         currency: "",
@@ -759,6 +773,69 @@ useEffect(() => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+  <Label className="text-sm font-medium">
+    Minimum Experience *
+  </Label>
+
+  <Select
+    value={jobForm.min_experience}
+    onValueChange={(value) =>
+      setJobForm((prev) => ({
+        ...prev,
+        min_experience: value,
+        max_experience: "", // reset max when min changes
+      }))
+    }
+  >
+    <SelectTrigger className="mt-1">
+      <SelectValue placeholder="Select Min Experience" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {experienceOptions.map((exp) => (
+        <SelectItem key={exp} value={exp}>
+          {exp} {exp !== "0" && "Years"}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+<div>
+  <Label className="text-sm font-medium">
+    Maximum Experience *
+  </Label>
+
+  <Select
+    value={jobForm.max_experience}
+    onValueChange={(value) =>
+      setJobForm((prev) => ({
+        ...prev,
+        max_experience: value,
+      }))
+    }
+    disabled={!jobForm.min_experience}
+  >
+    <SelectTrigger className="mt-1">
+      <SelectValue placeholder="Select Max Experience" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {experienceOptions
+        .filter(
+          (exp) =>
+            experienceOptions.indexOf(exp) >=
+            experienceOptions.indexOf(jobForm.min_experience || "0")
+        )
+        .map((exp) => (
+          <SelectItem key={exp} value={exp}>
+            {exp} {exp !== "0" && "Years"}
+          </SelectItem>
+        ))}
+    </SelectContent>
+  </Select>
+</div>
 
           <div>
             <Label htmlFor="salary" className="text-sm font-medium">

@@ -101,6 +101,8 @@ const ManageJobs = () => {
     company: "",
     location: "",
     experience: "",
+    max_experience:"",
+    min_experience:"",
     salary: "",
     salary_max: "",
     currency_id: "",
@@ -129,6 +131,8 @@ const ManageJobs = () => {
     company: string;
     location: string;
     experience: string;
+    max_experience: string;
+    min_experience: string;
     salary: string;
     salary_max: string;
     currency_id: string;
@@ -154,6 +158,8 @@ const ManageJobs = () => {
     company: string;
     location_id: number;
     experience: string;
+    max_experience: string;
+    min_experience: string;
     salary: string;
     salary_max: string;
     currency: {
@@ -274,7 +280,9 @@ const ManageJobs = () => {
   }
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
+  const experienceOptions = [
+    "0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20+",
+  ];
   useEffect(() => {
     const role = localStorage.getItem("admin_role");
 
@@ -486,6 +494,8 @@ const ManageJobs = () => {
         company: data.company || "",
         location: data.location?.toString() || data.location || "",
         experience: data.experience || "",
+        max_experience:data.max_experience || "",
+        min_experience:data.min_experience || "",
         salary: data.salary || "",
         salary_max: data.salary_max || "",
         currency_id: data.currency?.id?.toString() || data.currency || "",
@@ -1097,7 +1107,7 @@ const handleAddQuestion = () => {
                           <MapPin className="w-4 h-4 mr-1" />
                           <span>{job.location}</span>
                         </div>
-                        <div className="flex items-center">
+                        {/* <div className="flex items-center">
                           <Briefcase className="w-4 h-4 mr-1" />
                           <span>
                             {job.experience?.toString().trim().toLowerCase() === "fresher" ||
@@ -1105,7 +1115,20 @@ const handleAddQuestion = () => {
                               ? "Fresher"
                               : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
                           </span>
-                        </div>
+                        </div> */}
+                        <div className="flex items-center">
+                        <Briefcase className="w-4 h-4 mr-1" />
+                        <span>
+                          {job.min_experience === "0" && job.max_experience === "0"
+                            ? "Fresher"
+                            : `${job.min_experience} - ${job.max_experience} ${
+                                job.min_experience === job.max_experience &&
+                                job.min_experience === "1"
+                                  ? "Year"
+                                  : "Years"
+                              }`}
+                        </span>
+                      </div>
                         <div className="flex items-center">
                           <span className="w-3 h-5">{job.currency?.symbol_native}</span>
                           <span>
@@ -1269,7 +1292,7 @@ const handleAddQuestion = () => {
                     <MapPin className="w-4 h-4 mr-2" />
                     <span>{selectedJob.location}</span>
                   </div>
-                  <div className="flex items-center text-gray-600">
+                  {/* <div className="flex items-center text-gray-600">
                     <Briefcase className="w-4 h-4 mr-2" />
                      <span>
                      {selectedJob.experience?.toString().trim().toLowerCase() === "fresher" ||
@@ -1277,9 +1300,21 @@ const handleAddQuestion = () => {
                       ? "Fresher"
                       : `${selectedJob.experience} ${Number(selectedJob.experience) === 1 ? "Year" : "Years"}`}
                     </span>
-                  </div>
+                  </div> */}
+                   <div className="flex items-center text-gray-600">
+                        <Briefcase className="w-4 h-4 mr-2" />
+                        <span>
+                          {selectedJob.min_experience === "0" && selectedJob.max_experience === "0"
+                            ? "Fresher"
+                            : `${selectedJob.min_experience} - ${selectedJob.max_experience} ${
+                                selectedJob.min_experience === selectedJob.max_experience &&
+                                selectedJob.min_experience === "1"
+                                  ? "Year"
+                                  : "Years"
+                              }`}
+                        </span>
+                   </div>
                   <div className="flex items-center text-gray-600">
-                    {/* <DollarSign className="w-4 h-4 mr-2" /> */}
                     <span className="w-4 h-6 ">{selectedJob.currency?.symbol_native}</span>
                     <span>
                        {(() => {
@@ -1536,7 +1571,7 @@ const handleAddQuestion = () => {
                 placeholder="Search Location..."
               />
             </div>
-             <div>
+             {/* <div>
               <Label className="text-sm font-medium">
                             Experience Required *
                           </Label>
@@ -1558,7 +1593,80 @@ const handleAddQuestion = () => {
                               <SelectItem value="10+">10+ years</SelectItem>
                             </SelectContent>
                           </Select>
-                        </div>
+                        </div> */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Min Experience */}
+              <div>
+                <Label className="text-sm font-medium">
+                  Minimum Experience *
+                </Label>
+
+                <Select
+                  value={jobForm.min_experience}
+                  onValueChange={(value) =>
+                    setJobForm((prev) => ({
+                      ...prev,
+                      min_experience: value,
+                      max_experience: "",
+                    }))
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select minimum experience" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {experienceOptions.map((exp) => (
+                      <SelectItem key={exp} value={exp}>
+                        {exp === "20+"
+                          ? "20+ Years"
+                          : `${exp} Year${exp === "1" ? "" : "s"}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Max Experience */}
+              <div>
+                <Label className="text-sm font-medium">
+                  Maximum Experience *
+                </Label>
+
+                <Select
+                  value={jobForm.max_experience}
+                  onValueChange={(value) =>
+                    setJobForm((prev) => ({
+                      ...prev,
+                      max_experience: value,
+                    }))
+                  }
+                  disabled={!jobForm.min_experience}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select maximum experience" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {experienceOptions
+                      .filter(
+                        (exp) =>
+                          experienceOptions.indexOf(exp) >=
+                          experienceOptions.indexOf(
+                            jobForm.min_experience || "0"
+                          )
+                      )
+                      .map((exp) => (
+                        <SelectItem key={exp} value={exp}>
+                          {exp === "20+"
+                            ? "20+ Years"
+                            : `${exp} Year${exp === "1" ? "" : "s"}`}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div>
               <Label htmlFor="salary" className="text-sm font-medium">
                 Salary Range (Annual)

@@ -60,7 +60,7 @@ export default function CandidateDetailPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
+useEffect(() => {
   const token = localStorage.getItem("employeer_token");
 
   if (!token) {
@@ -71,6 +71,7 @@ export default function CandidateDetailPage() {
   const fetchAllProfiles = async () => {
     try {
       let allProfiles: Candidate[] = [];
+
       let nextUrl: string | null =
         `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`;
 
@@ -81,23 +82,39 @@ export default function CandidateDetailPage() {
           },
         });
 
+        if (!res.ok) {
+          console.error("Fetch failed:", res.status);
+          break;
+        }
+
         const data = await res.json();
 
         console.log("Page Response:", data);
 
         if (Array.isArray(data.results)) {
-          allProfiles = [...allProfiles, ...data.results];
+          allProfiles.push(...data.results);
         } else if (Array.isArray(data)) {
-          allProfiles = [...allProfiles, ...data];
+          allProfiles.push(...data);
         }
-        nextUrl = data.next;
+
+        nextUrl = data.next
+          ? data.next.replace("http://", "https://")
+          : null;
       }
 
       console.log("All Profiles:", allProfiles);
+      console.log(
+        "All Profile IDs:",
+        allProfiles.map((p) => p.id)
+      );
 
       setCandidates(allProfiles);
 
-      const currentId = Number(params.id);
+      const currentId = Number(
+        Array.isArray(params.id) ? params.id[0] : params.id
+      );
+
+      console.log("Current ID:", currentId);
 
       const found = allProfiles.find(
         (item) => Number(item.id) === currentId
@@ -106,9 +123,9 @@ export default function CandidateDetailPage() {
       console.log("Found Candidate:", found);
 
       setCandidate(found || null);
-      setLoading(false);
     } catch (error) {
       console.error("Fetch error:", error);
+    } finally {
       setLoading(false);
     }
   };
