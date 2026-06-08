@@ -751,7 +751,7 @@ useEffect(() => {
             </div>
 
             <div>
-              <Label className="text-sm font-medium">
+              {/* <Label className="text-sm font-medium">
                 Experience Required *
               </Label>
               <Select
@@ -771,71 +771,71 @@ useEffect(() => {
                   <SelectItem value="6-10">6-10 years</SelectItem>
                   <SelectItem value="10+">10+ years</SelectItem>
                 </SelectContent>
-              </Select>
+              </Select> */}
             </div>
 
             <div>
-  <Label className="text-sm font-medium">
-    Minimum Experience *
-  </Label>
+              <Label className="text-sm font-medium">
+                Minimum Experience *
+              </Label>
 
-  <Select
-    value={jobForm.min_experience}
-    onValueChange={(value) =>
-      setJobForm((prev) => ({
-        ...prev,
-        min_experience: value,
-        max_experience: "", // reset max when min changes
-      }))
-    }
-  >
-    <SelectTrigger className="mt-1">
-      <SelectValue placeholder="Select Min Experience" />
-    </SelectTrigger>
+              <Select
+                value={jobForm.min_experience}
+                onValueChange={(value) =>
+                  setJobForm((prev) => ({
+                    ...prev,
+                    min_experience: value,
+                    max_experience: "", // reset max when min changes
+                  }))
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select Min Experience" />
+                </SelectTrigger>
 
-    <SelectContent>
-      {experienceOptions.map((exp) => (
-        <SelectItem key={exp} value={exp}>
-          {exp} {exp !== "0" && "Years"}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
-<div>
-  <Label className="text-sm font-medium">
-    Maximum Experience *
-  </Label>
+                <SelectContent>
+                  {experienceOptions.map((exp) => (
+                    <SelectItem key={exp} value={exp}>
+                      {exp} {exp !== "0" && "Years"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">
+                Maximum Experience *
+              </Label>
 
-  <Select
-    value={jobForm.max_experience}
-    onValueChange={(value) =>
-      setJobForm((prev) => ({
-        ...prev,
-        max_experience: value,
-      }))
-    }
-    disabled={!jobForm.min_experience}
-  >
-    <SelectTrigger className="mt-1">
-      <SelectValue placeholder="Select Max Experience" />
-    </SelectTrigger>
+              <Select
+                value={jobForm.max_experience}
+                onValueChange={(value) =>
+                  setJobForm((prev) => ({
+                    ...prev,
+                    max_experience: value,
+                  }))
+                }
+                disabled={!jobForm.min_experience}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select Max Experience" />
+                </SelectTrigger>
 
-    <SelectContent>
-      {experienceOptions
-        .filter(
-          (exp) =>
-            experienceOptions.indexOf(exp) >=
-            experienceOptions.indexOf(jobForm.min_experience || "0")
-        )
-        .map((exp) => (
-          <SelectItem key={exp} value={exp}>
-            {exp} {exp !== "0" && "Years"}
-          </SelectItem>
-        ))}
-    </SelectContent>
-  </Select>
-</div>
+                <SelectContent>
+                  {experienceOptions
+                    .filter(
+                      (exp) =>
+                        experienceOptions.indexOf(exp) >=
+                        experienceOptions.indexOf(jobForm.min_experience || "0")
+                    )
+                    .map((exp) => (
+                      <SelectItem key={exp} value={exp}>
+                        {exp} {exp !== "0" && "Years"}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
 
           <div>
             <Label htmlFor="salary" className="text-sm font-medium">

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import AsyncSelect from "react-select/async";
 import { toast } from "sonner";
 import {
   Select,
@@ -980,7 +981,7 @@ const handleResendOTP = async () => {
                           )}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         {/* Country Dropdown */}
-                        <div>
+                        {/* <div>
                           <Label className="text-sm font-medium text-gray-700">
                             Country *
                           </Label>
@@ -1058,10 +1059,10 @@ const handleResendOTP = async () => {
                               {errors.countryId  }
                             </p>
                           )}
-                        </div>
+                        </div> */}
 
                         {/* State Dropdown */}
-                        <div>
+                        {/* <div>
                           <Label className="text-sm font-medium text-gray-700">
                             State *
                           </Label>
@@ -1128,10 +1129,10 @@ const handleResendOTP = async () => {
                               {errors.stateId }
                             </p>
                           )}
-                        </div>
+                        </div> */}
 
                         {/* City Dropdown */}
-                        <div>
+                        {/* <div>
                           <Label className="text-sm font-medium text-gray-700">
                             City *
                           </Label>
@@ -1198,9 +1199,146 @@ const handleResendOTP = async () => {
                               {errors.cityId }
                             </p>
                           )}
+                        </div> */}
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            Country *
+                          </Label>
+
+                          <AsyncSelect
+                            cacheOptions
+                            defaultOptions={countries.map((country) => ({
+                              value: country.id,
+                              label: country.name,
+                              phonecode: country.phonecode,
+                            }))}
+                            loadOptions={(inputValue) =>
+                              Promise.resolve(
+                                countries
+                                  .filter((c) =>
+                                    c.name.toLowerCase().includes(inputValue.toLowerCase())
+                                  )
+                                  .map((country) => ({
+                                    value: country.id,
+                                    label: country.name,
+                                    phonecode: country.phonecode,
+                                  }))
+                              )
+                            }
+                            value={
+                              formData.countryId
+                                ? {
+                                    value: formData.countryId,
+                                    label:
+                                      countries.find((c) => c.id == formData.countryId)?.name || "",
+                                    phonecode:
+                                      countries.find((c) => c.id == formData.countryId)?.phonecode || "",
+                                  }
+                                : null
+                            }
+                            onChange={(selected) => {
+                              handleInputChange("countryId", selected?.value || "");
+                              handleInputChange("phoneCode", selected?.phonecode || "");
+                            }}
+                            placeholder=" country"
+                          />
+
+                          {showErrors && errors.countryId && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.countryId}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            State *
+                          </Label>
+
+                          <AsyncSelect
+                            cacheOptions
+                            defaultOptions={states.map((state) => ({
+                              value: state.id,
+                              label: state.name,
+                            }))}
+                            loadOptions={(inputValue) =>
+                              Promise.resolve(
+                                states
+                                  .filter((s) =>
+                                    s.name.toLowerCase().includes(inputValue.toLowerCase())
+                                  )
+                                  .map((state) => ({
+                                    value: state.id,
+                                    label: state.name,
+                                  }))
+                              )
+                            }
+                            value={
+                              formData.stateId
+                                ? {
+                                    value: formData.stateId,
+                                    label:
+                                      states.find((s) => s.id == formData.stateId)?.name || "",
+                                  }
+                                : null
+                            }
+                            onChange={(selected) => {
+                              handleInputChange("stateId", selected?.value?.toString() || "");
+                            }}
+                            placeholder=" state"
+                          />
+
+                          {showErrors && errors.stateId && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.stateId}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            City *
+                          </Label>
+
+                          <AsyncSelect
+                            cacheOptions
+                            defaultOptions={cities.map((city) => ({
+                              value: city.id,
+                              label: city.name,
+                            }))}
+                            loadOptions={(inputValue) =>
+                              Promise.resolve(
+                                cities
+                                  .filter((c) =>
+                                    c.name.toLowerCase().includes(inputValue.toLowerCase())
+                                  )
+                                  .map((city) => ({
+                                    value: city.id,
+                                    label: city.name,
+                                  }))
+                              )
+                            }
+                            value={
+                              formData.cityId
+                                ? {
+                                    value: formData.cityId,
+                                    label:
+                                      cities.find((c) => c.id == formData.cityId)?.name || "",
+                                  }
+                                : null
+                            }
+                            onChange={(selected) => {
+                              handleInputChange("cityId", selected?.value?.toString() || "");
+                            }}
+                            placeholder=" city"
+                          />
+
+                          {showErrors && errors.cityId && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.cityId}
+                            </p>
+                          )}
                         </div>
                       </div>
-                                              <div className="mt-4">
+                        <div className="mt-4">
                           <Label
                             htmlFor="pincode"
                             className="text-sm font-medium text-gray-700"

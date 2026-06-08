@@ -1107,15 +1107,6 @@ const handleAddQuestion = () => {
                           <MapPin className="w-4 h-4 mr-1" />
                           <span>{job.location}</span>
                         </div>
-                        {/* <div className="flex items-center">
-                          <Briefcase className="w-4 h-4 mr-1" />
-                          <span>
-                            {job.experience?.toString().trim().toLowerCase() === "fresher" ||
-                            Number(job.experience) === 0
-                              ? "Fresher"
-                              : `${job.experience} ${Number(job.experience) === 1 ? "Year" : "Years"}`}
-                          </span>
-                        </div> */}
                         <div className="flex items-center">
                         <Briefcase className="w-4 h-4 mr-1" />
                         <span>
@@ -1292,15 +1283,6 @@ const handleAddQuestion = () => {
                     <MapPin className="w-4 h-4 mr-2" />
                     <span>{selectedJob.location}</span>
                   </div>
-                  {/* <div className="flex items-center text-gray-600">
-                    <Briefcase className="w-4 h-4 mr-2" />
-                     <span>
-                     {selectedJob.experience?.toString().trim().toLowerCase() === "fresher" ||
-                     Number(selectedJob.experience) === 0
-                      ? "Fresher"
-                      : `${selectedJob.experience} ${Number(selectedJob.experience) === 1 ? "Year" : "Years"}`}
-                    </span>
-                  </div> */}
                    <div className="flex items-center text-gray-600">
                         <Briefcase className="w-4 h-4 mr-2" />
                         <span>
@@ -1571,29 +1553,7 @@ const handleAddQuestion = () => {
                 placeholder="Search Location..."
               />
             </div>
-             {/* <div>
-              <Label className="text-sm font-medium">
-                            Experience Required *
-                          </Label>
-                          <Select
-                            required
-                            value={jobForm.experience}
-                            onValueChange={(value) =>
-                              setJobForm((prev) => ({ ...prev, experience: value }))
-                            }
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue placeholder="Select experience level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="fresher">Fresher</SelectItem>
-                              <SelectItem value="1-2">1-2 years</SelectItem>
-                              <SelectItem value="3-5">3-5 years</SelectItem>
-                              <SelectItem value="6-10">6-10 years</SelectItem>
-                              <SelectItem value="10+">10+ years</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div> */}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Min Experience */}
               <div>
