@@ -153,6 +153,14 @@ export default function AdminExcelUpload({
       }
 
       const token = localStorage.getItem("employeer_token");
+      const currenciesRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_MASTER}/currencies`
+      );
+
+      const currenciesData = await currenciesRes.json();
+
+      const currencies =
+        currenciesData.results || currenciesData;
 
       if (!token) {
         toast.error("Login required");
@@ -161,14 +169,21 @@ export default function AdminExcelUpload({
 
       try {
         for (const [index, row] of jsonData.entries()) {
+          const selectedCurrency = currencies.find(
+            (currency: any) =>
+              currency.code?.toLowerCase() ===
+              String(row.currency_id).toLowerCase()
+          );
           const payload = {
             title: row.title || "",
             job_title: row.job_title || "",
             company: row.company || "",
             category: row.category || "",
             location: row.location || "",
-            currency_id: Number(row.currency_id),
-            experience: row.experience || "",
+            currency_id: selectedCurrency?.id || "",
+            // experience: row.experience || "",
+            max_experience: row.max_experience || "",
+            min_experience: row.min_experience || "",
             salary: String(row.salary || ""),
             salary_max: String(row.salary_max || ""),
             job_type: row.job_type

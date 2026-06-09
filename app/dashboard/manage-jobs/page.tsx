@@ -44,6 +44,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import AdminExcelUpload from "@/components/AdminExcelUpload";
+import DownloadJobTemplate from "@/components/DownloadJobTemplate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -1011,7 +1012,7 @@ const handleAddQuestion = () => {
             <CardTitle>Manage Your Jobs</CardTitle>
 
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-
+                <DownloadJobTemplate />
                 <AdminExcelUpload
                   onUploadSuccess={fetchPostedJobs}
                   triggerButton={

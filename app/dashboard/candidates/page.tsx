@@ -566,17 +566,28 @@ const formatDate = (date?: any) => {
 
       const data = await res.json();
 
+      const updatedStatus = "Interview Scheduled";
+
       setCandidates((prev) =>
         prev.map((c) =>
-          c.id === data.id ? { ...c, status: data.application_status } : c,
-        ),
+          c.id === selectedCandidate.id
+            ? {
+                ...c,
+                status: updatedStatus,
+              }
+            : c
+        )
       );
 
       setSelectedCandidate((prev) =>
-        prev && prev.id === data.id
-          ? { ...prev, status: data.application_status }
-          : prev,
+        prev
+          ? {
+              ...prev,
+              status: updatedStatus,
+            }
+          : prev
       );
+
 
       toast.success("Interview Scheduled!");
       setOpenSchedule(false);
