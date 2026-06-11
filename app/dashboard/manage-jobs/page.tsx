@@ -1121,16 +1121,17 @@ const handleAddQuestion = () => {
                               }`}
                         </span>
                       </div>
-                        <div className="flex items-center">
-                          <span className="w-3 h-5">{job.currency?.symbol_native}</span>
-                          <span>
+                      <div className="flex items-center">
+                        <span>
                           {(() => {
+                            const symbol = job.currency?.symbol_native || "";
+
                             const minSalary = job.salary
-                              ? formatNumber(job.salary, job.currency?.code)
+                              ? `${symbol}${formatNumber(job.salary, job.currency?.code)}`
                               : "";
 
                             const maxSalary = job.salary_max
-                              ? formatNumber(job.salary_max, job.currency?.code)
+                              ? `${symbol}${formatNumber(job.salary_max, job.currency?.code)}`
                               : "";
 
                             if (minSalary && maxSalary) {
@@ -1147,8 +1148,8 @@ const handleAddQuestion = () => {
 
                             return "Salary - Not Disclosed";
                           })()}
-                          </span>
-                        </div>
+                        </span>
+                      </div>
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-1" />
                           <span>
@@ -1228,6 +1229,7 @@ const handleAddQuestion = () => {
                             <Share2 className="w-4 h-4 mr-2" />
                             Share
                           </DropdownMenuItem>
+                          {(job.applicants || 0) === 0 && (
                           <DropdownMenuItem
                             onClick={() => handleDeleteJob(job)}
                             className="text-red-600 focus:text-red-600"
@@ -1235,6 +1237,7 @@ const handleAddQuestion = () => {
                             <Trash2 className="w-4 h-4 mr-2" />
                             Delete Job
                           </DropdownMenuItem>
+                        )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

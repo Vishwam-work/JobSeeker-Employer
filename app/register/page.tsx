@@ -1349,7 +1349,7 @@ const handleResendOTP = async () => {
                             id="pincode"
                             value={formData.pincode}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, "");
+                              const value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
                               handleInputChange("pincode", value);
                             }}
                             placeholder="Enter pincode"
