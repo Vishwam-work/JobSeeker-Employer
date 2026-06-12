@@ -168,167 +168,167 @@ interface CandidateQA {
     fetchApplications();
   }, []);
 
-const exportToExcel = async () => {
-  const XLSX = await import("xlsx");
+// const exportToExcel = async () => {
+//   const XLSX = await import("xlsx");
 
-  if (!filteredCategories?.length) {
-    toast.warning("No data available to export");
-    return;
-  }
-  function formatDate(dateString: string) {
-  if (!dateString) return "";
+//   if (!filteredCategories?.length) {
+//     toast.warning("No data available to export");
+//     return;
+//   }
+//   function formatDate(dateString: string) {
+//   if (!dateString) return "";
 
-  const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB");
-  }
-  function stripHtml(html: string) {
-    if (!html) return "";
+//   const date = new Date(dateString);
+//     return date.toLocaleDateString("en-GB");
+//   }
+//   function stripHtml(html: string) {
+//     if (!html) return "";
 
-    return html
-      .replace(/<\/li>/gi, "\n")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<[^>]*>/g, "")
-      .trim();
-  }
-  const formatSalary = (
-  value: string | number,
-  currency: string = "INR"
-  ): string => {
-    if (!value) return "";
-    console.log("Formatting salary:", value, "Currency:", currency);
-    return new Intl.NumberFormat(
-      currency === "INR" ? "en-IN" : "en-US"
-    ).format(Number(String(value).replace(/,/g, "")));
-  };
+//     return html
+//       .replace(/<\/li>/gi, "\n")
+//       .replace(/<br\s*\/?>/gi, "\n")
+//       .replace(/<[^>]*>/g, "")
+//       .trim();
+//   }
+//   const formatSalary = (
+//   value: string | number,
+//   currency: string = "INR"
+//   ): string => {
+//     if (!value) return "";
+//     console.log("Formatting salary:", value, "Currency:", currency);
+//     return new Intl.NumberFormat(
+//       currency === "INR" ? "en-IN" : "en-US"
+//     ).format(Number(String(value).replace(/,/g, "")));
+//   };
 
-  const data = filteredCategories.map((c: any) => ({
-    Name: c.name || "",
-    Email: c.email || "",
-    Phone: c.phone ? `+${c.phoneCode || ""}`+" "+`${c.phone}` : "",
-    JobApplied: c.appliedFor || c.job_title || "",
-    Status: c.status.charAt(0).toUpperCase() + c.status.slice(1).toLowerCase() || "",
-    Experience: c.experience || "",
-    Location: c.location || "",
-    AppliedDate: formatDate(c.appliedDate),
-    CurrentSalary: c.current_currency_code + " " + formatSalary(c.current_salary, c.current_currency) || "",
-    ExpectedSalary: c.current_currency_code + " " + formatSalary(c.expected_salary, c.current_currency) || "",
-    Gender: c.gender ? c.gender.charAt(0).toUpperCase() + c.gender.slice(1).toLowerCase(): "",
-    ProfessionalSummary: stripHtml(c.professional_summary || ""),
-  }));
-  console.log("Data to export:", data);
-  const worksheet = XLSX.utils.json_to_sheet(data);
+//   const data = filteredCategories.map((c: any) => ({
+//     Name: c.name || "",
+//     Email: c.email || "",
+//     Phone: c.phone ? `+${c.phoneCode || ""}`+" "+`${c.phone}` : "",
+//     JobApplied: c.appliedFor || c.job_title || "",
+//     Status: c.status.charAt(0).toUpperCase() + c.status.slice(1).toLowerCase() || "",
+//     Experience: c.experience || "",
+//     Location: c.location || "",
+//     AppliedDate: formatDate(c.appliedDate),
+//     CurrentSalary: c.current_currency_code + " " + formatSalary(c.current_salary, c.current_currency) || "",
+//     ExpectedSalary: c.current_currency_code + " " + formatSalary(c.expected_salary, c.current_currency) || "",
+//     Gender: c.gender ? c.gender.charAt(0).toUpperCase() + c.gender.slice(1).toLowerCase(): "",
+//     ProfessionalSummary: stripHtml(c.professional_summary || ""),
+//   }));
+//   console.log("Data to export:", data);
+//   const worksheet = XLSX.utils.json_to_sheet(data);
 
-  // Add hyperlink to Job Applied column
-  filteredCategories.forEach((c: any, index: number) => {
-    const rowNumber = index + 2; // Header row = 1
-    console.log("Row Data:", c);
-    const nameCellAddress = `A${rowNumber}`;
+//   // Add hyperlink to Job Applied column
+//   filteredCategories.forEach((c: any, index: number) => {
+//     const rowNumber = index + 2; // Header row = 1
+//     console.log("Row Data:", c);
+//     const nameCellAddress = `A${rowNumber}`;
 
-    if (worksheet[nameCellAddress]) {
-      worksheet[nameCellAddress].l = {
-        Target: `https://nvglobaltechtestemployerv10.vercel.app/dashboard/candidate_listing/candidate_detail/${c.profile_id}`,
-        Tooltip: "Open Candidate Details",
-      };
-      // https://nvglobaltechtestemployerv10.vercel.app/
+//     if (worksheet[nameCellAddress]) {
+//       worksheet[nameCellAddress].l = {
+//         Target: `https://nvglobaltechtestemployerv10.vercel.app/dashboard/candidate_listing/candidate_detail/${c.profile_id}`,
+//         Tooltip: "Open Candidate Details",
+//       };
+//       // https://nvglobaltechtestemployerv10.vercel.app/
 
-      worksheet[nameCellAddress].s = {
-        font: {
-          color: { rgb: "0000FF" },
-          underline: true,
-        },
-      };
-    }
+//       worksheet[nameCellAddress].s = {
+//         font: {
+//           color: { rgb: "0000FF" },
+//           underline: true,
+//         },
+//       };
+//     }
 
-    // Column D = Applied For
-    const jobCellAddress = `D${rowNumber}`;
+//     // Column D = Applied For
+//     const jobCellAddress = `D${rowNumber}`;
 
-    if (worksheet[jobCellAddress]) {
-      worksheet[jobCellAddress].l = {
-        Target: `https://nvglobaltechtestserver90.vercel.app/job-details?id=${c.job_id}`,
-        Tooltip: "Open Job Details",
-      };
+//     if (worksheet[jobCellAddress]) {
+//       worksheet[jobCellAddress].l = {
+//         Target: `https://nvglobaltechtestserver90.vercel.app/job-details?id=${c.job_id}`,
+//         Tooltip: "Open Job Details",
+//       };
 
-      worksheet[jobCellAddress].s = {
-        font: {
-          color: { rgb: "0000FF" },
-          underline: true,
-        },
-      };
-    }
-  });
+//       worksheet[jobCellAddress].s = {
+//         font: {
+//           color: { rgb: "0000FF" },
+//           underline: true,
+//         },
+//       };
+//     }
+//   });
 
-  const workbook = XLSX.utils.book_new();
+//   const workbook = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(
-    workbook,
-    worksheet,
-    "Candidates"
-  );
+//   XLSX.utils.book_append_sheet(
+//     workbook,
+//     worksheet,
+//     "Candidates"
+//   );
 
-  XLSX.writeFile(workbook, "filtered_candidates.xlsx");
-};
+//   XLSX.writeFile(workbook, "filtered_candidates.xlsx");
+// };
 
-  const filteredCategories = candidates.filter((c) => {
-  const search = searchTerm.toLowerCase();
+//   const filteredCategories = candidates.filter((c) => {
+//   const search = searchTerm.toLowerCase();
 
-  const nameMatch =
-    !search ||
-    c.name?.toLowerCase().includes(search) ||
-    c.currentRole?.toLowerCase().includes(search) ||
-    c.appliedFor?.toLowerCase().includes(search) ||
-    c.skills?.some((skill: string) =>
-      skill.toLowerCase().includes(search)
-    );
+//   const nameMatch =
+//     !search ||
+//     c.name?.toLowerCase().includes(search) ||
+//     c.currentRole?.toLowerCase().includes(search) ||
+//     c.appliedFor?.toLowerCase().includes(search) ||
+//     c.skills?.some((skill: string) =>
+//       skill.toLowerCase().includes(search)
+//     );
 
-  const statusMatch =
-    statusFilter === "All" ||
-    c.status?.toLowerCase() === statusFilter.toLowerCase();
+//   const statusMatch =
+//     statusFilter === "All" ||
+//     c.status?.toLowerCase() === statusFilter.toLowerCase();
 
-  const locationMatch =
-    locationFilter === "All" ||
-    c.location?.toLowerCase() === locationFilter.toLowerCase();
+//   const locationMatch =
+//     locationFilter === "All" ||
+//     c.location?.toLowerCase() === locationFilter.toLowerCase();
 
-  const jobTitleMatch =
-    jobTitleFilter === "All" ||
-    c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
+//   const jobTitleMatch =
+//     jobTitleFilter === "All" ||
+//     c.appliedFor?.toLowerCase() === jobTitleFilter.toLowerCase();
 
-  const salary = parseInt(c.expectedSalary ?? "0", 10);
+//   const salary = parseInt(c.expectedSalary ?? "0", 10);
 
-  const salaryMatch =
-    salaryFilter === "All" ||
-    (salaryFilter === "Below 20000" && salary < 20000) ||
-    (salaryFilter === "20000-50000" &&
-      salary >= 20000 &&
-      salary <= 50000) ||
-    (salaryFilter === "Above 50000" && salary > 50000);
+//   const salaryMatch =
+//     salaryFilter === "All" ||
+//     (salaryFilter === "Below 20000" && salary < 20000) ||
+//     (salaryFilter === "20000-50000" &&
+//       salary >= 20000 &&
+//       salary <= 50000) ||
+//     (salaryFilter === "Above 50000" && salary > 50000);
 
-  const expMatch =
-    experienceFilter === "All" ||
-    (experienceFilter === "Fresher" &&
-      (c.experience?.toLowerCase().includes("fresher") ||
-        c.experience?.includes("0"))) ||
-    (experienceFilter === "1-3 Years" &&
-      ["1", "2", "3"].some((y) =>
-        c.experience?.includes(y)
-      )) ||
-    (experienceFilter === "3-5 Years" &&
-      ["3", "4", "5"].some((y) =>
-        c.experience?.includes(y)
-      )) ||
-    (experienceFilter === "5+ Years" &&
-      ["5", "6", "7", "8", "9", "10"].some((y) =>
-        c.experience?.includes(y)
-      ));
+//   const expMatch =
+//     experienceFilter === "All" ||
+//     (experienceFilter === "Fresher" &&
+//       (c.experience?.toLowerCase().includes("fresher") ||
+//         c.experience?.includes("0"))) ||
+//     (experienceFilter === "1-3 Years" &&
+//       ["1", "2", "3"].some((y) =>
+//         c.experience?.includes(y)
+//       )) ||
+//     (experienceFilter === "3-5 Years" &&
+//       ["3", "4", "5"].some((y) =>
+//         c.experience?.includes(y)
+//       )) ||
+//     (experienceFilter === "5+ Years" &&
+//       ["5", "6", "7", "8", "9", "10"].some((y) =>
+//         c.experience?.includes(y)
+//       ));
 
-  return (
-    nameMatch &&
-    statusMatch &&
-    locationMatch &&
-    salaryMatch &&
-    expMatch &&
-    jobTitleMatch
-  );
-});
+//   return (
+//     nameMatch &&
+//     statusMatch &&
+//     locationMatch &&
+//     salaryMatch &&
+//     expMatch &&
+//     jobTitleMatch
+//   );
+// });
   useEffect(() => {
   const role = localStorage.getItem("admin_role");
   if (role === "admin") {
@@ -381,7 +381,7 @@ const exportToExcel = async () => {
               Manage your job postings and find the perfect candidates
             </p>
           </div>
-          {activeTab === "candidates" && (
+          {/* {activeTab === "candidates" && (
             <Button
               type="button"
               onClick={exportToExcel}
@@ -389,7 +389,7 @@ const exportToExcel = async () => {
             >
               Export Excel
             </Button>
-          )}
+          )} */}
         </div>
 
         {/* Navigation Tabs */}

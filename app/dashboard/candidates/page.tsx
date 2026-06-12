@@ -220,6 +220,8 @@ const statusOptions = [
         // Map API to UI candidate shape
         const mapped = (Array.isArray(data.results) ? data.results : []).map((app: any) => ({
           id: app.id,
+          profile_id: app.profile?.id,
+          job_id: app.job,
           name: app.profile?.full_name || app.user_email || "Unknown",
           email: app.profile?.email || app.user_email,
           phone: app.profile?.phone || "Not provided",
@@ -256,6 +258,7 @@ const statusOptions = [
           qa: app.answers || [],
         }));
         console.log(mapped[0]?.status);
+        setTotalCandidates(data.count || 0);
         setCandidates(mapped);
         setCurrentPage(page);
         setTotalPages(Math.ceil(data.count / 5));
@@ -265,6 +268,116 @@ const statusOptions = [
       } finally {
         setLoading(false);
       }
+    };
+
+    const exportToExcel = async () => {
+      const XLSX = await import("xlsx");
+
+      if (!candidates?.length) {
+        toast.warning("No data available to export");
+        return;
+      }
+      function formatDate(dateString: string) {
+      if (!dateString) return "";
+
+      const date = new Date(dateString);
+        return date.toLocaleDateString("en-GB");
+      }
+      function stripHtml(html: string) {
+        if (!html) return "";
+
+        return html
+          .replace(/<\/li>/gi, "\n")
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<[^>]*>/g, "")
+          .trim();
+      }
+      const formatSalary = (
+      value: string | number,
+      currency: string = "INR"
+      ): string => {
+        if (!value) return "";
+        console.log("Formatting salary:", value, "Currency:", currency);
+        return new Intl.NumberFormat(
+          currency === "INR" ? "en-IN" : "en-US"
+        ).format(Number(String(value).replace(/,/g, "")));
+      };
+
+      const data = candidates.map((c: any) => ({
+        Name: c.name || "",
+        Email: c.email || "",
+        Phone: c.phone ? `+${c.phoneCode || ""}`+" "+`${c.phone}` : "",
+        JobApplied: c.appliedFor || c.job_title || "",
+        Status: c.status.charAt(0).toUpperCase() + c.status.slice(1).toLowerCase() || "",
+        Experience: c.experience || "",
+        Location: c.location || "",
+        AppliedDate: formatDate(c.appliedDate),
+        CurrentSalary:
+          `${c.current_currency?.symbol_native || ""} ${formatSalary(
+            c.current_salary,
+            c.current_currency?.code
+          )}`,
+
+        ExpectedSalary:
+          `${c.current_currency?.symbol_native || ""} ${formatSalary(
+            c.expected_salary,
+            c.current_currency?.code
+          )}`,
+        Gender: c.gender ? c.gender.charAt(0).toUpperCase() + c.gender.slice(1).toLowerCase(): "",
+        ProfessionalSummary: stripHtml(c.professional_summary || ""),
+
+      }));
+      console.log("Data to export:", data);
+      const worksheet = XLSX.utils.json_to_sheet(data);
+
+      // Add hyperlink to Job Applied column
+      candidates.forEach((c: any, index: number) => {
+        const rowNumber = index + 2; // Header row = 1
+        console.log("Row Data:", c);
+        const nameCellAddress = `A${rowNumber}`;
+
+        if (worksheet[nameCellAddress]) {
+          worksheet[nameCellAddress].l = {
+            Target: `https://nvglobaltechtestemployerv10.vercel.app/dashboard/candidate_listing/candidate_detail/${c.profile_id}`,
+            Tooltip: "Open Candidate Details",
+          };
+          // https://nvglobaltechtestemployerv10.vercel.app/
+
+          worksheet[nameCellAddress].s = {
+            font: {
+              color: { rgb: "0000FF" },
+              underline: true,
+            },
+          };
+        }
+
+        // Column D = Applied For
+        const jobCellAddress = `D${rowNumber}`;
+
+        if (worksheet[jobCellAddress]) {
+          worksheet[jobCellAddress].l = {
+            Target: `https://nvglobaltechtestserver90.vercel.app/job-details?id=${c.job_id}`,
+            Tooltip: "Open Job Details",
+          };
+
+          worksheet[jobCellAddress].s = {
+            font: {
+              color: { rgb: "0000FF" },
+              underline: true,
+            },
+          };
+        }
+      });
+
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Candidates"
+      );
+
+      XLSX.writeFile(workbook, "filtered_candidates.xlsx");
     };
 
  useEffect(() => {
@@ -742,8 +855,8 @@ const formatDate = (date?: any) => {
             </div> */}
 
             {/*  Search Bar  */}
-            <div className="mb-4">
-              <div className="relative">
+            <div className="mb-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+              <div className="relative flex-1">
                 <Input
                   type="text"
                   placeholder="Search by name, role or applied job..."
@@ -751,9 +864,10 @@ const formatDate = (date?: any) => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full h-11 pl-10"
                 />
+
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -766,6 +880,13 @@ const formatDate = (date?: any) => {
                   />
                 </svg>
               </div>
+
+              <Button
+                onClick={exportToExcel}
+                className="h-11 bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
+              >
+                Export Excel
+              </Button>
             </div>
 
             {/*  Filters */}

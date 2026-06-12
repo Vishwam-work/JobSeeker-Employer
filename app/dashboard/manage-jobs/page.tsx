@@ -170,7 +170,7 @@ const ManageJobs = () => {
       symbol_native: string;
     };
     currencyCode?: "INR" | "USD";
-    job_type: string[];
+    job_type: string | string[];
     work_mode: string;
     vacancies: number;
     application_deadline: string;
@@ -1332,14 +1332,30 @@ const handleAddQuestion = () => {
                 <div className="space-y-2">
                   <div className="flex items-center text-gray-600">
                   <Clock className="w-4 h-4 mr-2" />
-                  <span>
-                    {selectedJob.job_type
-                      ?.map(
-                        (type: string) =>
-                          jobTypeOptions.find((opt) => opt.value === type)?.label || type
-                      )
-                      .join(", ")}
-                  </span>
+                   <span>
+                          {Array.isArray(selectedJob.job_type)
+                            ? selectedJob.job_type
+                                .map(
+                                  (type: string) =>
+                                    type
+                                      .split("-")
+                                      .map(
+                                        (word) =>
+                                          word.charAt(0).toUpperCase() +
+                                          word.slice(1).toLowerCase()
+                                      )
+                                      .join(" ")
+                                )
+                                .join(", ")
+                            : selectedJob.job_type
+                                ?.split("-")
+                                .map(
+                                  (word: string) =>
+                                    word.charAt(0).toUpperCase() +
+                                    word.slice(1).toLowerCase()
+                                )
+                                .join(" ")}
+                        </span>
                 </div>
                   <div className="flex items-center text-gray-600">
                     <Building2 className="w-4 h-4 mr-2" />
