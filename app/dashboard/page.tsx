@@ -205,15 +205,15 @@ const exportToExcel = async () => {
     Name: c.name || "",
     Email: c.email || "",
     Phone: c.phone ? `+${c.phoneCode || ""}`+" "+`${c.phone}` : "",
-    AppliedFor: c.appliedFor || c.job_title || "",
-    Status: c.status || "",
+    JobApplied: c.appliedFor || c.job_title || "",
+    Status: c.status.charAt(0).toUpperCase() + c.status.slice(1).toLowerCase() || "",
     Experience: c.experience || "",
     Location: c.location || "",
-    appliedDate: formatDate(c.appliedDate),
-    current_salary: c.current_currency_code + " " + formatSalary(c.current_salary, c.current_currency) || "",
-    expected_salary: c.current_currency_code + " " + formatSalary(c.expected_salary, c.current_currency) || "",
-    gender: c.gender ? c.gender.charAt(0).toUpperCase() + c.gender.slice(1).toLowerCase(): "",
-    professional_summary: stripHtml(c.professional_summary || ""),
+    AppliedDate: formatDate(c.appliedDate),
+    CurrentSalary: c.current_currency_code + " " + formatSalary(c.current_salary, c.current_currency) || "",
+    ExpectedSalary: c.current_currency_code + " " + formatSalary(c.expected_salary, c.current_currency) || "",
+    Gender: c.gender ? c.gender.charAt(0).toUpperCase() + c.gender.slice(1).toLowerCase(): "",
+    ProfessionalSummary: stripHtml(c.professional_summary || ""),
   }));
   console.log("Data to export:", data);
   const worksheet = XLSX.utils.json_to_sheet(data);
