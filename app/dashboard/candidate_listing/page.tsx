@@ -1385,7 +1385,7 @@ const toggleCompany = (company: string) => {
                       {c.expected_salary && (
                       <span className="flex items-center gap-1">
                         <Highlight
-                          text={`${formatNumber(
+                          text={`${c.current_currency?.symbol_native || ""}${formatNumber(
                             c.expected_salary,
                             c.current_currency?.code
                           )}`}
@@ -1431,7 +1431,7 @@ const toggleCompany = (company: string) => {
                   {/* Preferred Location */}
                   {(c.country?.name || c.city?.name || c.state?.name) && (
                     <div className="grid grid-cols-[140px_1fr] gap-2">
-                      <span className="font-medium text-gray-600">Pref. Locations</span>
+                      <span className="font-medium text-gray-600">Current Location</span>
                       <span className="text-gray-900">
                         <Highlight
                           text={[

@@ -55,7 +55,7 @@ interface Candidate {
 export default function CandidateDetailPage() {
   const params = useParams();
   const router = useRouter();
-
+    const [viewedCandidateIds, setViewedCandidateIds] = useState<number[]>([]);
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +138,41 @@ useEffect(() => {
 
     return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
   };
+  const viewProfile = async (profileId: number) => {
+  const token = localStorage.getItem("employeer_token");
+
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/view-profile/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          profile: profileId,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to store viewed profile");
+    }
+
+    const data = await res.json();
+    console.log("View profile response:", data);
+
+    // backend se latest ids
+    setViewedCandidateIds(data.profile_ids || []);
+
+    console.log("Viewed profile stored");
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   if (loading) {
     return (
@@ -196,7 +231,7 @@ useEffect(() => {
                       {/* TAGS */}
                       <div className="flex flex-wrap gap-3 mt-4 text-sm">
                         <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
-                          {formatSalary(candidate.current_salary)}
+                          {formatSalary(candidate.current_salary)} / yr
                         </span>
 
                         <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
@@ -263,7 +298,7 @@ useEffect(() => {
                   <p className="text-sm text-gray-500">Current Salary</p>
 
                   <h3 className="text-xl font-bold text-gray-900 mt-2">
-                    {formatSalary(candidate.current_salary)}
+                    {formatSalary(candidate.current_salary)} / yr
                   </h3>
                 </div>
 
@@ -271,7 +306,7 @@ useEffect(() => {
                   <p className="text-sm text-gray-500">Expected Salary</p>
 
                   <h3 className="text-xl font-bold text-gray-900 mt-2">
-                    {formatSalary(candidate.expected_salary)}
+                    {formatSalary(candidate.expected_salary)} / yr
                   </h3>
                 </div>
 
@@ -319,11 +354,11 @@ useEffect(() => {
                       <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {ex.job_title}
+                            {ex.company}
                           </h3>
 
                           <p className="text-indigo-600 font-medium mt-1">
-                            {ex.company}
+                            {ex.job_title}
                           </p>
 
                           <p className="text-sm text-gray-500 mt-2">
@@ -466,12 +501,14 @@ useEffect(() => {
                   .map((c) => (
                     <div
                       key={c.id}
-                      onClick={() =>
+                      onClick={() => {
                         window.open(
                           `/dashboard/candidate_listing/candidate_detail/${c.id}`,
-                          "_blank",
-                        )
-                      }
+                          "_blank"
+                        );
+
+                        viewProfile(c.id);
+                      }}
                       className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 cursor-pointer transition"
                     >
                       <img

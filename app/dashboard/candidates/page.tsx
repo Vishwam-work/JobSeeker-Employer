@@ -1350,12 +1350,12 @@ const formatDate = (date?: any) => {
                       key={index}
                       className="border-l-2 border-purple-200 pl-4"
                     >
-                      <h4 className="font-medium text-gray-900">{exp.role}</h4>
-                      <p className="text-purple-600 font-medium">
+                      <h4 className="font-medium text-gray-900">{exp.company}</h4>
+                      {/* <p className="text-purple-600 font-medium">
                         {exp.category}
-                      </p>
+                      </p> */}
                       <p className="text-purple-600 font-medium">
-                        {exp.company}
+                        {exp.role}
                       </p>
                      <p className="text-sm text-gray-600 mb-2">
                         Year: {formatDate(exp.start_date)} -{" "}

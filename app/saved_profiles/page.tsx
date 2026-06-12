@@ -223,7 +223,7 @@ export default function SavedProfilesPage() {
 
                     {c.current_salary && (
                       <span>
-                        {formatSalary(c.current_salary)}
+                        {formatSalary(c.current_salary)} / yr
                       </span>
                     )}
 
