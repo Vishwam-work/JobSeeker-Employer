@@ -74,6 +74,30 @@ export default function DownloadJobTemplate() {
       ];
 
       worksheet.addRow(headers);
+      worksheet.addRow([
+        "Senior Python Developer", // title
+        "Python Developer",        // job_title
+        "ABC Technologies",        // company
+        "Information Technology",  // category
+        "Ahmedabad",               // location
+        "INR",                     // currency_id
+        5,                         // max_experience
+        3,                         // min_experience
+        600000,                    // salary
+        900000,                    // salary_max
+        "Full Time",               // job_type
+        "Hybrid",                  // work_mode
+        2,                         // vacancies
+        "27/10/2030",              // application_deadline
+        "Develop and maintain Python applications", // description
+        "3+ years Python experience",              // requirements
+        "Health Insurance, PF",                    // benefits
+        "Python,Django,REST API",                  // skills
+        "true",                                     // is_urgent
+        "false",                                      // is_remote
+        "Do you have Django experience?",          // questions
+        "https://company.com/careers",             // website_apply
+      ]);
 
       headers.forEach((_, index) => {
         worksheet.getColumn(index + 1).width = 25;
