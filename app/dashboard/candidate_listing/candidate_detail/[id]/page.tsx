@@ -97,9 +97,7 @@ useEffect(() => {
           allProfiles.push(...data);
         }
 
-        nextUrl = data.next
-          ? data.next.replace("http://", "https://")
-          : null;
+        nextUrl = data.next;
       }
 
       console.log("All Profiles:", allProfiles);
@@ -224,7 +222,7 @@ useEffect(() => {
                         {candidate.full_name}
                       </h1>
 
-                      <p className="text-gray-600 mt-2">
+                      <p className="text-gray-600 mt-2 capitalize">
                         {candidate.experience} Experience
                       </p>
 
@@ -243,7 +241,7 @@ useEffect(() => {
                         </span>
 
                         {candidate.notice_period && (
-                          <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full">
+                          <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full capitalize">
                             Notice: {candidate.notice_period}
                           </span>
                         )}
@@ -313,7 +311,7 @@ useEffect(() => {
                 <div className="bg-slate-50 rounded-2xl p-5 border">
                   <p className="text-sm text-gray-500">Notice Period</p>
 
-                  <h3 className="text-xl font-bold text-gray-900 mt-2">
+                  <h3 className="text-xl font-bold text-gray-900 mt-2 capitalize">
                     {candidate.notice_period || "-"}
                   </h3>
                 </div>
@@ -528,7 +526,7 @@ useEffect(() => {
                           {c.full_name}
                         </h3>
 
-                        <p className="text-sm text-gray-500 truncate">
+                        <p className="text-sm text-gray-500 truncate capitalize">
                           {c.experience}
                         </p>
                       </div>

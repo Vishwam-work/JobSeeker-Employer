@@ -270,6 +270,16 @@ const statusOptions = [
       }
     };
 
+// Selected candidate cleanup on list change
+  useEffect(() => {
+    if (
+      selectedCandidate &&
+      !candidates.some((c: any) => c.id === selectedCandidate.id)
+    ) {
+      setSelectedCandidate(null);
+    }
+  }, [candidates, selectedCandidate]);
+
     const exportToExcel = async () => {
       const XLSX = await import("xlsx");
 
@@ -832,28 +842,6 @@ const formatDate = (date?: any) => {
   return (
     <>
           <div>
-            {/* <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg">Applications</CardTitle>
-
-                <Badge variant="secondary">{candidates.length}</Badge>
-              </div>
-
-              <button
-                onClick={() => {
-                  setStatusFilter("All");
-                  setLocationFilter("All");
-                  setSalaryFilter("All");
-                  setExperienceFilter("All");
-                  setJobTitleFilter("All");
-                  setGenderFilter("All");
-                }}
-                className="text-sm px-3 py-1 border rounded-md hover:bg-gray-100"
-              >
-                Clear Filters
-              </button>
-            </div> */}
-
             {/*  Search Bar  */}
             <div className="mb-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
               <div className="relative flex-1">
@@ -1229,8 +1217,9 @@ const formatDate = (date?: any) => {
                 </p>
               </div>
             )}
-            <div className="flex items-center justify-between mt-8 px-4 py-3">
 
+            {/* pagination */}
+            <div className="flex items-center justify-between mt-8 px-4 py-3">
               {/* Left Info */}
               <p className="text-sm text-gray-500">
                 Page <span className="font-medium text-gray-900">{currentPage}</span> of{" "}
@@ -1578,14 +1567,6 @@ const formatDate = (date?: any) => {
                 </div>
               )}
 
-              {/* <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowResume((prev) => !prev)}
-              >
-                View Resume
-              </Button> */}
-
               {showResume && selectedCandidate?.resumeUrl && (
                 <div className="mt-4 h-[500px] border rounded">
                   <iframe
@@ -1711,13 +1692,7 @@ const formatDate = (date?: any) => {
                           <label className="text-sm font-medium">
                             Interview Date
                           </label>
-                          {/* <input
-                            required
-                            type="date"
-                            className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500"
-                            value={interviewDate}
-                            onChange={(e) => setInterviewDate(e.target.value)}
-                          /> */}
+
                             <div className="relative mt-1">
                             <input
                               required

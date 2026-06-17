@@ -662,20 +662,6 @@ const viewProfile = async (profileId: number) => {
           (ex) => matches(ex.designation) || matches(ex.company)
         ) ?? false);
     }
-    // 2. Specific Filters
-
-    // Keywords
-    // if (appliedFilters.keywords) {
-    //   const k = appliedFilters.keywords.toLowerCase();
-    //   const hasKeyword =
-    //     c.skills?.some((s) => s.name.toLowerCase().includes(k)) ||
-    //     c.full_name.toLowerCase().includes(k) ||
-    //     c.city?.name.toLowerCase().includes(k) ||
-    //     c.state?.name.toLowerCase().includes(k) ||
-    //     c.country?.name.toLowerCase().includes(k);
-    //   if (!hasKeyword) return false;
-    // }
-
     // Current Company
       if (appliedFilters.currentCompany.length > 0) {
         const normalize = (val: any) =>
@@ -708,26 +694,6 @@ const viewProfile = async (profileId: number) => {
 
   if (!stateMatch) return false;
 }
-
-  // filteredCandidates ke andar Experience Filter
-// if (appliedFilters.experience.length > 0) {
-//   const expVal = parseFloat(c.experience) || 0;
-
-//   const matchesExperience = appliedFilters.experience.some((range) => {
-//     if (range === "fresher") {
-//       return expVal === 0;
-//     }
-
-//     if (range === "20+") {
-//       return expVal >= 20;
-//     }
-
-//     const [min, max] = range.split("-").map(Number);
-//     return expVal >= min && expVal <= max;
-//   });
-
-//   if (!matchesExperience) return false;
-// }
 
 // Salary Filter
 if (appliedFilters.salary.length > 0) {
@@ -1367,7 +1333,12 @@ const toggleCompany = (company: string) => {
                     {c.experience && (
                       <span className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4 text-gray-500" />
-                        <Highlight text={c.experience} />
+                        <Highlight
+                          text={
+                            c.experience.charAt(0).toUpperCase() +
+                            c.experience.slice(1)
+                          }
+                        />
                       </span>
                     )}
 
