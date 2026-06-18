@@ -231,7 +231,7 @@ export default function SavedProfilesPage() {
                   {/* INFO ROW */}
                   <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-4">
                     {c.experience && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 capitalize">
                         <Briefcase className="w-4 h-4" />
                         {c.experience}
                       </span>

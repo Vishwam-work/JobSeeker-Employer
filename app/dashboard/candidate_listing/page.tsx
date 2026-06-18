@@ -270,9 +270,6 @@ useEffect(() => {
   ).format(Number(String(value).replace(/,/g, "")));
 };
 
-const parseNumber = (value: string): string => {
-  return value.replace(/,/g, "");
-};
   const cleanSearch = appliedFilters.keywords.trim().replace(/\s+/g, " ");
 // Current Company filter options ke liye sabhi pages ka data fetch karo
 useEffect(() => {
@@ -427,6 +424,7 @@ useEffect(() => {
   fetchSavedProfiles();
 }, []);
 
+// Fetch saved profiles to identify which candidates have been saved and show bookmark icon accordingly
 const fetchSavedProfiles = async () => {
   const token = localStorage.getItem("employeer_token");
 
@@ -442,21 +440,25 @@ const fetchSavedProfiles = async () => {
       }
     );
 
-    const data = await res.json();
+   const data = await res.json();
 
-    // only profile ids store karo
-    const ids = data.map((item: any) => item.profile.id);
+    const ids = data.results.map(
+      (item: any) => item.profile.id
+    );
 
     setSavedProfiles(ids);
-  } catch (err) {
-    console.error(err);
-  }
-};
+
+        setSavedProfiles(ids);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
 useEffect(() => {
   fetchViewedProfiles();
 }, []);
 
+// Fetch viewed profiles to identify which candidates have been viewed and show blue eye icon accordingly
 const fetchViewedProfiles = async () => {
   const token = localStorage.getItem("employeer_token");
 
@@ -485,6 +487,7 @@ const fetchViewedProfiles = async () => {
   }
 };
 
+// Save profile function
 const saveProfile = async (profileId: number) => {
   const token = localStorage.getItem("employeer_token");
 
@@ -533,7 +536,7 @@ const removeSavedProfile = async (profileId: number) => {
   if (!token) return;
 
   try {
-    // pehle saved record find karo
+    //  find saved record
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles-all/`,
       {
@@ -545,11 +548,13 @@ const removeSavedProfile = async (profileId: number) => {
 
     const savedData = await res.json();
 
-    const record = savedData.find(
+    const record = savedData.results.find(
       (item: any) => item.profile.id === profileId
     );
 
-    if (!record) return;
+    if (!record) {
+      return;
+    }
 
     // delete api
     const delRes = await fetch(
@@ -578,6 +583,7 @@ const removeSavedProfile = async (profileId: number) => {
 };
 
 
+// View profile function (blue eye icon) - store viewed profile in backend
 const viewProfile = async (profileId: number) => {
   const token = localStorage.getItem("employeer_token");
 
@@ -1360,7 +1366,7 @@ const toggleCompany = (company: string) => {
                             c.expected_salary,
                             c.current_currency?.code
                           )}`}
-                        /> /yr
+                        /> / yr
                       </span>
                     )}
 
