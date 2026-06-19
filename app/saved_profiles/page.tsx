@@ -41,8 +41,11 @@ interface Candidate {
 export default function SavedProfilesPage() {
   const [profiles, setProfiles] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProfiles, setTotalProfiles] = useState(0);
 
-  useEffect(() => {
+  const fetchSavedProfiles = async (page = 1) => {
     const token = localStorage.getItem("employeer_token");
 
     if (!token) {
@@ -50,42 +53,48 @@ export default function SavedProfilesPage() {
       return;
     }
 
-    const fetchSavedProfiles = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles-all/`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+    setLoading(true);
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/saved-profiles-all/?page=${page}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
+      );
 
-        const data = await res.json();
-
-        console.log("Saved Profiles API:", data);
-
-        const extractedProfiles = Array.isArray(data)
-          ? data.map((item: any) => ({
-              ...item.profile,
-              saved_id: item.id,
-            }))
-          : [];
-
-        setProfiles(extractedProfiles);
-      } catch (error) {
-        console.error("Saved profiles fetch error:", error);
-      } finally {
-        setLoading(false);
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
-    };
 
+     const data = await res.json();
+
+     setTotalProfiles(data.count);
+
+      console.log("Saved Profiles API:", data);
+
+      const extractedProfiles = Array.isArray(data.results)
+        ? data.results.map((item: any) => ({
+            ...item.profile,
+            saved_id: item.id,
+          }))
+        : [];
+
+      setProfiles(extractedProfiles);
+      setCurrentPage(page);
+      setTotalPages(Math.ceil(data.count / 3));
+    } catch (error) {
+      console.error("Saved profiles fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSavedProfiles();
   }, []);
 
@@ -148,7 +157,7 @@ export default function SavedProfilesPage() {
         {/* COUNT CARD */}
         <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
           <h2 className="text-3xl font-bold">
-            {profiles.length.toString().padStart(2, "0")}
+            {totalProfiles.toString().padStart(2, "0")}
           </h2>
 
           <p className="text-gray-500">
@@ -185,11 +194,18 @@ export default function SavedProfilesPage() {
                       />
 
                       <div className="flex-1">
-                        <h2 className="text-lg font-semibold text-gray-900">
+                        <h2
+                        onClick={() => {
+                          window.open(
+                            `/dashboard/candidate_listing/candidate_detail/${c.id}`,
+                            "_blank"
+                          );
+                        }}
+                        className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600">
                           {c.full_name}
                         </h2>
 
-                        {c.professional_summary && (
+                        {/* {c.professional_summary && (
                            <div
                           className="text-gray-700 leading-relaxed prose max-w-none
                           [&_ul]:list-disc [&_ul]:pl-6
@@ -199,7 +215,7 @@ export default function SavedProfilesPage() {
                             __html: c.professional_summary || "",
                           }}
                       />
-                        )}
+                        )} */}
                       </div>
                     </div>
 
@@ -215,7 +231,7 @@ export default function SavedProfilesPage() {
                   {/* INFO ROW */}
                   <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-4">
                     {c.experience && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 capitalize">
                         <Briefcase className="w-4 h-4" />
                         {c.experience}
                       </span>
@@ -267,6 +283,33 @@ export default function SavedProfilesPage() {
                 No saved profiles yet.
               </p>
             )}
+            {/* Pagination */}
+        <div className="flex items-center justify-center gap-2">
+
+          {/* Previous */}
+          <button
+            disabled={currentPage === 1}
+            onClick={() => fetchSavedProfiles(currentPage - 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ‹
+          </button>
+
+          {/* Page Info */}
+          <div className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700">
+            Page {currentPage} of {totalPages}
+          </div>
+
+          {/* Next */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => fetchSavedProfiles(currentPage + 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ›
+          </button>
+
+        </div>
           </CardContent>
         </Card>
       </div>
