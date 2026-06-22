@@ -278,7 +278,7 @@ useEffect(() => {
 
   const fetchAllCompanies = async () => {
     try {
-      let nextUrl = `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/?page=1`;
+      let nextUrl = `https://jobseeker-backend-jy1y.onrender.com/employeer/api/profile-all/?page=1`;
       const companySet = new Set<string>();
 
       while (nextUrl) {
