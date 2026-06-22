@@ -1314,22 +1314,17 @@ const toggleCompany = (company: string) => {
                 <div className="flex-1 flex flex-col gap-2">
 
                 {/* NAME */}
-                <h3
-                onClick={() => {
-                  window.open(
-                    `/dashboard/candidate_listing/candidate_detail/${c.id}`,
-                    "_blank"
-                  );
-
-                  viewProfile(c.id);
-                }}
-                  className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2"
+               <Link
+                  href={`/dashboard/candidate_listing/candidate_detail/${c.id}`}
+                  target="_blank"
+                  onClick={() => viewProfile(c.id)}
                 >
-
-                  <span className="font-semibold">
-                    <Highlight text={c.full_name} />
-                  </span>
-                </h3>
+                  <h3 className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 flex items-center gap-2">
+                    <span className="font-semibold">
+                      <Highlight text={c.full_name} />
+                    </span>
+                  </h3>
+                </Link>
 
                {/* Candidate Details Section */}
                 <div className="mt-4 space-y-3 text-sm text-gray-700">
