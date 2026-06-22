@@ -68,67 +68,66 @@ useEffect(() => {
     return;
   }
 
-  const fetchAllProfiles = async () => {
-    try {
-      let allProfiles: Candidate[] = [];
+  const fetchCandidate = async () => {
+  try {
+    const currentId = Number(
+      Array.isArray(params.id) ? params.id[0] : params.id
+    );
 
-      let nextUrl: string | null =
-        `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`;
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profiles/${currentId}/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-      while (nextUrl) {
-        const res = await fetch(nextUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    if (!res.ok) {
+      throw new Error("Candidate not found");
+    }
 
-        if (!res.ok) {
-          console.error("Fetch failed:", res.status);
-          break;
-        }
+    const result = await res.json();
 
-        const data = await res.json();
+    console.log("Candidate Response:", result);
 
-        console.log("Page Response:", data);
+    setCandidate(result.data);
+  } catch (error) {
+    console.error(error);
+    setCandidate(null);
+  } finally {
+    setLoading(false);
+  }
+};
+const fetchProfiles = async () => {
+  try {
+    let allProfiles: Candidate[] = [];
+    let nextUrl: string | null =
+      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`;
 
-        if (Array.isArray(data.results)) {
-          allProfiles.push(...data.results);
-        } else if (Array.isArray(data)) {
-          allProfiles.push(...data);
-        }
+    while (nextUrl && allProfiles.length < 6) {
+      const res = await fetch(nextUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        nextUrl = data.next;
+      const data = await res.json();
+
+      if (Array.isArray(data.results)) {
+        allProfiles.push(...data.results);
       }
 
-      console.log("All Profiles:", allProfiles);
-      console.log(
-        "All Profile IDs:",
-        allProfiles.map((p) => p.id)
-      );
-
-      setCandidates(allProfiles);
-
-      const currentId = Number(
-        Array.isArray(params.id) ? params.id[0] : params.id
-      );
-
-      console.log("Current ID:", currentId);
-
-      const found = allProfiles.find(
-        (item) => Number(item.id) === currentId
-      );
-
-      console.log("Found Candidate:", found);
-
-      setCandidate(found || null);
-    } catch (error) {
-      console.error("Fetch error:", error);
-    } finally {
-      setLoading(false);
+      nextUrl = data.next;
     }
-  };
 
-  fetchAllProfiles();
+    setCandidates(allProfiles);
+  } catch (err) {
+    console.error(err);
+  }
+};
+fetchCandidate();
+fetchProfiles();
 }, [params.id]);
 
   const formatSalary = (value?: string | number) => {
@@ -495,7 +494,7 @@ useEffect(() => {
               <div className="space-y-4">
                 {candidates
                   .filter((c) => c.id !== candidate.id)
-                  .slice(0, 10)
+                  .slice(0, 5)
                   .map((c) => (
                     <div
                       key={c.id}
