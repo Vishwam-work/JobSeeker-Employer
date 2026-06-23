@@ -281,7 +281,7 @@ const statusOptions = [
   }, [candidates, selectedCandidate]);
 
     const exportToExcel = async () => {
-      const XLSX = await import("xlsx");
+      const XLSX = await import("xlsx-js-style");
 
       if (!candidates?.length) {
         toast.warning("No data available to export");
@@ -340,6 +340,59 @@ const statusOptions = [
       console.log("Data to export:", data);
       const worksheet = XLSX.utils.json_to_sheet(data);
 
+      // Header style + Borders
+      const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+
+          if (!worksheet[cellAddress]) continue;
+
+          worksheet[cellAddress].s = {
+            ...(worksheet[cellAddress].s || {}),
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } },
+            },
+          };
+
+          // Header Row
+          if (R === 0) {
+            worksheet[cellAddress].s = {
+              ...worksheet[cellAddress].s,
+              font: {
+                bold: true,
+                color: { rgb: "000000" }, // Black text
+              },
+              fill: {
+                fgColor: { rgb: "D9E2F3" }, // Excel light blue
+              },
+              alignment: {
+                horizontal: "center",
+                vertical: "center",
+              },
+            };
+          }
+        }
+      }
+      worksheet["!cols"] = [
+        { wch: 25 }, // Name
+        { wch: 30 }, // Email
+        { wch: 18 }, // Phone
+        { wch: 25 }, // Job Applied
+        { wch: 15 }, // Status
+        { wch: 15 }, // Experience
+        { wch: 20 }, // Location
+        { wch: 15 }, // Applied Date
+        { wch: 18 }, // Current Salary
+        { wch: 18 }, // Expected Salary
+        { wch: 12 }, // Gender
+        { wch: 50 }, // Professional Summary
+      ];
+
       // Add hyperlink to Job Applied column
       candidates.forEach((c: any, index: number) => {
         const rowNumber = index + 2; // Header row = 1
@@ -348,15 +401,18 @@ const statusOptions = [
 
         if (worksheet[nameCellAddress]) {
           worksheet[nameCellAddress].l = {
-            Target: `https://nvglobaltechtestemployerv10.vercel.app/dashboard/candidate_listing/candidate_detail/${c.profile_id}`,
+            Target: `https://nvglobaltechtestemployerv10.vercel.app/profile-detail/${c.profile_id}`,
             Tooltip: "Open Candidate Details",
           };
           // https://nvglobaltechtestemployerv10.vercel.app/
+          // http://localhost:3005/
 
           worksheet[nameCellAddress].s = {
+            ...(worksheet[nameCellAddress].s || {}),
             font: {
+              ...(worksheet[nameCellAddress].s?.font || {}),
               color: { rgb: "0000FF" },
-              underline: true,
+              // underline: true,
             },
           };
         }
@@ -371,9 +427,11 @@ const statusOptions = [
           };
 
           worksheet[jobCellAddress].s = {
+            ...(worksheet[jobCellAddress].s || {}),
             font: {
+              ...(worksheet[jobCellAddress].s?.font || {}),
               color: { rgb: "0000FF" },
-              underline: true,
+              // underline: true,
             },
           };
         }
