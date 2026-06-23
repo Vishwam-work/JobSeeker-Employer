@@ -55,121 +55,57 @@ interface Candidate {
 export default function CandidateDetailPage() {
   const params = useParams();
   const router = useRouter();
-    const [viewedCandidateIds, setViewedCandidateIds] = useState<number[]>([]);
   const [candidate, setCandidate] = useState<Candidate | null>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const token = localStorage.getItem("employeer_token");
+  useEffect(() => {
+    const token = localStorage.getItem("employeer_token");
 
-  if (!token) {
-    setLoading(false);
-    return;
-  }
-
-  const fetchCandidate = async () => {
-  try {
-    const currentId = Number(
-      Array.isArray(params.id) ? params.id[0] : params.id
-    );
-
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profiles/${currentId}/`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error("Candidate not found");
+    if (!token) {
+      setLoading(false);
+      return;
     }
 
-    const result = await res.json();
+    const fetchCandidate = async () => {
+      try {
+        const currentId = Number(
+          Array.isArray(params.id) ? params.id[0] : params.id,
+        );
 
-    console.log("Candidate Response:", result);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profiles/${currentId}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
-    setCandidate(result.data);
-  } catch (error) {
-    console.error(error);
-    setCandidate(null);
-  } finally {
-    setLoading(false);
-  }
-};
-const fetchProfiles = async () => {
-  try {
-    let allProfiles: Candidate[] = [];
-    let nextUrl: string | null =
-      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/profile-all/`;
+        if (!res.ok) {
+          throw new Error("Candidate not found");
+        }
 
-    while (nextUrl && allProfiles.length < 6) {
-      const res = await fetch(nextUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const result = await res.json();
 
-      const data = await res.json();
+        console.log("Candidate Response:", result);
 
-      if (Array.isArray(data.results)) {
-        allProfiles.push(...data.results);
+        setCandidate(result.data);
+      } catch (error) {
+        console.error(error);
+        setCandidate(null);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      nextUrl = data.next;
-    }
-
-    setCandidates(allProfiles);
-  } catch (err) {
-    console.error(err);
-  }
-};
-fetchCandidate();
-fetchProfiles();
-}, [params.id]);
+    fetchCandidate();
+  }, [params.id]);
 
   const formatSalary = (value?: string | number) => {
     if (!value) return "-";
 
     return `₹ ${new Intl.NumberFormat("en-IN").format(Number(value))}`;
   };
-  const viewProfile = async (profileId: number) => {
-  const token = localStorage.getItem("employeer_token");
-
-  if (!token) return;
-
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL_EMPLOYER}/view-profile/`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          profile: profileId,
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error("Failed to store viewed profile");
-    }
-
-    const data = await res.json();
-    console.log("View profile response:", data);
-
-    // backend se latest ids
-    setViewedCandidateIds(data.profile_ids || []);
-
-    console.log("Viewed profile stored");
-  } catch (err) {
-    console.error(err);
-  }
-};
 
   if (loading) {
     return (
@@ -194,12 +130,12 @@ fetchProfiles();
       <div className="bg-gradient-to-b from-slate-50 to-white min-h-screen">
         <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6 px-4 lg:px-8 py-8">
           {/* LEFT SECTION */}
-          <div className="col-span-12 lg:col-span-8 space-y-6 ">
+          <div className="col-span-12 space-y-6 px-2 sm:px-4 lg:px-6">
             {/* PROFILE CARD */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-6">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-4 sm:p-6">
                 {/* TOP SECTION */}
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
                   {/* LEFT */}
                   <div className="flex flex-col sm:flex-row gap-5 items-start">
                     {/* PROFILE IMAGE */}
@@ -212,12 +148,12 @@ fetchProfiles();
                             )}`
                       }
                       alt={candidate.full_name}
-                      className="w-28 h-28 rounded-2xl object-cover border shadow-md bg-white"
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border shadow-md bg-white"
                     />
 
                     {/* INFO */}
-                    <div>
-                      <h1 className="text-3xl font-bold text-gray-900">
+                    <div className="w-full">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
                         {candidate.full_name}
                       </h1>
 
@@ -226,7 +162,7 @@ fetchProfiles();
                       </p>
 
                       {/* TAGS */}
-                      <div className="flex flex-wrap gap-3 mt-4 text-sm">
+                      <div className="flex flex-wrap gap-2 sm:gap-3 mt-4 text-xs sm:text-sm">
                         <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
                           {formatSalary(candidate.current_salary)} / yr
                         </span>
@@ -249,16 +185,16 @@ fetchProfiles();
                   </div>
 
                   {/* RIGHT ACTION */}
-                  <div className="flex flex-col gap-3 w-full sm:w-auto">
+                  <div className="flex flex-col gap-3 w-full xl:w-auto">
                     {candidate.resume && (
                       <button
                         onClick={() =>
                           window.open(
                             `${process.env.NEXT_PUBLIC_URL}${candidate.resume}`,
-                            "_blank"
+                            "_blank",
                           )
                         }
-                        className="inline-flex items-center justify-center self-start bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow hover:shadow-md hover:scale-[1.02] transition"
+                        className="inline-flex items-center justify-center w-full xl:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow hover:shadow-md transition"
                       >
                         View Resume
                       </button>
@@ -269,15 +205,15 @@ fetchProfiles();
             </div>
 
             {/* PROFESSIONAL SUMMARY */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-5">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">
                 Professional Summary
               </h2>
 
               <div
                 className="prose max-w-none text-gray-700
-            [&_ul]:list-disc [&_ul]:pl-6
-            [&_ol]:list-decimal [&_ol]:pl-6"
+                [&_ul]:list-disc [&_ul]:pl-6
+                [&_ol]:list-decimal [&_ol]:pl-6"
                 dangerouslySetInnerHTML={{
                   __html: candidate.professional_summary || "",
                 }}
@@ -285,16 +221,16 @@ fetchProfiles();
             </div>
 
             {/* COMPENSATION */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-5">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">
                 Compensation Details
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-slate-50 rounded-2xl p-5 border">
                   <p className="text-sm text-gray-500">Current Salary</p>
 
-                  <h3 className="text-xl font-bold text-gray-900 mt-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mt-2">
                     {formatSalary(candidate.current_salary)} / yr
                   </h3>
                 </div>
@@ -302,7 +238,7 @@ fetchProfiles();
                 <div className="bg-slate-50 rounded-2xl p-5 border">
                   <p className="text-sm text-gray-500">Expected Salary</p>
 
-                  <h3 className="text-xl font-bold text-gray-900 mt-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mt-2">
                     {formatSalary(candidate.expected_salary)} / yr
                   </h3>
                 </div>
@@ -310,7 +246,7 @@ fetchProfiles();
                 <div className="bg-slate-50 rounded-2xl p-5 border">
                   <p className="text-sm text-gray-500">Notice Period</p>
 
-                  <h3 className="text-xl font-bold text-gray-900 mt-2 capitalize">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mt-2 capitalize">
                     {candidate.notice_period || "-"}
                   </h3>
                 </div>
@@ -318,16 +254,16 @@ fetchProfiles();
             </div>
 
             {/* SKILLS */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-5">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">
                 Skills
               </h2>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 {candidate.skills?.map((s, i) => (
                   <span
                     key={i}
-                    className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium border border-blue-100"
+                    className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium border border-blue-100"
                   >
                     {s.name}
                   </span>
@@ -337,8 +273,8 @@ fetchProfiles();
 
             {/* EXPERIENCE */}
             {(candidate.experiences?.length ?? 0) > 0 && (
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-5">
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">
                   Experience
                 </h2>
 
@@ -346,11 +282,11 @@ fetchProfiles();
                   {candidate.experiences?.map((ex, i) => (
                     <div
                       key={i}
-                      className="border border-gray-100 rounded-2xl p-5 hover:shadow-md transition"
+                      className="border border-gray-100 rounded-2xl p-4 sm:p-5 hover:shadow-md transition"
                     >
-                      <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                             {ex.company}
                           </h3>
 
@@ -364,13 +300,13 @@ fetchProfiles();
                         </div>
 
                         {ex.category && (
-                          <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm">
+                          <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm w-fit">
                             {ex.category}
                           </span>
                         )}
                       </div>
 
-                      <p className="text-gray-700 mt-4 leading-relaxed">
+                      <p className="text-gray-700 mt-4 leading-relaxed break-words">
                         {ex.description}
                       </p>
                     </div>
@@ -381,8 +317,8 @@ fetchProfiles();
 
             {/* EDUCATION */}
             {(candidate.educations?.length ?? 0) > 0 && (
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-5">
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">
                   Education
                 </h2>
 
@@ -390,9 +326,9 @@ fetchProfiles();
                   {candidate.educations?.map((e, i) => (
                     <div
                       key={i}
-                      className="border border-gray-100 rounded-2xl p-5"
+                      className="border border-gray-100 rounded-2xl p-4 sm:p-5"
                     >
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                         {e.education_detail?.name}
                       </h3>
 
@@ -400,7 +336,9 @@ fetchProfiles();
                         {e.course_detail?.name}
                       </p>
 
-                      <p className="text-gray-600 mt-2">{e.institution}</p>
+                      <p className="text-gray-600 mt-2 break-words">
+                        {e.institution}
+                      </p>
 
                       <p className="text-sm text-gray-500 mt-2">
                         {e.start_year} - {e.end_year}
@@ -413,8 +351,8 @@ fetchProfiles();
 
             {/* CERTIFICATIONS */}
             {(candidate.certifications?.length ?? 0) > 0 && (
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-5">
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">
                   Certifications
                 </h2>
 
@@ -422,7 +360,7 @@ fetchProfiles();
                   {candidate.certifications?.map((c, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between border border-gray-100 rounded-2xl p-5"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-gray-100 rounded-2xl p-4 sm:p-5"
                     >
                       <div>
                         <h3 className="font-semibold text-gray-900">
@@ -434,11 +372,12 @@ fetchProfiles();
                             {c.issuer}
                           </p>
                         )}
+
                         {c.year && (
-                        <span className="text-sm text-gray-500 mt-1">
-                          {c.year}
-                        </span>
-                      )}
+                          <span className="text-sm text-gray-500 mt-1 block">
+                            {c.year}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -447,18 +386,18 @@ fetchProfiles();
             )}
 
             {/* CONTACT */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-5">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">
                 Contact Information
               </h2>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl">
                   <div className="bg-blue-100 p-3 rounded-xl">
                     <Mail size={18} className="text-blue-700" />
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm text-gray-500">Email Address</p>
 
                     <p className="font-medium text-gray-900 break-all">
@@ -467,7 +406,7 @@ fetchProfiles();
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl">
                   <div className="bg-green-100 p-3 rounded-xl">
                     <Phone size={18} className="text-green-700" />
                   </div>
@@ -480,57 +419,6 @@ fetchProfiles();
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT SIDEBAR */}
-          <div className="col-span-12 lg:col-span-4">
-            <div className="sticky top-24 bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
-              <h2 className="text-xl font-semibold text-gray-900 mb-5">
-                Similar Profiles
-              </h2>
-
-              <div className="space-y-4">
-                {candidates
-                  .filter((c) => c.id !== candidate.id)
-                  .slice(0, 5)
-                  .map((c) => (
-                    <div
-                      key={c.id}
-                      onClick={() => {
-                        window.open(
-                          `/dashboard/candidate_listing/candidate_detail/${c.id}`,
-                          "_blank"
-                        );
-
-                        viewProfile(c.id);
-                      }}
-                      className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 cursor-pointer transition"
-                    >
-                      <img
-                        src={
-                          c.profile_image
-                            ? `${process.env.NEXT_PUBLIC_URL}${c.profile_image}`
-                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                c.full_name,
-                              )}`
-                        }
-                        alt={c.full_name}
-                        className="w-14 h-14 rounded-xl object-cover border"
-                      />
-
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">
-                          {c.full_name}
-                        </h3>
-
-                        <p className="text-sm text-gray-500 truncate capitalize">
-                          {c.experience}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
               </div>
             </div>
           </div>
